@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>包裝材料採購對照單與庫存管理系統</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Font: Inter & Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- html2canvas & jsPDF for clean A4 PDF Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+    }
+    [x-cloak] { display: none !important; }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased" x-data="packagingApp()" x-cloak>
+
+  <!-- TOP HEADER & NAVBAR (改為沉穩質感深色實色 Header) -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-md text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- App Title / Logo -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 via-cyan-400 to-blue-500 text-slate-950 flex items-center justify-center shadow-md shadow-teal-900/50">
+            <i class="fa-solid fa-boxes-packing text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-base font-bold text-white tracking-tight">甜蜜果物-包材點貨/叫貨系統</h1>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs & Actions -->
+        <div class="flex items-center gap-2">
+          
+          <!-- Home Link Button -->
+          <a href="index.html" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+            <i class="fa-solid fa-house text-slate-400"></i> 回首頁
+          </a>
+
+          <!-- Tab Switcher -->
+          <div class="bg-slate-800 p-1 rounded-xl flex gap-1 border border-slate-700 text-xs font-semibold">
+            <button 
+              @click="currentTab = 'inventory'"
+              :class="currentTab === 'inventory' ? 'bg-teal-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'"
+              class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 font-bold">
+              <i class="fa-solid fa-boxes-stacked"></i>
+              庫存盤點
+            </button>
+            <button 
+              @click="currentTab = 'order'"
+              :class="currentTab === 'order' ? 'bg-teal-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'"
+              class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 relative font-bold">
+              <i class="fa-solid fa-clipboard-check"></i>
+              叫貨對照單
+              <span x-show="orderedItems.length > 0" 
+                    x-text="orderedItems.length" 
+                    class="ml-1 px-1.5 py-0.2 bg-amber-400 text-slate-950 text-[10px] rounded-full font-bold"></span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- TOOLBAR & GLOBAL CONTROLS -->
+    <div class="mb-6 bg-white p-3.5 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Search & Quick Filters -->
+      <div class="flex items-center gap-2 flex-1 min-w-[240px]">
+        <div class="relative w-full max-w-xs">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input 
+            type="text" 
+            x-model="searchQuery" 
+            placeholder="搜尋包材名稱、規格、廠商..." 
+            class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition">
+        </div>
+
+        <button 
+          @click="favoriteFilterOnly = !favoriteFilterOnly"
+          :class="favoriteFilterOnly ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
+          class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1 shrink-0">
+          <i class="fa-solid fa-star" :class="favoriteFilterOnly ? 'text-amber-500' : 'text-slate-400'"></i>
+          <span x-text="favoriteFilterOnly ? '顯示全部' : '常叫包材'"></span>
+        </button>
+      </div>
+
+      <!-- Action Buttons Group -->
+      <div class="flex items-center flex-wrap gap-2 text-xs">
+        
+        <!-- Batch Add -->
+        <button 
+          @click="showBatchModal = true" 
+          class="bg-teal-600 hover:bg-teal-700 text-white font-medium px-3 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1.5">
+          <i class="fa-solid fa-layer-group"></i> 批量新增
+        </button>
+
+        <!-- Manage Suppliers Modal -->
+        <button 
+          @click="showSupplierModal = true" 
+          class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+          <i class="fa-solid fa-industry text-teal-600"></i> 管理廠商
+        </button>
+
+        <!-- Export JSON -->
+        <button 
+          @click="exportData()" 
+          class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
+          title="匯出JSON備份檔">
+          <i class="fa-solid fa-file-export text-slate-500"></i> 匯出
+        </button>
+
+        <!-- Import JSON -->
+        <label class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium px-2.5 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1">
+          <i class="fa-solid fa-file-import text-slate-500"></i> 匯入
+          <input type="file" accept=".json" class="hidden" @change="importData($event)">
+        </label>
+
+        <!-- Zero Stock Button -->
+        <button 
+          @click="confirmZeroStock()" 
+          class="bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 font-medium px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
+          title="將現有庫存批次清零">
+          <i class="fa-solid fa-arrow-rotate-left text-amber-600"></i> 庫存歸零
+        </button>
+
+        <!-- Clear All Data Button -->
+        <button 
+          @click="confirmClearAll()" 
+          class="bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 font-medium px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
+          title="清空所有品項與叫貨資料">
+          <i class="fa-solid fa-trash-can text-rose-600"></i> 清空
+        </button>
+
+      </div>
+    </div>
+
+    <!-- TAB 1: INVENTORY MANAGEMENT (庫存盤點頁面 - 廠商不同顏色區塊與卡片底色) -->
+    <div x-show="currentTab === 'inventory'" class="space-y-8">
+      
+      <!-- SUPPLIER SECTIONS WITH DISTINCT COLOR THEMING -->
+      <template x-for="supplier in suppliers" :key="supplier">
+        <div x-show="getFilteredItemsBySupplier(supplier).length > 0 || !searchQuery" 
+             class="rounded-2xl border p-4 transition-all space-y-3"
+             :class="getSupplierBlockStyle(supplier)">
+          
+          <!-- Supplier Section Distinct Header -->
+          <div class="flex items-center justify-between border-b pb-2.5" :class="getSupplierHeaderBorderStyle(supplier)">
+            <div class="flex items-center gap-2.5">
+              <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shadow-xs text-white"
+                    :class="getSupplierBadgeStyle(supplier)">
+                <i class="fa-solid" :class="{
+                  'fa-building': supplier === '必堅',
+                  'fa-warehouse': supplier === '利泰',
+                  'fa-cart-shopping': supplier === '淘寶',
+                  'fa-industry': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
+                }"></i>
+              </span>
+              <div>
+                <h2 class="text-sm font-bold tracking-tight flex items-center gap-2" :class="getSupplierTitleTextStyle(supplier)">
+                  <span x-text="supplier"></span>
+                  <span class="text-xs font-medium opacity-75" x-text="'(' + getFilteredItemsBySupplier(supplier).length + ' 品項)'"></span>
+                </h2>
+                <p class="text-[10px] opacity-70" x-text="supplier === '淘寶' ? '外購/跨境進口專區' : '國內合作廠商'"></p>
+              </div>
+            </div>
+
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" :class="getSupplierTagStyle(supplier)" x-text="supplier"></span>
+          </div>
+
+          <!-- Inventory Cards Grid with Distinct Card Background Colors -->
+          <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-3">
+            <template x-for="item in getFilteredItemsBySupplier(supplier)" :key="item.id">
+              <div 
+                class="rounded-xl border p-2.5 transition shadow-xs hover:shadow flex flex-col justify-between relative group"
+                :class="[
+                  getItemCardBgStyle(supplier),
+                  item.currentStock <= item.safetyStock ? 'border-amber-400 ring-2 ring-amber-300' : ''
+                ]">
+                
+                <div>
+                  <!-- Top Row: Favorite Star & Name & Unit Selector & Delete Button -->
+                  <div class="flex items-start justify-between gap-1 mb-1">
+                    <button 
+                      @click="toggleFavorite(item)" 
+                      class="text-xs p-0.5 focus:outline-none transition transform active:scale-125"
+                      title="標記為常叫包材">
+                      <i class="fa-solid fa-star" :class="item.isFavorite ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-300'"></i>
+                    </button>
+
+                    <div class="flex-1 px-1">
+                      <h3 class="text-xs font-bold text-slate-800 leading-snug line-clamp-2" x-text="item.name"></h3>
+                      <p class="text-[10px] text-slate-500 font-medium mt-0.5" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></p>
+                    </div>
+
+                    <!-- Delete Single Item Button -->
+                    <button 
+                      @click="deleteItem(item.id)" 
+                      class="text-slate-300 hover:text-rose-500 text-xs p-0.5 transition"
+                      title="刪除此品項">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+
+                  <!-- Low Stock Warning Badge -->
+                  <div x-show="item.currentStock <= item.safetyStock" class="mb-2">
+                    <span class="bg-amber-100 text-amber-800 text-[9px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-1 w-max">
+                      <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> 低於安全庫存
+                    </span>
+                  </div>
+
+                  <!-- Stock Counter & Unit Selector -->
+                  <div class="bg-white/80 backdrop-blur-xs p-1.5 rounded-lg border border-slate-200/60 flex flex-col gap-1 my-1.5">
+                    <div class="flex items-center justify-between text-[10px] text-slate-500 font-medium">
+                      <span>現有庫存</span>
+                      <!-- Flexible Unit Selector (個、包、瓶、箱) -->
+                      <select 
+                        x-model="item.unit" 
+                        @change="saveInventory()" 
+                        class="bg-white border border-slate-300 text-slate-800 text-[10px] rounded-md px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-teal-500 font-bold shadow-2xs">
+                        <option value="個">個</option>
+                        <option value="包">包</option>
+                        <option value="瓶">瓶</option>
+                        <option value="箱">箱</option>
+                      </select>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-1.5 mt-0.5">
+                      <button @click="updateStock(item, -1)" class="w-7 h-7 bg-white border border-slate-300 rounded-md text-slate-700 hover:bg-slate-100 text-xs font-bold flex items-center justify-center shadow-2xs active:scale-95 transition">-</button>
+                      
+                      <!-- 明顯且突出的庫存數字輸入框 (確保預設數字為 0 不空白) -->
+                      <input 
+                        type="number" 
+                        :value="item.currentStock ?? 0"
+                        @input="item.currentStock = $event.target.value === '' ? 0 : Math.max(0, parseInt($event.target.value) || 0); saveInventory()"
+                        @blur="if (item.currentStock === '' || isNaN(item.currentStock)) item.currentStock = 0; saveInventory()"
+                        class="w-16 h-7 text-center text-xs font-extrabold bg-white border-2 border-teal-500 rounded-md shadow-inner text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-600 transition">
+                        
+                      <button @click="updateStock(item, 1)" class="w-7 h-7 bg-white border border-slate-300 rounded-md text-slate-700 hover:bg-slate-100 text-xs font-bold flex items-center justify-center shadow-2xs active:scale-95 transition">+</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bottom Action: Add to Order List -->
+                <div class="pt-1 mt-1 border-t border-slate-200/50 flex items-center justify-between gap-1">
+                  <div class="text-[9px] text-slate-400">
+                    安全預警: <span x-text="item.safetyStock"></span> <span x-text="item.unit || '個'"></span>
+                  </div>
+
+                  <button 
+                    @click="addToOrder(item)" 
+                    :class="isItemOrdered(item.id) ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-teal-700 hover:bg-teal-800 text-white border border-teal-800'"
+                    class="px-2 py-1 rounded-md text-[11px] font-bold transition flex items-center gap-1 shadow-2xs">
+                    <i class="fa-solid" :class="isItemOrdered(item.id) ? 'fa-check' : 'fa-plus'"></i>
+                    <span x-text="isItemOrdered(item.id) ? '已加入叫貨' : '加入叫貨'"></span>
+                  </button>
+                </div>
+
+              </div>
+            </template>
+          </div>
+
+          <!-- Empty State for Supplier -->
+          <div x-show="getFilteredItemsBySupplier(supplier).length === 0 && searchQuery" class="text-center py-4 bg-white/70 rounded-xl border border-dashed border-slate-200 text-slate-400 text-xs">
+            查無符合「<span x-text="searchQuery"></span>」的包材品項
+          </div>
+
+        </div>
+      </template>
+
+      <!-- Global Empty Inventory State -->
+      <div x-show="inventory.length === 0" class="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 space-y-3">
+        <div class="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto text-xl">
+          <i class="fa-solid fa-box-open"></i>
+        </div>
+        <h3 class="text-sm font-bold text-slate-700">尚未建立任何包材庫存品項</h3>
+        <p class="text-xs text-slate-400 max-w-sm mx-auto">請點選右上角的 **【+ 批量新增】** 建立品項資料。</p>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: ORDER PURCHASE SHEET (叫貨對照單頁面 - 表格式 layout 與廠商跳色背景) -->
+    <div x-show="currentTab === 'order'" class="space-y-6">
+      
+      <!-- Top Actions Bar for Order Sheet -->
+      <div class="bg-white p-4 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900">今日採購叫貨清單</h2>
+          <p class="text-xs text-slate-500">已選取 <span x-text="orderedItems.length" class="font-bold text-teal-600"></span> 項包材叫貨需求</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Clear Order List Button -->
+          <button 
+            @click="clearOrderList()" 
+            x-show="orderedItems.length > 0"
+            class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+            <i class="fa-solid fa-broom text-slate-500"></i> 清空叫貨
+          </button>
+
+          <!-- Export PDF Button -->
+          <button 
+            @click="exportToPDF()" 
+            x-show="orderedItems.length > 0"
+            class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1.5">
+            <i class="fa-solid fa-file-pdf"></i> 匯出 A4 PDF 叫貨單
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State for Order List -->
+      <div x-show="orderedItems.length === 0" class="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 space-y-3">
+        <div class="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto text-xl">
+          <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+        <h3 class="text-sm font-bold text-slate-700">叫貨清單預設為空</h3>
+        <p class="text-xs text-slate-400 max-w-sm mx-auto">請先回到「庫存盤點」頁面，點擊品項卡片上的 **【+ 加入叫貨】** 按鈕，即可將品項轉移至此處。</p>
+        <button @click="currentTab = 'inventory'" class="bg-teal-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition hover:bg-teal-700">
+          前往庫存盤點選取品項
+        </button>
+      </div>
+
+      <!-- INDEPENDENT SUPPLIER PURCHASE TABLES WITH DISTINCT BACKGROUND COLORS -->
+      <div x-show="orderedItems.length > 0" class="flex justify-center py-2">
+        
+        <!-- Target Wrapper for PDF Export (Centered max-w-[720px]) -->
+        <div id="printable-purchase-order" class="w-full max-w-[720px] bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5 text-xs text-slate-800">
+          
+          <!-- Printable Header -->
+          <div class="text-center border-b border-slate-200 pb-3">
+            <h1 class="text-lg font-bold tracking-wider text-slate-900">甜蜜果物 - 包裝材料採購對照單</h1>
+            <div class="text-xs text-slate-500 mt-1 flex justify-center items-center gap-4">
+              <span>日期：<span x-text="currentDateFormatted" class="font-medium text-slate-700"></span></span>
+              <span>叫貨總品項：<span x-text="orderedItems.length" class="font-bold text-teal-700"></span> 項</span>
+            </div>
+          </div>
+
+          <!-- INDEPENDENT SUPPLIER TABLES WITH DISTINCT BACKGROUND COLOR THEMING -->
+          <div class="space-y-6">
+            <template x-for="supplier in activeOrderSuppliers" :key="supplier">
+              <div class="rounded-xl border shadow-xs overflow-hidden transition-all"
+                   :class="{
+                     'bg-blue-50/70 border-blue-300': supplier === '必堅',
+                     'bg-emerald-50/70 border-emerald-300': supplier === '利泰',
+                     'bg-amber-50/70 border-amber-300': supplier === '淘寶',
+                     'bg-slate-50 border-slate-200': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
+                   }">
+                
+                <!-- Table Header Title with Supplier Colors -->
+                <div class="px-4 py-2.5 font-bold flex justify-between items-center text-xs border-b"
+                     :class="{
+                       'bg-blue-100/90 text-blue-950 border-blue-300': supplier === '必堅',
+                       'bg-emerald-100/90 text-emerald-950 border-emerald-300': supplier === '利泰',
+                       'bg-amber-100/90 text-amber-950 border-amber-300': supplier === '淘寶',
+                       'bg-slate-200 text-slate-800 border-slate-300': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
+                     }">
+                  <span class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-md flex items-center justify-center text-xs text-white"
+                          :class="{
+                            'bg-blue-600': supplier === '必堅',
+                            'bg-emerald-600': supplier === '利泰',
+                            'bg-amber-600': supplier === '淘寶',
+                            'bg-slate-600': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
+                          }">
+                      <i class="fa-solid" :class="{
+                        'fa-building': supplier === '必堅',
+                        'fa-warehouse': supplier === '利泰',
+                        'fa-cart-shopping': supplier === '淘寶',
+                        'fa-truck-field': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
+                      }"></i>
+                    </span>
+                    <span class="font-bold text-sm" x-text="supplier + ' 採購單'"></span>
+                  </span>
+                  
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold shadow-2xs" 
+                        :class="{
+                          'bg-blue-200 text-blue-900': supplier === '必堅',
+                          'bg-emerald-200 text-emerald-900': supplier === '利泰',
+                          'bg-amber-200 text-amber-900': supplier === '淘寶',
+                          'bg-slate-300 text-slate-800': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
+                        }"
+                        x-text="getOrderedItemsBySupplier(supplier).length + ' 項品項'"></span>
+                </div>
+
+                <!-- Supplier Form Table -->
+                <div class="p-3 overflow-x-auto">
+                  <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr class="text-slate-500 border-b border-slate-200/80 text-[11px]">
+                        <th class="pb-2 font-semibold w-4/12 px-1">品名</th>
+                        <th class="pb-2 font-semibold w-5/12 px-1">叫貨數量 (輸入框)</th>
+                        <th class="pb-2 font-semibold w-3/12 px-1">備註</th>
+                        <th class="pb-2 text-right font-semibold w-1/12 px-1">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200/60">
+                      <template x-for="item in getOrderedItemsBySupplier(supplier)" :key="item.id">
+                        <tr class="hover:bg-white/60 transition-colors">
+                          
+                          <!-- Item Name & Spec -->
+                          <td class="py-2.5 px-1 align-middle">
+                            <div class="font-bold text-slate-800" x-text="item.name"></div>
+                            <div class="text-[10px] text-slate-500 mt-0.5" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></div>
+                          </td>
+                          
+                          <!-- Order Quantity Input & Unit Selector -->
+                          <td class="py-2.5 px-1 align-middle">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                              <div class="inline-flex items-center bg-white border border-slate-300 rounded-lg shadow-2xs p-0.5">
+                                <button 
+                                  @click="item.orderWeight = Math.max(0, item.orderWeight - 1)" 
+                                  class="w-6 h-6 text-slate-600 hover:bg-slate-100 rounded font-bold text-xs flex items-center justify-center transition">-</button>
+                                <input 
+                                  type="number" 
+                                  min="0"
+                                  x-model.number="item.orderWeight" 
+                                  class="w-12 text-center text-xs font-bold text-slate-900 bg-transparent focus:outline-none">
+                                <button 
+                                  @click="item.orderWeight = Math.max(0, item.orderWeight + 1)" 
+                                  class="w-6 h-6 text-slate-600 hover:bg-slate-100 rounded font-bold text-xs flex items-center justify-center transition">+</button>
+                              </div>
+
+                              <!-- Unit Dropdown Selector -->
+                              <select 
+                                x-model="item.unit" 
+                                class="bg-white border border-slate-300 text-slate-800 text-xs rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-teal-500 font-medium">
+                                <option value="個">個</option>
+                                <option value="包">包</option>
+                                <option value="瓶">瓶</option>
+                                <option value="箱">箱</option>
+                              </select>
+                            </div>
+                          </td>
+
+                          <!-- Order Remark Input -->
+                          <td class="py-2.5 px-1 align-middle">
+                            <input 
+                              type="text" 
+                              x-model="item.orderRemark" 
+                              placeholder="填寫備註..." 
+                              class="w-full text-xs px-2.5 py-1 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500">
+                          </td>
+
+                          <!-- Remove Button -->
+                          <td class="py-2.5 px-1 align-middle text-right">
+                            <button 
+                              @click="removeFromOrder(item.id)" 
+                              class="text-slate-300 hover:text-rose-500 p-1 transition"
+                              title="從叫貨單移除">
+                              <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                          </td>
+
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+            </template>
+          </div>
+
+          <!-- COMPACT SUMMARY SECTION (精簡採購摘要單 - 三廠商分開獨立表格) -->
+          <div id="compact-summary-export-target" class="pt-4 border-t-2 border-dashed border-slate-300 space-y-3 p-4 bg-white rounded-xl">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold text-slate-700 flex items-center gap-1.5 uppercase tracking-wider">
+                <i class="fa-solid fa-list-check text-teal-600"></i> 精簡採購摘要單
+              </h3>
+              <span class="text-[10px] text-slate-400">供快速對照 / 單一廠商截圖叫貨使用</span>
+            </div>
+
+            <!-- Grid for Independent Compact Supplier Tables -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <template x-for="supplier in activeOrderSuppliers" :key="'summary-' + supplier">
+                <div 
+                  :id="'summary-card-' + supplier"
+                  class="bg-slate-50 rounded-lg border p-2.5 text-[11px] space-y-1.5 shadow-2xs relative"
+                  :class="{
+                    'border-blue-200 bg-blue-50/40': supplier === '必堅',
+                    'border-emerald-200 bg-emerald-50/40': supplier === '利泰',
+                    'border-amber-200 bg-amber-50/40': supplier === '淘寶',
+                    'border-slate-200': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
+                  }">
+                  
+                  <!-- Compact Table Supplier Title with Download Image Button -->
+                  <div class="font-bold flex items-center justify-between border-b pb-1 text-slate-800"
+                       :class="{
+                         'border-blue-200 text-blue-900': supplier === '必堅',
+                         'border-emerald-200 text-emerald-900': supplier === '利泰',
+                         'border-amber-200 text-amber-900': supplier === '淘寶',
+                         'border-slate-200': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
+                       }">
+                    <span class="flex items-center gap-1">
+                      <span class="w-2 h-2 rounded-full"
+                            :class="{
+                              'bg-blue-600': supplier === '必堅',
+                              'bg-emerald-600': supplier === '利泰',
+                              'bg-amber-600': supplier === '淘寶',
+                              'bg-slate-600': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
+                            }"></span>
+                      <span x-text="supplier"></span>
+                    </span>
+
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[9px] font-normal opacity-75" x-text="getOrderedItemsBySupplier(supplier).length + ' 項'"></span>
+                      
+                      <!-- Individual Supplier Image Download Button -->
+                      <button 
+                        @click="downloadSupplierSummaryImage(supplier)" 
+                        data-html2canvas-ignore="true"
+                        class="px-1.5 py-0.5 rounded bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 text-[9px] font-bold shadow-2xs flex items-center gap-0.5 transition"
+                        title="下載此廠商對照單圖片">
+                        <i class="fa-solid fa-camera text-teal-600"></i>
+                        <span>截圖</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Compact Table -->
+                  <table class="w-full text-left border-collapse">
+                    <thead>
+                      <tr class="text-[10px] text-slate-400 border-b border-slate-200/60">
+                        <th class="pb-1 font-semibold">品名</th>
+                        <th class="pb-1 font-semibold text-center w-14">數量</th>
+                        <th class="pb-1 font-semibold text-right">備註</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200/40">
+                      <template x-for="item in getOrderedItemsBySupplier(supplier)" :key="'sum-item-' + item.id">
+                        <tr class="text-slate-700">
+                          <td class="py-1 pr-1 font-medium leading-tight">
+                            <span x-text="item.name"></span>
+                            <span x-show="item.spec" x-text="'(' + item.spec + ')'" class="text-[9px] text-slate-400 block"></span>
+                          </td>
+                          <td class="py-1 text-center font-bold text-teal-700 whitespace-nowrap">
+                            <span x-text="item.orderWeight"></span>
+                            <span x-text="item.unit || '個'" class="text-[9px] font-normal text-slate-500"></span>
+                          </td>
+                          <td class="py-1 text-right text-[10px] text-slate-500 truncate max-w-[80px]" x-text="item.orderRemark || '-'"></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Printable Footer -->
+          <div class="pt-3 border-t border-slate-300 text-[10px] text-slate-400 flex justify-between items-center">
+            <span>採購簽核：____________________</span>
+            <span>甜蜜果物 · 包裝材料採購系統 A4 對照表</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- MODAL 1: BATCH ADD ITEMS (批量新增模態框) -->
+  <div x-show="showBatchModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
+    <div @click.away="showBatchModal = false" class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-layer-group text-sky-600"></i> 批量新增包材品項
+        </h3>
+        <button @click="showBatchModal = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">預設廠商</label>
+            <select x-model="batchSupplier" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none font-medium">
+              <template x-for="sup in suppliers" :key="sup">
+                <option :value="sup" x-text="sup"></option>
+              </template>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">預設單位</label>
+            <select x-model="batchUnit" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none font-medium">
+              <option value="個">個</option>
+              <option value="包">包</option>
+              <option value="瓶">瓶</option>
+              <option value="箱">箱</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">輸入品項與規格 (每行一項，支援規格自動拆解)</label>
+          <textarea 
+            x-model="batchInputText" 
+            rows="6" 
+            placeholder="例如：
+瓦楞紙箱 3號,5號,8號 必堅
+透明封箱膠帶 48mm 利泰
+提袋 品牌:藍色 規格:大,中,小 淘寶"
+            class="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none font-mono text-xs leading-relaxed"></textarea>
+          <p class="text-[10px] text-slate-400 mt-1">小撇步：可將逗號分隔的規格寫在一起，系統會自動拆解為獨立的規格卡片。</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+        <button @click="showBatchModal = false" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50">取消</button>
+        <button @click="processBatchAdd()" class="px-4 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-xs">確認導入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: SUPPLIER MANAGEMENT (管理廠商模態框) -->
+  <div x-show="showSupplierModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
+    <div @click.away="showSupplierModal = false" class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-industry text-sky-600"></i> 管理廠商列表
+        </h3>
+        <button @click="showSupplierModal = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="flex gap-2">
+          <input 
+            type="text" 
+            x-model="newSupplierName" 
+            placeholder="新增廠商名稱 (如: 順豐包材)" 
+            class="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-sky-500">
+          <button @click="addSupplier()" class="bg-sky-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-sky-700">新增</button>
+        </div>
+
+        <div class="border border-slate-200 rounded-lg divide-y divide-slate-100 max-h-48 overflow-y-auto">
+          <template x-for="sup in suppliers" :key="sup">
+            <div class="p-2 flex items-center justify-between">
+              <span class="font-medium text-slate-700" x-text="sup"></span>
+              <button 
+                x-show="sup !== '必堅' && sup !== '利泰' && sup !== '淘寶'" 
+                @click="removeSupplier(sup)" 
+                class="text-slate-300 hover:text-rose-500 p-1">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2 border-t border-slate-100">
+        <button @click="showSupplierModal = false" class="px-4 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-200">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div 
+    x-show="toast.show" 
+    x-transition
+    class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 font-medium">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span x-text="toast.message"></span>
+  </div>
+
+  <!-- ALPINE APP LOGIC -->
+  <script>
+    function packagingApp() {
+      return {
+        currentTab: 'inventory', // 'inventory' | 'order'
+        searchQuery: '',
+        favoriteFilterOnly: false,
+        showBatchModal: false,
+        showSupplierModal: false,
+
+        // Batch Modal State
+        batchSupplier: '必堅',
+        batchUnit: '個',
+        batchInputText: '',
+
+        // Supplier Modal State
+        newSupplierName: '',
+
+        // Toast Notification State
+        toast: {
+          show: false,
+          message: ''
+        },
+
+        // Suppliers List
+        suppliers: JSON.parse(localStorage.getItem('pkg_suppliers')) || ['必堅', '利泰', '淘寶'],
+
+        // Main Inventory Data
+        inventory: JSON.parse(localStorage.getItem('pkg_inventory')) || [
+          { id: 1, name: '瓦楞外箱 5號', spec: '標準規格', origin: '必堅', unit: '箱', currentStock: 12, safetyStock: 5, isFavorite: true },
+          { id: 2, name: '彩色印刷禮盒', spec: '水果6入裝', origin: '必堅', unit: '個', currentStock: 30, safetyStock: 10, isFavorite: false },
+          { id: 3, name: '透明封箱膠帶', spec: '48mm x 90y', origin: '利泰', unit: '包', currentStock: 8, safetyStock: 10, isFavorite: true },
+          { id: 4, name: '防震氣泡袋', spec: '30cm x 30cm', origin: '利泰', unit: '包', currentStock: 25, safetyStock: 5, isFavorite: false },
+          { id: 5, name: '客製化提袋', spec: '大號藍色', origin: '淘寶', unit: '個', currentStock: 2, safetyStock: 20, isFavorite: true },
+          { id: 6, name: '網狀水果護套', spec: '12cm白色', origin: '淘寶', unit: '包', currentStock: 15, safetyStock: 5, isFavorite: false }
+        ],
+
+        // Ordered Items Array
+        orderedItems: [],
+
+        // Save State to LocalStorage
+        saveInventory() {
+          localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
+          localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
+        },
+
+        // Toast Trigger
+        showToast(msg) {
+          this.toast.message = msg;
+          this.toast.show = true;
+          setTimeout(() => {
+            this.toast.show = false;
+          }, 2500);
+        },
+
+        // Ocean Color Dynamic Styles for Suppliers & Cards (強化跳色區隔)
+        getSupplierBlockStyle(supplier) {
+          switch (supplier) {
+            case '必堅': return 'bg-blue-50/80 border-blue-200/90 shadow-xs';
+            case '利泰': return 'bg-emerald-50/80 border-emerald-200/90 shadow-xs';
+            case '淘寶': return 'bg-amber-50/80 border-amber-200/90 shadow-xs';
+            default: return 'bg-slate-50/50 border-slate-200 shadow-xs';
+          }
+        },
+
+        getSupplierHeaderBorderStyle(supplier) {
+          switch (supplier) {
+            case '必堅': return 'border-blue-300';
+            case '利泰': return 'border-emerald-300';
+            case '淘寶': return 'border-amber-300';
+            default: return 'border-slate-200';
+          }
+        },
+
+        getSupplierBadgeStyle(supplier) {
+          switch (supplier) {
+            case '必堅': return 'bg-blue-600';
+            case '利泰': return 'bg-emerald-600';
+            case '淘寶': return 'bg-amber-600';
+            default: return 'bg-slate-600';
+          }
+        },
+
+        getSupplierTitleTextStyle(supplier) {
+          switch (supplier) {
+            case '必堅': return 'text-blue-950';
+            case '利泰': return 'text-emerald-950';
+            case '淘寶': return 'text-amber-950';
+            default: return 'text-slate-900';
+          }
+        },
+
+        getSupplierTagStyle(supplier) {
+          switch (supplier) {
+            case '必堅': return 'bg-blue-200 text-blue-900 font-bold';
+            case '利泰': return 'bg-emerald-200 text-emerald-900 font-bold';
+            case '淘寶': return 'bg-amber-200 text-amber-900 font-bold';
+            default: return 'bg-slate-200 text-slate-800';
+          }
+        },
+
+        // Distinct Item Card Background Styles per Supplier (明顯跳色對比)
+        getItemCardBgStyle(supplier) {
+          switch (supplier) {
+            case '必堅': return 'bg-blue-100/80 border-blue-300 hover:border-blue-500';
+            case '利泰': return 'bg-emerald-100/80 border-emerald-300 hover:border-emerald-500';
+            case '淘寶': return 'bg-amber-100/80 border-amber-300 hover:border-amber-500';
+            default: return 'bg-white border-slate-200 hover:border-slate-400';
+          }
+        },
+
+        // Filtered Inventory items
+        getFilteredItemsBySupplier(supplier) {
+          return this.inventory.filter(item => {
+            const matchesSupplier = item.origin === supplier;
+            const matchesSearch = !this.searchQuery || 
+              item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+              (item.spec && item.spec.toLowerCase().includes(this.searchQuery.toLowerCase()));
+            const matchesFavorite = !this.favoriteFilterOnly || item.isFavorite;
+
+            return matchesSupplier && matchesSearch && matchesFavorite;
+          });
+        },
+
+        // Stock Updates
+        updateStock(item, delta) {
+          item.currentStock = Math.max(0, item.currentStock + delta);
+          this.saveInventory();
+        },
+
+        toggleFavorite(item) {
+          item.isFavorite = !item.isFavorite;
+          this.saveInventory();
+          this.showToast(item.isFavorite ? `已設為常叫包材` : `已取消常叫標記`);
+        },
+
+        deleteItem(itemId) {
+          if (confirm('確定要刪除這個包材品項嗎？')) {
+            this.inventory = this.inventory.filter(i => i.id !== itemId);
+            this.orderedItems = this.orderedItems.filter(i => i.id !== itemId);
+            this.saveInventory();
+            this.showToast('已刪除品項');
+          }
+        },
+
+        // Add item to Order list
+        addToOrder(item) {
+          const existing = this.orderedItems.find(o => o.id === item.id);
+          if (existing) {
+            this.orderedItems = this.orderedItems.filter(o => o.id !== item.id);
+            this.showToast(`已從叫貨單移除「${item.name}」`);
+          } else {
+            this.orderedItems.push({
+              ...item,
+              orderBox: 1,
+              orderWeight: 0,
+              orderRemark: ''
+            });
+            this.showToast(`已加入叫貨單：「${item.name}」`);
+          }
+        },
+
+        isItemOrdered(itemId) {
+          return this.orderedItems.some(o => o.id === itemId);
+        },
+
+        removeFromOrder(itemId) {
+          this.orderedItems = this.orderedItems.filter(o => o.id !== itemId);
+        },
+
+        clearOrderList() {
+          if (confirm('確定要清空今日叫貨清單嗎？')) {
+            this.orderedItems = [];
+            this.showToast('已清空叫貨清單');
+          }
+        },
+
+        // Active Order Suppliers List
+        get activeOrderSuppliers() {
+          const active = this.orderedItems.map(i => i.origin);
+          return [...new Set(active)];
+        },
+
+        getOrderedItemsBySupplier(supplier) {
+          return this.orderedItems.filter(i => i.origin === supplier);
+        },
+
+        get currentDateFormatted() {
+          const today = new Date();
+          return `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+        },
+
+        // Supplier Management
+        addSupplier() {
+          if (!this.newSupplierName.trim()) return;
+          if (!this.suppliers.includes(this.newSupplierName.trim())) {
+            this.suppliers.push(this.newSupplierName.trim());
+            this.newSupplierName = '';
+            this.saveInventory();
+            this.showToast('已新增廠商');
+          }
+        },
+
+        removeSupplier(sup) {
+          if (confirm(`確定要刪除廠商「${sup}」嗎？`)) {
+            this.suppliers = this.suppliers.filter(s => s !== sup);
+            this.saveInventory();
+          }
+        },
+
+        // Batch Add Logic
+        processBatchAdd() {
+          if (!this.batchInputText.trim()) return;
+
+          const lines = this.batchInputText.split('\n').filter(l => l.trim().length > 0);
+          let addedCount = 0;
+
+          lines.forEach(line => {
+            let itemSupplier = this.batchSupplier;
+            let text = line.trim();
+
+            this.suppliers.forEach(sup => {
+              if (text.includes(sup)) {
+                itemSupplier = sup;
+                text = text.replace(sup, '').trim();
+              }
+            });
+
+            const specMatch = text.match(/([\u4e00-\u9fa5\w\s]+)\s+([\d,A-Za-z\u4e00-\u9fa5\-\+]+)/);
+            
+            if (specMatch && specMatch[2].includes(',')) {
+              const name = specMatch[1].trim();
+              const specs = specMatch[2].split(',');
+              
+              specs.forEach(s => {
+                this.inventory.push({
+                  id: Date.now() + Math.random(),
+                  name: name,
+                  spec: s.trim(),
+                  origin: itemSupplier,
+                  unit: this.batchUnit,
+                  currentStock: 0,
+                  safetyStock: 5,
+                  isFavorite: false
+                });
+                addedCount++;
+              });
+            } else {
+              this.inventory.push({
+                id: Date.now() + Math.random(),
+                name: text,
+                spec: '',
+                origin: itemSupplier,
+                unit: this.batchUnit,
+                currentStock: 0,
+                safetyStock: 5,
+                isFavorite: false
+              });
+              addedCount++;
+            }
+          });
+
+          this.batchInputText = '';
+          this.showBatchModal = false;
+          this.saveInventory();
+          this.showToast(`順利批次新增 ${addedCount} 個包材品項`);
+        },
+
+        // Global Controls
+        confirmZeroStock() {
+          if (confirm('確定要把所有品項的「現有庫存」批次歸 0 嗎？')) {
+            this.inventory.forEach(i => i.currentStock = 0);
+            this.saveInventory();
+            this.showToast('庫存已全數歸零');
+          }
+        },
+
+        confirmClearAll() {
+          if (confirm('警告：確定要清空「所有」庫存與叫貨資料嗎？此操作無法撤銷！')) {
+            this.inventory = [];
+            this.orderedItems = [];
+            this.saveInventory();
+            this.showToast('已完全清空系統資料');
+          }
+        },
+
+        exportData() {
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+            inventory: this.inventory,
+            suppliers: this.suppliers
+          }, null, 2));
+          const dlAnchorElem = document.createElement('a');
+          dlAnchorElem.setAttribute("href", dataStr);
+          dlAnchorElem.setAttribute("download", `pkg_inventory_backup_${new Date().toISOString().slice(0,10)}.json`);
+          dlAnchorElem.click();
+          this.showToast('備份資料已順利下載');
+        },
+
+        importData(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const data = JSON.parse(e.target.result);
+              if (data.inventory) this.inventory = data.inventory;
+              if (data.suppliers) this.suppliers = data.suppliers;
+              this.saveInventory();
+              this.showToast('備份資料成功復原');
+            } catch (err) {
+              alert('JSON 檔案格式錯誤！');
+            }
+          };
+          reader.readAsText(file);
+        },
+
+        // Export PDF
+        async exportToPDF() {
+          this.showToast('正在生成精簡採購摘要 PDF...');
+          const element = document.getElementById('compact-summary-export-target');
+          
+          if (!element) return;
+
+          try {
+            const canvas = await html2canvas(element, {
+              scale: 2,
+              useCORS: true,
+              backgroundColor: '#ffffff'
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const imgWidth = pdfWidth - 20; // 邊距 10mm
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            pdf.addImage(imgData, 'PNG', 10, 15, imgWidth, imgHeight);
+            pdf.save(`甜蜜果物_包材精簡採購單_${this.currentDateFormatted.replace(/\//g, '-')}.pdf`);
+            this.showToast('精簡採購摘要 PDF 匯出成功！');
+          } catch (error) {
+            console.error('PDF Export Error:', error);
+            alert('PDF 生成發生錯誤，請重試');
+          }
+        },
+
+        // Download Single Supplier Summary Image
+        async downloadSupplierSummaryImage(supplier) {
+          const elementId = 'summary-card-' + supplier;
+          const element = document.getElementById(elementId);
+
+          if (!element) return;
+
+          this.showToast(`正在生成【${supplier}】採購摘要截圖...`);
+
+          try {
+            const canvas = await html2canvas(element, {
+              scale: 3, // High Resolution
+              useCORS: true,
+              backgroundColor: '#ffffff'
+            });
+
+            const link = document.createElement('a');
+            link.download = `甜蜜果物_叫貨摘要_${supplier}_${this.currentDateFormatted.replace(/\//g, '-')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            this.showToast(`【${supplier}】截圖下載完成！`);
+          } catch (error) {
+            console.error('Image Export Error:', error);
+            alert('圖片生成失敗，請再試一次');
+          }
+        }
+      };
+    }
+  </script>
+</body>
+</html>
