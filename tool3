@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>甜蜜果物鮮果採購單與庫存管理系統</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: {
+              50: '#FAF9F5',
+              100: '#F4F1EA',
+              200: '#E6E0D4',
+            },
+            sage: {
+              50: '#F2F6F3',
+              100: '#E1EBE3',
+              500: '#5B8C5A',
+              600: '#4A7C59',
+              700: '#3A6346',
+            },
+            amber: {
+              400: '#FBBF24',
+              500: '#F59E0B',
+              600: '#D97706',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Alpine.js CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  
+  <!-- html2pdf.js & dependencies for robust PDF Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: #F4F6F4;
+    }
+    
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F1F1F1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #C2D4C2;
+      border-radius: 4px;
+    }
+
+    /* Print styling fallback */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printable-purchase-order, #printable-purchase-order * {
+        visibility: visible;
+      }
+      #printable-purchase-order {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="text-slate-700 antialiased pb-12" x-data="fruitApp()" x-init="initData()">
+
+  <!-- Toast Notification -->
+  <div x-show="toast.show" 
+       x-transition:enter="transition ease-out duration-300 transform"
+       x-transition:enter-start="opacity-0 translate-y-2"
+       x-transition:enter-end="opacity-100 translate-y-0"
+       x-transition:leave="transition ease-in duration-200 transform"
+       x-transition:leave-start="opacity-100 translate-y-0"
+       x-transition:leave-end="opacity-0 translate-y-2"
+       class="fixed bottom-5 right-5 z-50 flex items-center px-4 py-3 rounded-xl shadow-lg text-sm font-medium"
+       :class="{
+         'bg-sage-600 text-white': toast.type === 'success',
+         'bg-amber-500 text-white': toast.type === 'warning',
+         'bg-red-600 text-white': toast.type === 'error',
+         'bg-slate-800 text-white': toast.type === 'info'
+       }"
+       style="display: none;">
+    <i class="fas mr-2.5" :class="{
+      'fa-check-circle': toast.type === 'success',
+      'fa-exclamation-triangle': toast.type === 'warning',
+      'fa-exclamation-circle': toast.type === 'error',
+      'fa-info-circle': toast.type === 'info'
+    }"></i>
+    <span x-text="toast.message"></span>
+  </div>
+
+  <!-- Header Banner -->
+  <header class="bg-gradient-to-r from-sage-600 via-sage-500 to-emerald-600 text-white shadow-md no-print">
+    <div class="max-w-6xl mx-auto px-4 py-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm text-white">
+          <i class="fa-solid fa-lemon text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-wide">甜蜜果物鮮果採購系統</h1>
+          <p class="text-xs text-sage-100 opacity-90">進銷存庫存盤點與雙欄採購對照單</p>
+        </div>
+      </div>
+
+      <!-- Utilities -->
+      <div class="flex items-center space-x-2">
+        <a href="index.html" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+          <i class="fa-solid fa-house"></i> 回首頁
+        </a>
+        <button @click="exportBackupData()" class="px-3 py-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-lg text-xs font-medium transition flex items-center border border-white/20">
+          <i class="fa-solid fa-file-export mr-1.5 text-amber-300"></i>
+          匯出資料
+        </button>
+        <button @click="$refs.fileInput.click()" class="px-3 py-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-lg text-xs font-medium transition flex items-center border border-white/20">
+          <i class="fa-solid fa-file-import mr-1.5 text-emerald-300"></i>
+          匯入資料
+        </button>
+        <input type="file" x-ref="fileInput" @change="importBackupData($event)" accept=".json" class="hidden">
+        <button @click="openBatchModal()" class="px-3 py-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-lg text-xs font-medium transition flex items-center border border-white/20">
+          <i class="fa-solid fa-list-check mr-1.5 text-amber-300"></i>
+          批量加入品項
+        </button>
+        <button @click="openOriginModal()" class="px-3 py-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-lg text-xs font-medium transition flex items-center border border-white/20">
+          <i class="fa-solid fa-earth-americas mr-1.5"></i>
+          新增國家產地
+        </button>
+        <button @click="showResetConfirm = true" class="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-white rounded-xl text-xs font-medium transition flex items-center border border-red-300/30">
+          <i class="fa-solid fa-trash-can mr-1.5"></i>
+          清空
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-6xl mx-auto px-3 sm:px-5 pt-4">
+
+    <!-- Tab Navigation -->
+    <div class="flex border-b border-slate-200 mb-4 bg-white rounded-xl p-1 shadow-sm no-print">
+      <button @click="activeTab = 'inventory'" 
+              :class="activeTab === 'inventory' ? 'bg-sage-500 text-white shadow-sm font-semibold' : 'text-slate-600 hover:text-sage-600 hover:bg-sage-50'"
+              class="flex-1 py-2 px-3 rounded-lg text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-boxes-stacked"></i>
+        <span>1. 庫存盤點</span>
+        <span class="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.2 rounded-full font-normal" 
+              :class="activeTab === 'inventory' ? 'bg-white/20 text-white' : ''" 
+              x-text="inventory.length"></span>
+      </button>
+
+      <button @click="activeTab = 'order'" 
+              :class="activeTab === 'order' ? 'bg-sage-500 text-white shadow-sm font-semibold' : 'text-slate-600 hover:text-sage-600 hover:bg-sage-50'"
+              class="flex-1 py-2 px-3 rounded-lg text-xs sm:text-sm transition flex items-center justify-center gap-1.5 relative">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span>2. 叫貨清單對照單</span>
+        <span x-show="orderedItemsCount > 0" class="bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold" x-text="orderedItemsCount"></span>
+      </button>
+    </div>
+
+    <!-- TAB 1: INVENTORY AUDIT (庫存盤點) -->
+    <div x-show="activeTab === 'inventory'" class="space-y-4">
+      
+      <!-- Filter & Controls Bar -->
+      <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-2 justify-between items-stretch md:items-center">
+        <!-- Search Input -->
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input type="text" x-model="searchQuery" placeholder="搜尋品名、規格或產地..." 
+                 class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:border-sage-500 text-xs">
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="flex flex-wrap items-center gap-1.5">
+          <!-- Starred / Hot filter -->
+          <button @click="filterStarOnly = !filterStarOnly" 
+                  :class="filterStarOnly ? 'bg-amber-500 text-white shadow-sm' : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'"
+                  class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
+            <i class="fa-solid fa-star text-[10px]" :class="filterStarOnly ? 'text-white' : 'text-amber-400'"></i>
+            <span>僅看常叫貨</span>
+          </button>
+
+          <!-- Low stock warning filter -->
+          <button @click="filterLowStockOnly = !filterLowStockOnly" 
+                  :class="filterLowStockOnly ? 'bg-amber-600 text-white' : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'"
+                  class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
+            <i class="fa-solid fa-triangle-exclamation text-[10px]" :class="filterLowStockOnly ? 'text-white' : 'text-amber-500'"></i>
+            <span>預警</span>
+          </button>
+
+          <!-- Main Category Selector -->
+          <select x-model="filterCategory" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-600 bg-slate-50 focus:outline-none focus:border-sage-500">
+            <option value="ALL">全部類別</option>
+            <option value="國產">國產水果</option>
+            <option value="進口">進口水果</option>
+          </select>
+
+          <!-- Batch Add Button (Primary Action) -->
+          <button @click="openBatchModal()" class="px-3.5 py-1.5 bg-sage-600 hover:bg-sage-700 text-white rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-sm ml-auto">
+            <i class="fa-solid fa-square-plus text-xs"></i>
+            <span>批量新增品項/多規格</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- INVENTORY DISPLAY SECTION -->
+      
+      <!-- SECTION A: Domestic Fruits (國產水果) - Compact Cards -->
+      <div x-show="filterCategory === 'ALL' || filterCategory === '國產'" class="space-y-2">
+        <div class="flex items-center space-x-2 border-b border-emerald-200 pb-1.5">
+          <span class="text-sm font-bold text-emerald-800 flex items-center gap-1.5">
+            🇹🇼 國產水果
+          </span>
+          <span class="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full" x-text="getDomesticItems().length + ' 項'"></span>
+        </div>
+
+        <!-- 30% Compact Grid Layout -->
+        <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-2.5">
+          <template x-for="item in getDomesticItems()" :key="item.id">
+            <div x-show="matchesFilter(item)" class="bg-white rounded-xl p-2.5 shadow-sm border transition hover:shadow-md flex flex-col justify-between"
+                 :class="item.stock <= item.safetyStock ? 'border-amber-300 bg-amber-50/10' : 'border-slate-100'">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <div class="flex items-center gap-1">
+                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-medium">台灣</span>
+                    <template x-if="item.stock <= item.safetyStock">
+                      <span class="text-[9px] px-1 py-0.2 rounded bg-amber-100 text-amber-800 font-medium">低庫存</span>
+                    </template>
+                  </div>
+                  <!-- STARRED BUTTON -->
+                  <button @click="toggleStar(item)" class="p-0.5 text-base transition-transform active:scale-125 focus:outline-none" :title="item.isFavorite ? '取消常叫貨' : '設為常叫貨'">
+                    <i class="fa-solid fa-star transition-colors" :class="item.isFavorite ? 'text-amber-400 drop-shadow-sm' : 'text-slate-200 hover:text-amber-300'"></i>
+                  </button>
+                </div>
+
+                <h3 class="text-xs sm:text-sm font-bold text-slate-800 truncate" x-text="item.name"></h3>
+                <p class="text-[10px] text-slate-400 mb-1.5 truncate" x-text="item.spec || '標準規格'"></p>
+              </div>
+
+              <!-- Item Footer Action & Controls (Compact) -->
+              <div class="pt-1.5 border-t border-slate-100 space-y-1.5">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-slate-500">庫存: <b class="text-slate-800" x-text="item.stock"></b></span>
+                  <div class="flex items-center space-x-0.5">
+                    <button @click="adjustStock(item, -1)" class="w-5 h-5 rounded bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 text-xs">-</button>
+                    <input type="number" min="0" x-model.number="item.stock" @change="saveData()" class="w-8 text-center text-[11px] font-bold border rounded py-0.5">
+                    <button @click="adjustStock(item, 1)" class="w-5 h-5 rounded bg-sage-100 text-sage-700 font-bold hover:bg-sage-200 text-xs">+</button>
+                  </div>
+                </div>
+
+                <!-- DIRECT ORDER BUTTON -->
+                <div class="flex items-center justify-between gap-1 pt-0.5">
+                  <template x-if="!item.inOrder">
+                    <button @click="addToOrder(item)" class="w-full py-1 bg-sage-600 hover:bg-sage-700 text-white rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1 shadow-sm">
+                      <i class="fa-solid fa-cart-plus text-[10px]"></i>
+                      <span>+ 叫貨</span>
+                    </button>
+                  </template>
+                  <template x-if="item.inOrder">
+                    <div class="w-full flex items-center justify-between bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-lg text-[10px]">
+                      <span class="text-amber-800 font-bold flex items-center gap-0.5">
+                        <i class="fa-solid fa-check text-amber-600"></i> 已叫
+                      </span>
+                      <button @click="removeFromOrder(item)" class="text-slate-400 hover:text-red-500 ml-1">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+                  </template>
+                  <button @click="editItem(item)" class="text-slate-300 hover:text-sage-600 p-1" title="編輯"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
+                  <button @click="deleteItem(item)" class="text-slate-300 hover:text-red-500 p-1" title="刪除"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- SECTION B: Imported Fruits (進口水果 - Compact Cards Grouped by Country) -->
+      <div x-show="filterCategory === 'ALL' || filterCategory === '進口'" class="space-y-4 pt-1">
+        <div class="flex items-center space-x-2 border-b border-blue-200 pb-1.5">
+          <span class="text-sm font-bold text-blue-900 flex items-center gap-1.5">
+            ✈️ 進口水果（依國家分類）
+          </span>
+          <span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded-full" x-text="getImportedItems().length + ' 項'"></span>
+        </div>
+
+        <!-- Group by Imported Countries -->
+        <template x-for="country in getImportedCountries()" :key="country">
+          <div class="space-y-1.5 pl-2 border-l-2 border-blue-100">
+            <h4 class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span x-text="getCountryFlag(country)"></span>
+              <span x-text="country"></span>
+              <span class="text-[10px] text-slate-400 font-normal" x-text="'(' + getItemsByCountry(country).length + ')'"></span>
+            </h4>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-2.5">
+              <template x-for="item in getItemsByCountry(country)" :key="item.id">
+                <div x-show="matchesFilter(item)" class="bg-white rounded-xl p-2.5 shadow-sm border transition hover:shadow-md flex flex-col justify-between"
+                     :class="item.stock <= item.safetyStock ? 'border-amber-300 bg-amber-50/10' : 'border-slate-100'">
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <div class="flex items-center gap-1">
+                        <span class="text-[10px] px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 font-medium truncate" x-text="item.origin"></span>
+                        <template x-if="item.stock <= item.safetyStock">
+                          <span class="text-[9px] px-1 py-0.2 rounded bg-amber-100 text-amber-800 font-medium">低庫存</span>
+                        </template>
+                      </div>
+                      <!-- STARRED BUTTON -->
+                      <button @click="toggleStar(item)" class="p-0.5 text-base transition-transform active:scale-125 focus:outline-none" :title="item.isFavorite ? '取消常叫貨' : '設為常叫貨'">
+                        <i class="fa-solid fa-star transition-colors" :class="item.isFavorite ? 'text-amber-400 drop-shadow-sm' : 'text-slate-200 hover:text-amber-300'"></i>
+                      </button>
+                    </div>
+
+                    <h3 class="text-xs sm:text-sm font-bold text-slate-800 truncate" x-text="item.name"></h3>
+                    <p class="text-[10px] text-slate-400 mb-1.5 truncate" x-text="item.spec || '標準規格'"></p>
+                  </div>
+
+                  <!-- Item Controls -->
+                  <div class="pt-1.5 border-t border-slate-100 space-y-1.5">
+                    <div class="flex items-center justify-between text-[11px]">
+                      <span class="text-slate-500">庫存: <b class="text-slate-800" x-text="item.stock"></b></span>
+                      <div class="flex items-center space-x-0.5">
+                        <button @click="adjustStock(item, -1)" class="w-5 h-5 rounded bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 text-xs">-</button>
+                        <input type="number" min="0" x-model.number="item.stock" @change="saveData()" class="w-8 text-center text-[11px] font-bold border rounded py-0.5">
+                        <button @click="adjustStock(item, 1)" class="w-5 h-5 rounded bg-sage-100 text-sage-700 font-bold hover:bg-sage-200 text-xs">+</button>
+                      </div>
+                    </div>
+
+                    <!-- DIRECT ORDER BUTTON -->
+                    <div class="flex items-center justify-between gap-1 pt-0.5">
+                      <template x-if="!item.inOrder">
+                        <button @click="addToOrder(item)" class="w-full py-1 bg-sage-600 hover:bg-sage-700 text-white rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1 shadow-sm">
+                          <i class="fa-solid fa-cart-plus text-[10px]"></i>
+                          <span>+ 叫貨</span>
+                        </button>
+                      </template>
+                      <template x-if="item.inOrder">
+                        <div class="w-full flex items-center justify-between bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-lg text-[10px]">
+                          <span class="text-amber-800 font-bold flex items-center gap-0.5">
+                            <i class="fa-solid fa-check text-amber-600"></i> 已叫
+                          </span>
+                          <button @click="removeFromOrder(item)" class="text-slate-400 hover:text-red-500 ml-1">
+                            <i class="fa-solid fa-xmark"></i>
+                          </button>
+                        </div>
+                      </template>
+                      <button @click="editItem(item)" class="text-slate-300 hover:text-sage-600 p-1" title="編輯"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
+                      <button @click="deleteItem(item)" class="text-slate-300 hover:text-red-500 p-1" title="刪除"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: ORDER LIST & DUAL-COLUMN COMPARISON SHEET -->
+    <div x-show="activeTab === 'order'" class="space-y-4">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 no-print flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-cart-flatbed text-sage-600"></i>
+            今日預計叫貨品項
+          </h2>
+          <p class="text-xs text-slate-500">預設空白，僅在盤點頁點擊「+ 加入叫貨」的品項會顯示於下方採購對照單。</p>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button @click="clearAllOrders()" x-show="orderedItems.length > 0" class="px-3.5 py-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl text-xs font-medium transition">
+            <i class="fa-solid fa-trash-can mr-1"></i>清空叫貨單
+          </button>
+          <button @click="copyOrderText()" x-show="orderedItems.length > 0" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-medium transition shadow-sm">
+            <i class="fa-regular fa-copy mr-1"></i>複製文字 (LINE)
+          </button>
+          <button @click="exportToPDF()" x-show="orderedItems.length > 0" class="px-4 py-2 bg-sage-600 hover:bg-sage-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span>下載 50% 雙欄 A4 PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- EMPTY STATE: DEFAULT FULLY BLANK -->
+      <div x-show="orderedItems.length === 0" class="bg-white rounded-2xl p-12 text-center border border-slate-100 shadow-sm no-print">
+        <div class="w-16 h-16 bg-sage-50 text-sage-500 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+          <i class="fa-solid fa-basket-shopping"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-700">叫貨清單目前為空</h3>
+        <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">請切換至「庫存盤點」頁面，點擊水果卡片上的 <span class="text-sage-600 font-bold">【+ 加入叫貨】</span> 按鈕即可將水果轉移進來。</p>
+        <button @click="activeTab = 'inventory'" class="mt-4 px-5 py-2 bg-sage-600 text-white text-xs font-bold rounded-xl shadow-sm hover:bg-sage-700 transition">
+          返回庫存盤點選取品項
+        </button>
+      </div>
+
+      <!-- ORDER QUANTITY ADJUSTMENT TABLE (Interactive Controls) -->
+      <div x-show="orderedItems.length > 0" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 no-print space-y-4">
+        <h3 class="text-sm font-bold text-slate-700">叫貨數量與規格調整</h3>
+        
+        <div class="overflow-x-auto border border-slate-100 rounded-xl">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
+              <tr>
+                <th class="p-3">品名 / 產地</th>
+                <th class="p-3 text-center">規格</th>
+                <th class="p-3 text-center">叫貨箱數</th>
+                <th class="p-3 text-center">叫貨斤數</th>
+                <th class="p-3 text-center">備註</th>
+                <th class="p-3 text-center">移除</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              <template x-for="item in orderedItems" :key="item.id">
+                <tr class="hover:bg-sage-50/30">
+                  <td class="p-3">
+                    <div class="font-bold text-slate-800" x-text="item.name"></div>
+                    <div class="text-[10px] text-slate-400" x-text="item.category + ' · ' + item.origin"></div>
+                  </td>
+                  <td class="p-3 text-center text-slate-500" x-text="item.spec || '-'"></td>
+                  <td class="p-3 text-center">
+                    <div class="flex items-center justify-center space-x-1">
+                      <button @click="adjustOrderBox(item, -1)" class="w-6 h-6 bg-slate-100 rounded font-bold text-xs">-</button>
+                      <input type="number" min="0" x-model.number="item.orderBox" @change="saveData()" class="w-12 text-center font-bold border rounded py-0.5 text-xs">
+                      <button @click="adjustOrderBox(item, 1)" class="w-6 h-6 bg-sage-100 text-sage-700 rounded font-bold text-xs">+</button>
+                    </div>
+                  </td>
+                  <td class="p-3 text-center">
+                    <div class="flex items-center justify-center space-x-1">
+                      <button @click="adjustOrderWeight(item, -1)" class="w-6 h-6 bg-slate-100 rounded font-bold text-xs">-</button>
+                      <input type="number" min="0" step="0.5" x-model.number="item.orderWeight" @change="saveData()" class="w-12 text-center font-bold border rounded py-0.5 text-xs">
+                      <button @click="adjustOrderWeight(item, 1)" class="w-6 h-6 bg-amber-100 text-amber-700 rounded font-bold text-xs">+</button>
+                    </div>
+                  </td>
+                  <td class="p-3 text-center">
+                    <input type="text" x-model="item.orderRemark" placeholder="備註..." @change="saveData()" class="w-28 px-2 py-1 text-xs border rounded">
+                  </td>
+                  <td class="p-3 text-center">
+                    <button @click="removeFromOrder(item)" class="text-slate-400 hover:text-red-500 p-1"><i class="fa-solid fa-trash-can"></i></button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DUAL-COLUMN 50/50 COMPARISON SHEET (PDF / PRINT TARGET) -->
+      <div x-show="orderedItems.length > 0" class="flex justify-center py-4">
+        
+        <!-- Target Wrapper for PDF Export (max-w-[700px] = 50% scale printable format) -->
+        <div id="printable-purchase-order" class="w-full max-w-[700px] bg-white p-6 rounded-xl border border-slate-300 shadow-sm space-y-4 text-xs text-slate-800">
+          
+          <!-- Clean Printable Header -->
+          <div class="text-center border-b border-slate-300 pb-3">
+            <h1 class="text-xl font-bold tracking-wider text-slate-900">甜蜜果物 鮮果採購對照單</h1>
+            <div class="text-xs text-slate-500 mt-1 flex justify-center items-center gap-4">
+              <span>日期：<span x-text="currentDateFormatted" class="font-medium"></span></span>
+              <span>叫貨總品項：<span x-text="orderedItems.length" class="font-bold text-slate-800"></span> 項</span>
+            </div>
+          </div>
+
+          <!-- 50% DUAL COLUMN TABLE GRID (Left Domestic / Right Imported) -->
+          <div class="grid grid-cols-2 gap-4 items-start pt-1">
+            
+            <!-- LEFT COLUMN: 國產水果 (50%) -->
+            <div class="border border-slate-200 rounded-lg p-3 bg-slate-50/30">
+              <div class="font-bold text-emerald-800 border-b border-emerald-200 pb-1.5 mb-2 flex justify-between items-center text-xs">
+                <span>🇹🇼 國產水果 (左欄)</span>
+                <span class="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded" x-text="domesticOrderedItems.length + '項'"></span>
+              </div>
+
+              <table class="w-full text-left text-[11px]">
+                <thead>
+                  <tr class="text-slate-400 border-b border-slate-200">
+                    <th class="py-1 font-medium">品名</th>
+                    <th class="py-1 text-center font-medium">規格</th>
+                    <th class="py-1 text-right font-medium">叫貨數量</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  <template x-for="item in domesticOrderedItems" :key="item.id">
+                    <tr>
+                      <td class="py-1.5 font-medium text-slate-800">
+                        <span x-text="item.name"></span>
+                        <div x-show="item.orderRemark" class="text-[9px] text-amber-600 font-normal" x-text="'* ' + item.orderRemark"></div>
+                      </td>
+                      <td class="py-1.5 text-center text-slate-500 text-[10px]" x-text="item.spec || '-'"></td>
+                      <td class="py-1.5 text-right font-bold text-slate-900">
+                        <span x-show="item.orderBox > 0" x-text="item.orderBox + '箱 '"></span>
+                        <span x-show="item.orderWeight > 0" x-text="item.orderWeight + '斤'"></span>
+                        <span x-show="item.orderBox === 0 && item.orderWeight === 0">1箱</span>
+                      </td>
+                    </tr>
+                  </template>
+                  <template x-if="domesticOrderedItems.length === 0">
+                    <tr>
+                      <td colspan="3" class="py-4 text-center text-slate-400 text-[10px]">無國產貨叫貨項目</td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- RIGHT COLUMN: 進口水果 (50%) -->
+            <div class="border border-slate-200 rounded-lg p-3 bg-slate-50/30">
+              <div class="font-bold text-blue-900 border-b border-blue-200 pb-1.5 mb-2 flex justify-between items-center text-xs">
+                <span>✈️ 進口水果 (右欄)</span>
+                <span class="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded" x-text="importedOrderedItems.length + '項'"></span>
+              </div>
+
+              <table class="w-full text-left text-[11px]">
+                <thead>
+                  <tr class="text-slate-400 border-b border-slate-200">
+                    <th class="py-1 font-medium">品名 (產地)</th>
+                    <th class="py-1 text-center font-medium">規格</th>
+                    <th class="py-1 text-right font-medium">叫貨數量</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  <template x-for="item in importedOrderedItems" :key="item.id">
+                    <tr>
+                      <td class="py-1.5 font-medium text-slate-800">
+                        <span x-text="item.name"></span>
+                        <span class="text-[9px] text-blue-600 font-normal" x-text="'(' + item.origin + ')'"></span>
+                        <div x-show="item.orderRemark" class="text-[9px] text-amber-600 font-normal" x-text="'* ' + item.orderRemark"></div>
+                      </td>
+                      <td class="py-1.5 text-center text-slate-500 text-[10px]" x-text="item.spec || '-'"></td>
+                      <td class="py-1.5 text-right font-bold text-slate-900">
+                        <span x-show="item.orderBox > 0" x-text="item.orderBox + '箱 '"></span>
+                        <span x-show="item.orderWeight > 0" x-text="item.orderWeight + '斤'"></span>
+                        <span x-show="item.orderBox === 0 && item.orderWeight === 0">1箱</span>
+                      </td>
+                    </tr>
+                  </template>
+                  <template x-if="importedOrderedItems.length === 0">
+                    <tr>
+                      <td colspan="3" class="py-4 text-center text-slate-400 text-[10px]">無進口貨叫貨項目</td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+
+          <!-- Printable Footer -->
+          <div class="pt-3 border-t border-slate-300 text-[10px] text-slate-400 flex justify-between items-center">
+            <span>採購簽核：____________________</span>
+            <span>甜蜜果物採購系統 · A4 直式</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- MODALS SECTION -->
+
+  <!-- MODAL 1: ADD / EDIT ITEM MODAL -->
+  <div x-show="showItemModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display: none;">
+    <div @click.outside="showItemModal = false" class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+        <h3 class="text-lg font-bold text-slate-800" x-text="isEditing ? '編輯鮮果品項' : '新增鮮果品項'"></h3>
+        <button @click="showItemModal = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-4 text-xs sm:text-sm">
+        <div>
+          <label class="block text-slate-600 font-medium mb-1">水果品名 *</label>
+          <input type="text" x-model="itemForm.name" placeholder="例如：日本貓眼葡萄, 愛文芒果" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="block text-slate-600 font-medium">國家 / 產地 *</label>
+              <button @click="openOriginModal()" type="button" class="text-[10px] text-sage-600 font-bold hover:underline">+ 新增國家</button>
+            </div>
+            <select x-model="itemForm.origin" @change="onOriginChange()" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500 bg-white">
+              <template x-for="orig in origins" :key="orig">
+                <option :value="orig" x-text="orig"></option>
+              </template>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-slate-600 font-medium mb-1">歸類類別</label>
+            <input type="text" x-model="itemForm.category" readonly class="w-full px-3 py-2 rounded-xl border border-slate-100 bg-slate-100 text-slate-500 font-medium cursor-not-allowed">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-600 font-medium mb-1">規格 (包裝)</label>
+            <input type="text" x-model="itemForm.spec" placeholder="例如：2kg/原箱, 5kg" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500">
+          </div>
+
+          <div>
+            <label class="block text-slate-600 font-medium mb-1">現有庫存 (箱)</label>
+            <input type="number" min="0" x-model.number="itemForm.stock" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-600 font-medium mb-1">安全預警閥值 (箱)</label>
+          <input type="number" min="0" x-model.number="itemForm.safetyStock" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500">
+        </div>
+
+        <div class="flex items-center space-x-2 pt-1">
+          <input type="checkbox" id="starCheck" x-model="itemForm.isFavorite" class="rounded text-sage-600 focus:ring-sage-500 w-4 h-4">
+          <label for="starCheck" class="text-xs font-bold text-slate-700 cursor-pointer">標記為常叫貨品項</label>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button @click="showItemModal = false" type="button" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-medium">取消</button>
+          <button @click="saveItemForm()" type="button" class="px-5 py-2 bg-sage-600 hover:bg-sage-700 text-white rounded-xl text-xs font-medium shadow-sm">儲存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: BATCH ADD ITEMS MODAL (INTELLIGENT MULTI-SPEC) -->
+  <div x-show="showBatchModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display: none;">
+    <div @click.outside="showBatchModal = false" class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-sage-600"></i>
+          批量新增品項與多規格
+        </h3>
+        <button @click="showBatchModal = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="p-2.5 bg-sage-50 border border-sage-200 rounded-xl text-[11px] text-sage-800 leading-relaxed space-y-1">
+          <p class="font-bold flex items-center gap-1">
+            <i class="fa-solid fa-circle-info"></i> 智慧多規格拆解格式範例：
+          </p>
+          <ul class="list-disc pl-4 space-y-0.5 text-slate-600">
+            <li><b class="text-slate-800">多尺寸逗號拆分：</b><code class="bg-white px-1 rounded border">台中椪柑 23, 27, 30尺寸</code></li>
+            <li><b class="text-slate-800">品牌與多規格：</b><code class="bg-white px-1 rounded border">紐西蘭櫻桃 品牌:藍白 30, 30-32, 34, 36+ 紐西蘭</code></li>
+            <li><b class="text-slate-800">等級區分：</b><code class="bg-white px-1 rounded border">愛文芒果 5A, 6A</code> 或 <code class="bg-white px-1 rounded border">甜柿 8A, 9A, 10A</code></li>
+          </ul>
+        </div>
+
+        <textarea x-model="batchInputText" rows="7" placeholder="請直接貼上或輸入品項，例如：
+台中椪柑 23,27,30尺寸
+紐西蘭櫻桃 品牌:藍白 30,30-32,34,36+ 紐西蘭
+愛文芒果 5A, 6A
+甜柿 8A, 9A, 10A" class="w-full p-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-sage-500 font-mono leading-relaxed"></textarea>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <button @click="showBatchModal = false" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-medium">取消</button>
+          <button @click="processBatchAdd()" class="px-5 py-2 bg-sage-600 hover:bg-sage-700 text-white rounded-xl text-xs font-medium shadow-sm flex items-center gap-1">
+            <i class="fa-solid fa-check"></i>
+            <span>確認自動拆分並匯入</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: ORIGIN MANAGER MODAL -->
+  <div x-show="showOriginModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display: none;">
+    <div @click.outside="showOriginModal = false" class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
+        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-earth-americas text-sage-600"></i>
+          管理 / 新增國家產地
+        </h3>
+        <button @click="showOriginModal = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="flex gap-2">
+          <input type="text" x-model="newOriginInput" @keydown.enter.prevent="addNewOrigin()" placeholder="例如：韓國, 泰國..." class="flex-1 px-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500">
+          <button @click="addNewOrigin()" class="px-3 py-1.5 bg-sage-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-sage-700">新增</button>
+        </div>
+
+        <div class="pt-2">
+          <label class="text-[11px] font-bold text-slate-500 block mb-1.5">現有國家清單：</label>
+          <div class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1">
+            <template x-for="orig in origins" :key="orig">
+              <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs">
+                <span x-text="orig"></span>
+                <template x-if="orig !== '台灣'">
+                  <button @click="removeOrigin(orig)" class="text-slate-400 hover:text-red-500 ml-0.5"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                </template>
+              </span>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: RESET CONFIRM MODAL -->
+  <div x-show="showResetConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display: none;">
+    <div class="bg-white rounded-2xl max-w-xs w-full p-5 text-center shadow-2xl border border-slate-100">
+      <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+        <i class="fa-solid fa-trash-can"></i>
+      </div>
+      <h3 class="text-sm font-bold text-slate-800 mb-1">確定要完全清空資料嗎？</h3>
+      <p class="text-xs text-slate-500 mb-4">這將會清空所有庫存品項與叫貨紀錄，此操作無法復原。</p>
+      <div class="flex gap-2 justify-center">
+        <button @click="showResetConfirm = false" class="px-4 py-1.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-medium">取消</button>
+        <button @click="resetDataToDefault()" class="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-sm">確定清空</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alpine.js Application Script -->
+  <script>
+    function fruitApp() {
+      return {
+        activeTab: 'inventory',
+        searchQuery: '',
+        filterCategory: 'ALL',
+        filterStarOnly: false,
+        filterLowStockOnly: false,
+
+        toast: {
+          show: false,
+          message: '',
+          type: 'success'
+        },
+
+        showItemModal: false,
+        isEditing: false,
+        editingId: null,
+        itemForm: {
+          name: '',
+          origin: '台灣',
+          category: '國產',
+          spec: '',
+          stock: 0,
+          safetyStock: 0,
+          isFavorite: false
+        },
+
+        showBatchModal: false,
+        batchInputText: '',
+
+        showOriginModal: false,
+        newOriginInput: '',
+
+        showResetConfirm: false,
+
+        origins: ['台灣', '日本', '美國', '紐西蘭', '智利', '澳洲', '南非'],
+
+        inventory: [],
+
+        defaultDataset: [
+          { id: '1', name: '愛文芒果', origin: '台灣', category: '國產', spec: '5kg/箱', stock: 2, safetyStock: 2, isFavorite: true, inOrder: false, orderBox: 1, orderWeight: 0, orderRemark: '' },
+          { id: '2', name: '金鑽鳳梨', origin: '台灣', category: '國產', spec: '10kg/箱', stock: 5, safetyStock: 1, isFavorite: true, inOrder: false, orderBox: 1, orderWeight: 0, orderRemark: '' },
+          { id: '3', name: '日本貓眼葡萄', origin: '日本', category: '進口', spec: '2kg/原箱', stock: 0, safetyStock: 1, isFavorite: true, inOrder: false, orderBox: 1, orderWeight: 0, orderRemark: '頂級顆粒' },
+          { id: '4', name: '美國水蜜桃', origin: '美國', category: '進口', spec: '5kg/12入', stock: 1, safetyStock: 2, isFavorite: false, inOrder: false, orderBox: 1, orderWeight: 0, orderRemark: '' },
+          { id: '5', name: '紐西蘭陽光金圓頭奇異果', origin: '紐西蘭', category: '進口', spec: '22入/原箱', stock: 6, safetyStock: 2, isFavorite: false, inOrder: false, orderBox: 1, orderWeight: 0, orderRemark: '' },
+          { id: '6', name: '智利櫻桃', origin: '智利', category: '進口', spec: '2kg/28mm', stock: 0, safetyStock: 0, isFavorite: false, inOrder: false, orderBox: 1, orderWeight: 0, orderRemark: '' }
+        ],
+
+        initData() {
+          const localInventory = localStorage.getItem('sweet_fruit_inventory');
+          const localOrigins = localStorage.getItem('sweet_fruit_origins');
+
+          if (localInventory) {
+            try {
+              const loaded = JSON.parse(localInventory);
+              this.inventory = loaded.map(item => ({
+                ...item,
+                isFavorite: item.isFavorite !== undefined ? item.isFavorite : (item.starred || false)
+              }));
+            } catch(e) {
+              this.inventory = [...this.defaultDataset];
+            }
+          } else {
+            this.inventory = JSON.parse(JSON.stringify(this.defaultDataset));
+          }
+
+          if (localOrigins) {
+            try {
+              this.origins = JSON.parse(localOrigins);
+            } catch(e) {}
+          }
+        },
+
+        saveData() {
+          localStorage.setItem('sweet_fruit_inventory', JSON.stringify(this.inventory));
+          localStorage.setItem('sweet_fruit_origins', JSON.stringify(this.origins));
+        },
+
+        showNotification(message, type = 'success') {
+          this.toast.message = message;
+          this.toast.type = type;
+          this.toast.show = true;
+          setTimeout(() => { this.toast.show = false; }, 3000);
+        },
+
+        toggleStar(item) {
+          item.isFavorite = !item.isFavorite;
+          this.saveData();
+          this.showNotification(item.isFavorite ? `已標記「${item.name}」為常叫貨` : `已取消標記「${item.name}」`, 'info');
+        },
+
+        matchesFilter(item) {
+          const q = this.searchQuery.toLowerCase();
+          const matchesSearch = item.name.toLowerCase().includes(q) ||
+                                item.origin.toLowerCase().includes(q) ||
+                                (item.spec && item.spec.toLowerCase().includes(q));
+          const matchesStar = this.filterStarOnly ? item.isFavorite : true;
+          const matchesLowStock = this.filterLowStockOnly ? (item.stock <= item.safetyStock) : true;
+
+          return matchesSearch && matchesStar && matchesLowStock;
+        },
+
+        getDomesticItems() {
+          return this.inventory.filter(i => i.category === '國產');
+        },
+
+        getImportedItems() {
+          return this.inventory.filter(i => i.category === '進口');
+        },
+
+        getImportedCountries() {
+          const importedOrigins = this.getImportedItems().map(i => i.origin);
+          return [...new Set(importedOrigins)];
+        },
+
+        getItemsByCountry(country) {
+          return this.inventory.filter(i => i.category === '進口' && i.origin === country);
+        },
+
+        getCountryFlag(country) {
+          const flags = {
+            '台灣': '🇹🇼',
+            '日本': '🇯🇵',
+            '美國': '🇺🇸',
+            '紐西蘭': '🇳🇿',
+            '智利': '🇨🇱',
+            '澳洲': '🇦🇺',
+            '南非': '🇿🇦',
+            '韓國': '🇰🇷',
+            '泰國': '🇹🇭'
+          };
+          return flags[country] || '🌐';
+        },
+
+        openOriginModal() {
+          this.newOriginInput = '';
+          this.showOriginModal = true;
+        },
+
+        addNewOrigin() {
+          const val = this.newOriginInput.trim();
+          if (!val) return;
+          if (!this.origins.includes(val)) {
+            this.origins.push(val);
+            this.saveData();
+            this.showNotification(`已成功新增國家產地：「${val}」`);
+          }
+          this.newOriginInput = '';
+        },
+
+        removeOrigin(orig) {
+          if (orig === '台灣') return;
+          this.origins = this.origins.filter(o => o !== orig);
+          this.saveData();
+          this.showNotification(`已移除「${orig}」`, 'info');
+        },
+
+        openBatchModal() {
+          this.batchInputText = '';
+          this.showBatchModal = true;
+        },
+
+        // Advanced Multi-spec Batch Add Logic
+        processBatchAdd() {
+          if (!this.batchInputText.trim()) return;
+
+          const lines = this.batchInputText.split('\n').filter(l => l.trim().length > 0);
+          let count = 0;
+
+          lines.forEach(line => {
+            let text = line.trim();
+            if (!text) return;
+
+            let origin = '台灣';
+            for (let o of this.origins) {
+              if (o !== '台灣' && text.includes(o)) {
+                origin = o;
+                break;
+              }
+            }
+
+            let brandRemark = '';
+            const brandMatch = text.match(/(品牌[:：]\s*[\w\u4e00-\u9fa5]+)/i);
+            if (brandMatch) {
+              brandRemark = brandMatch[0].replace(/品牌[:：]\s*/i, '');
+              text = text.replace(brandMatch[0], '');
+            }
+
+            text = text.replace(/規格[:：]/g, '');
+
+            const parts = text.split(/\s+/);
+            let name = parts[0];
+            let specPart = parts.slice(1).join(' ').replace(origin, '').trim();
+
+            if (!specPart) {
+              this.inventory.unshift({
+                id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+                name: name,
+                origin: origin,
+                category: origin === '台灣' ? '國產' : '進口',
+                spec: brandRemark ? `品牌:${brandRemark}` : '標準規格',
+                stock: 0,
+                safetyStock: 0,
+                isFavorite: false,
+                inOrder: false,
+                orderBox: 1,
+                orderWeight: 0,
+                orderRemark: ''
+              });
+              count++;
+              return;
+            }
+
+            let specs = [];
+            
+            if (specPart.includes(',') || specPart.includes('，') || specPart.includes('/') || specPart.includes(' ')) {
+              const rawSpecs = specPart.split(/[,，/ ]+/).filter(s => s.trim().length > 0);
+              
+              let suffix = '';
+              const lastWord = rawSpecs[rawSpecs.length - 1];
+              if (['尺寸', '號', '規格', '級', '入'].includes(lastWord)) {
+                suffix = rawSpecs.pop();
+              }
+
+              rawSpecs.forEach(s => {
+                let cleanSpec = s.trim();
+                if (suffix && !cleanSpec.endsWith(suffix)) {
+                  cleanSpec += suffix;
+                }
+                if (brandRemark) {
+                  cleanSpec = `${cleanSpec} (${brandRemark})`;
+                }
+                specs.push(cleanSpec);
+              });
+            } else {
+              specs.push(brandRemark ? `${specPart} (${brandRemark})` : specPart);
+            }
+
+            specs.forEach(s => {
+              this.inventory.unshift({
+                id: Date.now().toString() + Math.random().toString(36).substring(2, 6),
+                name: name,
+                origin: origin,
+                category: origin === '台灣' ? '國產' : '進口',
+                spec: s,
+                stock: 0,
+                safetyStock: 0,
+                isFavorite: false,
+                inOrder: false,
+                orderBox: 1,
+                orderWeight: 0,
+                orderRemark: ''
+              });
+              count++;
+            });
+          });
+
+          this.saveData();
+          this.showBatchModal = false;
+          this.showNotification(`已自動拆解並匯入 ${count} 個規格品項！`);
+        },
+
+        addToOrder(item) {
+          item.inOrder = true;
+          if (!item.orderBox || item.orderBox === 0) item.orderBox = 1;
+          this.saveData();
+          this.showNotification(`已將「${item.name}」加入叫貨清單！`);
+        },
+
+        removeFromOrder(item) {
+          item.inOrder = false;
+          this.saveData();
+          this.showNotification(`已將「${item.name}」移出叫貨清單`, 'info');
+        },
+
+        clearAllOrders() {
+          if (confirm('確定要清空所有叫貨清單嗎？')) {
+            this.inventory.forEach(i => i.inOrder = false);
+            this.saveData();
+            this.showNotification('叫貨清單已完全清空！', 'info');
+          }
+        },
+
+        get orderedItems() {
+          return this.inventory.filter(i => i.inOrder);
+        },
+
+        get orderedItemsCount() {
+          return this.orderedItems.length;
+        },
+
+        get domesticOrderedItems() {
+          return this.orderedItems.filter(i => i.category === '國產');
+        },
+
+        get importedOrderedItems() {
+          return this.orderedItems.filter(i => i.category === '進口');
+        },
+
+        get currentDateFormatted() {
+          const today = new Date();
+          return `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+        },
+
+        adjustStock(item, delta) {
+          item.stock = Math.max(0, (item.stock || 0) + delta);
+          this.saveData();
+        },
+
+        adjustOrderBox(item, delta) {
+          item.orderBox = Math.max(0, (item.orderBox || 0) + delta);
+          this.saveData();
+        },
+
+        adjustOrderWeight(item, delta) {
+          item.orderWeight = Math.max(0, (item.orderWeight || 0) + delta);
+          this.saveData();
+        },
+
+        openAddItemModal() {
+          this.isEditing = false;
+          this.editingId = null;
+          this.itemForm = { name: '', origin: '台灣', category: '國產', spec: '', stock: 0, safetyStock: 0, isFavorite: false };
+          this.showItemModal = true;
+        },
+
+        editItem(item) {
+          this.isEditing = true;
+          this.editingId = item.id;
+          this.itemForm = { ...item };
+          this.showItemModal = true;
+        },
+
+        deleteItem(item) {
+          if (confirm(`確定要刪除「${item.name}」嗎？`)) {
+            this.inventory = this.inventory.filter(i => i.id !== item.id);
+            this.saveData();
+            this.showNotification(`已刪除「${item.name}」`, 'info');
+          }
+        },
+
+        onOriginChange() {
+          this.itemForm.category = (this.itemForm.origin === '台灣') ? '國產' : '進口';
+        },
+
+        saveItemForm() {
+          if (!this.itemForm.name.trim()) return;
+
+          if (this.isEditing) {
+            const index = this.inventory.findIndex(i => i.id === this.editingId);
+            if (index !== -1) {
+              this.inventory[index] = { ...this.inventory[index], ...this.itemForm };
+            }
+          } else {
+            this.inventory.unshift({
+              id: Date.now().toString(),
+              ...this.itemForm,
+              inOrder: false,
+              orderBox: 1,
+              orderWeight: 0,
+              orderRemark: ''
+            });
+          }
+
+          this.saveData();
+          this.showItemModal = false;
+          this.showNotification('儲存成功！');
+        },
+
+        resetDataToDefault() {
+          this.inventory = [];
+          this.saveData();
+          this.showResetConfirm = false;
+          this.showNotification('已成功清空所有庫存資料！', 'warning');
+        },
+
+        exportBackupData() {
+          const exportObject = {
+            version: '1.0',
+            exportDate: new Date().toISOString(),
+            origins: this.origins,
+            inventory: this.inventory
+          };
+
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObject, null, 2));
+          const downloadAnchor = document.createElement('a');
+          downloadAnchor.setAttribute("href", dataStr);
+          downloadAnchor.setAttribute("download", `甜蜜果物庫存盤點備份_${new Date().toISOString().slice(0,10)}.json`);
+          document.body.appendChild(downloadAnchor);
+          downloadAnchor.click();
+          downloadAnchor.remove();
+
+          this.showNotification('已成功匯出庫存與產地資料！');
+        },
+
+        importBackupData(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const imported = JSON.parse(e.target.result);
+              if (imported && Array.isArray(imported.inventory)) {
+                this.inventory = imported.inventory;
+                if (Array.isArray(imported.origins)) {
+                  this.origins = imported.origins;
+                }
+                this.saveData();
+                this.showNotification('成功匯入備份資料！', 'success');
+              } else {
+                this.showNotification('匯入失敗：檔案格式不正確！', 'error');
+              }
+            } catch (err) {
+              console.error(err);
+              this.showNotification('匯入失敗：JSON 格式讀取錯誤！', 'error');
+            }
+            event.target.value = '';
+          };
+          reader.readAsText(file);
+        },
+
+        copyOrderText() {
+          if (this.orderedItems.length === 0) return;
+
+          let text = `📦 【甜蜜果物鮮果採購單】 ${this.currentDateFormatted}\n`;
+          text += `-----------------------------------\n`;
+
+          if (this.domesticOrderedItems.length > 0) {
+            text += `🇹🇼 【國產水果】\n`;
+            this.domesticOrderedItems.forEach(i => {
+              text += `• ${i.name} : ${i.orderBox || 1}箱`;
+              if (i.orderWeight > 0) text += ` (${i.orderWeight}斤)`;
+              if (i.orderRemark) text += ` [${i.orderRemark}]`;
+              text += `\n`;
+            });
+            text += `\n`;
+          }
+
+          if (this.importedOrderedItems.length > 0) {
+            text += `✈️ 【進口水果】\n`;
+            this.importedOrderedItems.forEach(i => {
+              text += `• ${i.name} (${i.origin}) : ${i.orderBox || 1}箱`;
+              if (i.orderWeight > 0) text += ` (${i.orderWeight}斤)`;
+              if (i.orderRemark) text += ` [${i.orderRemark}]`;
+              text += `\n`;
+            });
+          }
+
+          text += `-----------------------------------\n`;
+          text += `請安排發貨，謝謝！`;
+
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+
+          this.showNotification('採購訊息已成功複製！');
+        },
+
+        async exportToPDF() {
+          if (this.orderedItems.length === 0) return;
+
+          this.showNotification('正在生成 A4 雙欄對照單 PDF...', 'info');
+
+          const targetEl = document.getElementById('printable-purchase-order');
+          if (!targetEl) return;
+
+          try {
+            const canvas = await html2canvas(targetEl, {
+              scale: 2,
+              useCORS: true,
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const imgWidth = pdfWidth - 20;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            const xOffset = (pdfWidth - imgWidth) / 2;
+
+            pdf.addImage(imgData, 'JPEG', xOffset, 15, imgWidth, imgHeight);
+            pdf.save(`甜蜜果物鮮果採購對照單_${new Date().toISOString().slice(0,10)}.pdf`);
+
+            this.showNotification('PDF 下載成功！');
+          } catch (err) {
+            console.error('PDF Generation Error:', err);
+            this.showNotification('PDF 生成失敗，改開啟系統列印', 'warning');
+            window.print();
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
