@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>戰鬥陀螺大賽賽事管理系統</title>
+    <title>戰鬥陀螺大賽賽事管理系統 (雲端即時同步版)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts: Inter & Orbitron -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Firebase App & Realtime Database SDK (v8 Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -36,6 +41,7 @@
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
         .glow-gold { text-shadow: 0 0 12px rgba(251, 191, 36, 0.6); }
         .glow-blue { text-shadow: 0 0 12px rgba(56, 189, 248, 0.6); }
+        [x-cloak] { display: none !important; }
     </style>
 </head>
 <body class="bg-bey-dark text-slate-100 font-sans min-h-screen flex flex-col selection:bg-bey-accent selection:text-bey-dark">
@@ -58,26 +64,41 @@
                     <i class="fa-solid fa-burst text-bey-dark text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="font-orbitron font-black tracking-wider text-base sm:text-lg bg-gradient-to-r from-white via-slate-200 to-bey-gold bg-clip-text text-transparent">BEYBLADE X</h1>
-                    <p class="text-[10px] text-slate-400 font-orbitron tracking-widest uppercase">陀螺賽事管理系統</p>
+                    <h1 class="font-orbitron font-black tracking-wider text-base sm:text-lg bg-gradient-to-r from-white via-slate-200 to-bey-gold bg-clip-text text-transparent flex items-center gap-2">
+                        BEYBLADE X
+                        <!-- 雲端連線狀態指示燈 -->
+                        <span id="cloud-status-badge" class="text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 bg-amber-500 text-slate-950 shadow-2xs font-sans">
+                            <i class="fa-solid fa-cloud-slash text-[10px]"></i>
+                            <span id="cloud-status-text">本機模式</span>
+                        </span>
+                    </h1>
+                    <p class="text-[10px] text-slate-400 font-orbitron tracking-widest uppercase">陀螺賽事管理系統 (雲端即時同步)</p>
                 </div>
             </div>
 
-            <!-- Page Navigation Tabs -->
-            <nav class="flex items-center space-x-1 sm:space-x-2 bg-bey-dark/80 p-1.5 rounded-xl border border-bey-border">
-                <button onclick="switchTab('A')" id="navA" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 bg-bey-accent text-bey-dark shadow-md">
-                    <i class="fa-solid fa-users"></i><span>A 選手管理</span>
+            <!-- Header Utilities & Page Nav -->
+            <div class="flex items-center space-x-2">
+                <!-- 雲端設定按鈕 -->
+                <button onclick="openCloudModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-bey-accent font-bold text-xs rounded-xl transition-all flex items-center space-x-1.5 shadow-md">
+                    <i class="fa-solid fa-cloud"></i><span>雲端設定</span>
                 </button>
-                <button onclick="switchTab('B')" id="navB" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-shuffle"></i><span>B 抽籤分組</span>
-                </button>
-                <button onclick="switchTab('C')" id="navC" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-sitemap"></i><span>C 淘汰樹狀</span>
-                </button>
-                <button onclick="switchTab('D')" id="navD" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-trophy"></i><span>D 決賽循環</span>
-                </button>
-            </nav>
+
+                <!-- Page Navigation Tabs -->
+                <nav class="flex items-center space-x-1 sm:space-x-2 bg-bey-dark/80 p-1.5 rounded-xl border border-bey-border">
+                    <button onclick="switchTab('A')" id="navA" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 bg-bey-accent text-bey-dark shadow-md">
+                        <i class="fa-solid fa-users"></i><span>A 選手管理</span>
+                    </button>
+                    <button onclick="switchTab('B')" id="navB" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-shuffle"></i><span>B 抽籤分組</span>
+                    </button>
+                    <button onclick="switchTab('C')" id="navC" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-sitemap"></i><span>C 淘汰樹狀</span>
+                    </button>
+                    <button onclick="switchTab('D')" id="navD" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-trophy"></i><span>D 決賽循環</span>
+                    </button>
+                </nav>
+            </div>
         </div>
     </header>
 
@@ -311,6 +332,31 @@
 
     </main>
 
+    <!-- ==================== CLOUD SETTINGS MODAL ==================== -->
+    <div id="cloudModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-bey-card border border-bey-border rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-bey-border pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2 font-orbitron">
+                    <i class="fa-solid fa-cloud text-bey-accent"></i> Firebase 即時雲端同步設定
+                </h3>
+                <button onclick="closeCloudModal()" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-400">請貼上從 Firebase 專案設定中複製的 JSON 設定碼。設定完成後，不同裝置開啟此網頁即可自動雙向同步賽事資料。</p>
+            <div>
+                <label class="block font-bold text-slate-300 mb-1.5 text-xs">Firebase Config (JSON 格式)</label>
+                <textarea id="cloudConfigText" rows="6" placeholder='{
+  "apiKey": "...",
+  "databaseURL": "https://...",
+  "projectId": "..."
+}' class="w-full bg-bey-dark border border-bey-border rounded-xl p-3 font-mono text-xs text-slate-200 focus:outline-none focus:border-bey-accent"></textarea>
+            </div>
+            <div class="flex justify-end gap-2.5 pt-3 border-t border-bey-border">
+                <button onclick="closeCloudModal()" class="px-4 py-2 border border-bey-border rounded-xl font-bold text-xs text-slate-400 hover:text-white">取消</button>
+                <button onclick="saveCloudConfig()" class="px-5 py-2 bg-bey-accent text-bey-dark rounded-xl font-bold text-xs shadow-md hover:bg-sky-400">儲存並連線</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== C Page Match Scoring Modal (iPad Optimized) ==================== -->
     <div id="matchModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-bey-card border border-bey-border rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
@@ -415,7 +461,7 @@
         </div>
     </div>
 
-    <!-- Application Script -->
+    <!-- Application Script with Firebase Sync -->
     <script>
         // Global State
         let players = [];
@@ -427,15 +473,86 @@
         let activeDModalIdx = null;
         let activeFaults = { p1: 0, p2: 0 };
 
+        let isCloudConnected = false;
+        let cloudConfigText = localStorage.getItem('bey_cloud_config') || '';
+
         // Initialize on load
         window.onload = function() {
+            document.getElementById('cloudConfigText').value = cloudConfigText;
             loadAllFromStorage();
+            initFirebase();
             renderPlayerTable();
             updatePageBUI();
             renderAssignedSeeds();
             renderBracketTree();
             renderTop3Section();
         };
+
+        function initFirebase() {
+            if (!cloudConfigText.trim()) return;
+            try {
+                let config = JSON.parse(cloudConfigText);
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(config);
+                }
+                const dbRef = firebase.database().ref('beybladeTournamentData');
+                
+                dbRef.on('value', (snapshot) => {
+                    const cloudData = snapshot.val();
+                    if (cloudData) {
+                        if (cloudData.players) players = cloudData.players;
+                        if (cloudData.tournamentSize !== undefined) tournamentSize = cloudData.tournamentSize;
+                        if (cloudData.assignedSeeds) assignedSeeds = cloudData.assignedSeeds;
+                        if (cloudData.bracketData) bracketData = cloudData.bracketData;
+                        if (cloudData.top3Data) top3Data = cloudData.top3Data;
+
+                        saveAllToStorage(false); // Update local storage without looping cloud push
+                        renderPlayerTable();
+                        updatePageBUI();
+                        renderAssignedSeeds();
+                        renderBracketTree();
+                        renderTop3Section();
+                    }
+                    isCloudConnected = true;
+                    updateCloudStatusUI(true);
+                });
+            } catch (e) {
+                console.error('Firebase 連線失敗:', e);
+                isCloudConnected = false;
+                updateCloudStatusUI(false);
+            }
+        }
+
+        function updateCloudStatusUI(connected) {
+            const badge = document.getElementById('cloud-status-badge');
+            const text = document.getElementById('cloud-status-text');
+            if (connected) {
+                badge.className = "text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 bg-emerald-500 text-slate-950 shadow-2xs font-sans";
+                text.innerText = "雲端即時連線中";
+                badge.querySelector('i').className = "fa-solid fa-cloud text-[10px]";
+            } else {
+                badge.className = "text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 bg-amber-500 text-slate-950 shadow-2xs font-sans";
+                text.innerText = "本機模式";
+                badge.querySelector('i').className = "fa-solid fa-cloud-slash text-[10px]";
+            }
+        }
+
+        function openCloudModal() {
+            document.getElementById('cloudModal').classList.remove('hidden');
+        }
+
+        function closeCloudModal() {
+            document.getElementById('cloudModal').classList.add('hidden');
+        }
+
+        function saveCloudConfig() {
+            const val = document.getElementById('cloudConfigText').value.trim();
+            localStorage.setItem('bey_cloud_config', val);
+            cloudConfigText = val;
+            closeCloudModal();
+            initFirebase();
+            showToast('雲端設定已儲存並重新連線！');
+        }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
@@ -459,13 +576,24 @@
             if (tabId === 'D') renderTop3Section();
         }
 
-        // --- Storage Management ---
-        function saveAllToStorage() {
+        // --- Storage Management & Cloud Sync ---
+        function saveAllToStorage(pushToCloud = true) {
+            const payload = {
+                players,
+                tournamentSize,
+                assignedSeeds,
+                bracketData,
+                top3Data
+            };
             localStorage.setItem('bey_players', JSON.stringify(players));
             localStorage.setItem('bey_size', JSON.stringify(tournamentSize));
             localStorage.setItem('bey_seeds', JSON.stringify(assignedSeeds));
             localStorage.setItem('bey_bracket', JSON.stringify(bracketData));
             localStorage.setItem('bey_top3', JSON.stringify(top3Data));
+
+            if (pushToCloud && isCloudConnected && firebase.apps.length) {
+                firebase.database().ref('beybladeTournamentData').set(payload);
+            }
         }
 
         function loadAllFromStorage() {
@@ -773,7 +901,7 @@
                     if (m2) nextRound[i].p2 = m2.winner || { name: 'TBD' };
                 }
             }
-            saveAllToStorage();
+            saveAllToStorage(false);
         }
 
         function getPlayerPaymentTag(playerObj) {
