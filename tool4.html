@@ -213,6 +213,125 @@
     <!-- TAB 1: INVENTORY MANAGEMENT -->
     <div x-show="currentTab === 'inventory'" class="space-y-6">
       
+      <!-- FAVORITE / CONSTANT ORDER SECTION (常叫貨分類專區) -->
+      <div x-show="getFavoriteItems().length > 0 && !searchQuery" 
+           class="rounded-2xl border p-4 sm:p-5 transition-all space-y-4 bg-amber-50/70 border-amber-300 shadow-xs">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-amber-300 pb-3">
+          <div class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-bold shadow-xs text-white bg-amber-500">
+              <i class="fa-solid fa-star"></i>
+            </span>
+            <div>
+              <h2 class="text-sm sm:text-base font-bold tracking-tight flex items-center gap-2.5 text-amber-950">
+                <span>常叫貨分類</span>
+                <span class="text-xs font-semibold opacity-75" x-text="'(' + getFavoriteItems().length + ' 品項)'"></span>
+              </h2>
+              <p class="text-xs opacity-70 mt-0.5 text-amber-900">所有加星號的常用包材快速檢視</p>
+            </div>
+          </div>
+
+          <span class="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-amber-200 text-amber-900">常叫貨專區</span>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+          <template x-for="item in getFavoriteItems()" :key="'fav-' + item.id">
+            <div 
+              class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group bg-amber-100/70 border-amber-300 hover:border-amber-500"
+              :class="item.currentStock <= item.safetyStock ? 'border-amber-500 ring-2 ring-amber-400' : ''">
+              
+              <div>
+                <!-- Top Row -->
+                <div class="flex items-start justify-between gap-1 mb-1.5">
+                  <button 
+                    @click="toggleFavorite(item)" 
+                    class="touch-btn p-1 text-lg focus:outline-none transition transform active:scale-125"
+                    title="取消常叫標記">
+                    <i class="fa-solid fa-star text-amber-500 fill-amber-500"></i>
+                  </button>
+
+                  <div class="flex-1 px-1">
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2" x-text="item.name"></h3>
+                    <p class="text-xs text-slate-600 font-semibold mt-1" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></p>
+                  </div>
+
+                  <!-- Edit & Delete Action Group -->
+                  <div class="flex items-center gap-0.5">
+                    <button 
+                      @click="openEditModal(item)" 
+                      class="touch-btn text-slate-400 hover:text-teal-600 text-xs p-1.5 transition"
+                      title="編輯此品項">
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button 
+                      @click="deleteItem(item.id)" 
+                      class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5 transition"
+                      title="刪除此品項">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Low Stock Warning Badge -->
+                <div x-show="item.currentStock <= item.safetyStock" class="mb-2">
+                  <span class="bg-amber-200 text-amber-900 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 w-max">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-700"></i> 低於安全庫存
+                  </span>
+                </div>
+
+                <!-- Stock Counter & Unit Selector -->
+                <div class="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-amber-200/80 flex flex-col gap-2 my-2.5">
+                  <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
+                    <span>現有庫存</span>
+                    <select 
+                      x-model="item.unit" 
+                      @change="saveInventory()" 
+                      class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-teal-500 font-bold shadow-2xs">
+                      <option value="個">個</option>
+                      <option value="包">包</option>
+                      <option value="瓶">瓶</option>
+                      <option value="箱">箱</option>
+                    </select>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-2 mt-0.5">
+                    <button @click="updateStock(item, -1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">-</button>
+                    
+                    <input 
+                      type="number" 
+                      inputmode="numeric"
+                      :value="item.currentStock ?? 0"
+                      @input="item.currentStock = $event.target.value === '' ? 0 : Math.max(0, parseInt($event.target.value) || 0); saveInventory()"
+                      @blur="if (item.currentStock === '' || isNaN(item.currentStock)) item.currentStock = 0; saveInventory()"
+                      class="w-16 h-11 text-center text-base sm:text-lg font-black bg-white border-2 border-amber-500 rounded-xl shadow-inner text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-600 transition">
+                      
+                    <button @click="updateStock(item, 1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Action: Add to Order List -->
+              <div class="pt-2 mt-1 border-t border-amber-200/60 flex items-center justify-between gap-1">
+                <div class="text-xs text-slate-600 font-medium">
+                  廠商: <span class="font-bold text-amber-950" x-text="item.origin"></span>
+                </div>
+
+                <button 
+                  @click="addToOrder(item)" 
+                  :class="isItemOrdered(item.id) ? 'bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white' : 'bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white border border-teal-800'"
+                  class="touch-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs">
+                  <i class="fa-solid text-sm" :class="isItemOrdered(item.id) ? 'fa-check' : 'fa-plus'"></i>
+                  <span x-text="isItemOrdered(item.id) ? '已叫貨' : '+ 叫貨'"></span>
+                </button>
+              </div>
+
+            </div>
+          </template>
+        </div>
+      </div>
+
       <!-- SUPPLIER SECTIONS WITH DISTINCT COLOR THEMING -->
       <template x-for="supplier in suppliers" :key="supplier">
         <div x-show="getFilteredItemsBySupplier(supplier).length > 0 || !searchQuery" 
@@ -243,7 +362,7 @@
             <span class="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider" :class="getSupplierTagStyle(supplier)" x-text="supplier"></span>
           </div>
 
-          <!-- Inventory Cards Grid (Mobile: 2 cols / Tablet: 3-4 cols / Desktop: 5 cols) -->
+          <!-- Inventory Cards Grid -->
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             <template x-for="item in getFilteredItemsBySupplier(supplier)" :key="item.id">
               <div 
@@ -254,11 +373,11 @@
                 ]">
                 
                 <div>
-                  <!-- Top Row: Favorite Star & Name & Unit Selector & Delete Button -->
-                  <div class="flex items-start justify-between gap-1.5 mb-1.5">
+                  <!-- Top Row: Favorite Star & Name & Edit / Delete Buttons -->
+                  <div class="flex items-start justify-between gap-1 mb-1.5">
                     <button 
                       @click="toggleFavorite(item)" 
-                      class="touch-btn p-1.5 text-lg focus:outline-none transition transform active:scale-125"
+                      class="touch-btn p-1 text-lg focus:outline-none transition transform active:scale-125"
                       title="標記為常叫包材">
                       <i class="fa-solid fa-star" :class="item.isFavorite ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-300'"></i>
                     </button>
@@ -268,13 +387,21 @@
                       <p class="text-xs text-slate-600 font-semibold mt-1" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></p>
                     </div>
 
-                    <!-- Delete Single Item Button -->
-                    <button 
-                      @click="deleteItem(item.id)" 
-                      class="touch-btn text-slate-300 hover:text-rose-500 text-sm p-1.5 transition"
-                      title="刪除此品項">
-                      <i class="fa-solid fa-trash"></i>
-                    </button>
+                    <!-- Edit & Delete Action Group -->
+                    <div class="flex items-center gap-0.5">
+                      <button 
+                        @click="openEditModal(item)" 
+                        class="touch-btn text-slate-400 hover:text-teal-600 text-xs p-1.5 transition"
+                        title="編輯此品項">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </button>
+                      <button 
+                        @click="deleteItem(item.id)" 
+                        class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5 transition"
+                        title="刪除此品項">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </div>
                   </div>
 
                   <!-- Low Stock Warning Badge -->
@@ -284,7 +411,7 @@
                     </span>
                   </div>
 
-                  <!-- Stock Counter & Unit Selector (放大按鈕區塊) -->
+                  <!-- Stock Counter & Unit Selector -->
                   <div class="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-slate-200/80 flex flex-col gap-2 my-2.5">
                     <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
                       <span>現有庫存</span>
@@ -301,10 +428,9 @@
                     </div>
 
                     <div class="flex items-center justify-between gap-2 mt-0.5">
-                      <!-- 調整後的放大減號按鈕 -->
                       <button @click="updateStock(item, -1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">-</button>
                       
-                      <!-- 明顯且突出的庫存數字輸入框 -->
+                      <!-- 庫存數字輸入框 -->
                       <input 
                         type="number" 
                         inputmode="numeric"
@@ -313,7 +439,6 @@
                         @blur="if (item.currentStock === '' || isNaN(item.currentStock)) item.currentStock = 0; saveInventory()"
                         class="w-16 h-11 text-center text-base sm:text-lg font-black bg-white border-2 border-teal-500 rounded-xl shadow-inner text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-600 transition">
                         
-                      <!-- 調整後的放大加號按鈕 -->
                       <button @click="updateStock(item, 1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">+</button>
                     </div>
                   </div>
@@ -460,7 +585,7 @@
                         x-text="getOrderedItemsBySupplier(supplier).length + ' 項品項'"></span>
                 </div>
 
-                <!-- Supplier Form Table (Overflow-x for mobile) -->
+                <!-- Supplier Form Table -->
                 <div class="p-3.5 overflow-x-auto">
                   <table class="w-full text-left text-sm border-collapse whitespace-nowrap">
                     <thead>
@@ -481,7 +606,7 @@
                             <div class="text-xs text-slate-600 font-semibold mt-0.5" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></div>
                           </td>
                           
-                          <!-- Order Quantity Input & Unit Selector (叫貨單內的 +- 按鈕同步放大) -->
+                          <!-- Order Quantity Input & Unit Selector -->
                           <td class="py-3 px-2 align-middle">
                             <div class="flex items-center gap-2 flex-wrap">
                               <div class="inline-flex items-center bg-white border-2 border-slate-300 rounded-xl shadow-xs p-1 gap-1">
@@ -692,7 +817,51 @@
     </div>
   </div>
 
-  <!-- MODAL 2: SUPPLIER MANAGEMENT -->
+  <!-- MODAL 2: EDIT SINGLE ITEM -->
+  <div x-show="showEditModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
+    <div @click.away="showEditModal = false" class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-teal-600 text-lg"></i> 編輯包材品項
+        </h3>
+        <button @click="showEditModal = false" class="touch-btn text-slate-400 hover:text-slate-600 p-2 text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-3.5 text-sm" x-data>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">品名</label>
+          <input type="text" x-model="editingItem.name" class="w-full p-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500 font-bold text-slate-900">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">規格描述</label>
+          <input type="text" x-model="editingItem.spec" placeholder="例如: 水果6入裝 / 48mm" class="w-full p-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500 font-medium text-slate-800">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">所屬廠商</label>
+            <select x-model="editingItem.origin" class="w-full p-3 border-2 border-slate-200 rounded-xl bg-white focus:outline-none font-bold text-slate-800">
+              <template x-for="sup in suppliers" :key="sup">
+                <option :value="sup" x-text="sup"></option>
+              </template>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">安全庫存預警</label>
+            <input type="number" min="0" x-model.number="editingItem.safetyStock" class="w-full p-3 border-2 border-slate-200 rounded-xl focus:outline-none font-bold text-slate-900 text-center">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+        <button @click="showEditModal = false" class="touch-btn px-4.5 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50">取消</button>
+        <button @click="saveEditedItem()" class="touch-btn px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold shadow-xs">儲存變更</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: SUPPLIER MANAGEMENT -->
   <div x-show="showSupplierModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
     <div @click.away="showSupplierModal = false" class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
       <div class="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -751,11 +920,20 @@
         favoriteFilterOnly: false,
         showBatchModal: false,
         showSupplierModal: false,
+        showEditModal: false,
 
         batchSupplier: '必堅',
         batchUnit: '個',
         batchInputText: '',
         newSupplierName: '',
+
+        editingItem: {
+          id: null,
+          name: '',
+          spec: '',
+          origin: '',
+          safetyStock: 5
+        },
 
         toast: {
           show: false,
@@ -840,6 +1018,15 @@
           }
         },
 
+        getFavoriteItems() {
+          return this.inventory.filter(item => {
+            const matchesSearch = !this.searchQuery || 
+              item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+              (item.spec && item.spec.toLowerCase().includes(this.searchQuery.toLowerCase()));
+            return item.isFavorite && matchesSearch;
+          });
+        },
+
         getFilteredItemsBySupplier(supplier) {
           return this.inventory.filter(item => {
             const matchesSupplier = item.origin === supplier;
@@ -855,6 +1042,30 @@
         updateStock(item, delta) {
           item.currentStock = Math.max(0, item.currentStock + delta);
           this.saveInventory();
+        },
+
+        openEditModal(item) {
+          this.editingItem = {
+            id: item.id,
+            name: item.name,
+            spec: item.spec || '',
+            origin: item.origin,
+            safetyStock: item.safetyStock ?? 5
+          };
+          this.showEditModal = true;
+        },
+
+        saveEditedItem() {
+          const item = this.inventory.find(i => i.id === this.editingItem.id);
+          if (item) {
+            item.name = this.editingItem.name.trim();
+            item.spec = this.editingItem.spec.trim();
+            item.origin = this.editingItem.origin;
+            item.safetyStock = Math.max(0, parseInt(this.editingItem.safetyStock) || 0);
+            this.saveInventory();
+            this.showEditModal = false;
+            this.showToast('品項資料更新成功');
+          }
         },
 
         toggleFavorite(item) {
@@ -1009,15 +1220,21 @@
         },
 
         exportData() {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const day = String(now.getDate()).padStart(2, '0');
+          const fileName = `${year}-${month}-${day}包材資料.json`;
+
           const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
             inventory: this.inventory,
             suppliers: this.suppliers
           }, null, 2));
           const dlAnchorElem = document.createElement('a');
           dlAnchorElem.setAttribute("href", dataStr);
-          dlAnchorElem.setAttribute("download", `pkg_inventory_backup_${new Date().toISOString().slice(0,10)}.json`);
+          dlAnchorElem.setAttribute("download", fileName);
           dlAnchorElem.click();
-          this.showToast('備份資料已順利下載');
+          this.showToast(`備份檔「${fileName}」已下載`);
         },
 
         importData(event) {
