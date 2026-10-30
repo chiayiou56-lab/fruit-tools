@@ -3,25 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>甜蜜果物 - 進貨與上車管理工具 (iPad 完美優化版)</title>
+  <title>甜蜜果物 - 進貨與上車管理系統 (雲端即時同步版)</title>
   
-  <!-- Tailwind CSS & Lucide Icons & html2pdf.js -->
+  <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
+  <!-- Firebase App & Realtime Database SDK (v8 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   
   <style>
     body {
       -webkit-tap-highlight-color: transparent;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
-    
-    /* 針對 iPad 觸控與互動優化 */
+    [x-cloak] { display: none !important; }
     button, select, input {
       touch-action: manipulation;
     }
 
-    /* 預防 PDF / 列印時表格被裁切 */
     @media print {
       html, body {
         width: 210mm;
@@ -70,7 +71,7 @@
 </head>
 <body class="bg-[#F4F9F5] text-slate-800 pb-16 antialiased">
 
-  <!-- 頂部導覽列 (iPad 優化) -->
+  <!-- 頂部導覽列 -->
   <header class="sticky top-0 z-30 bg-[#059669] text-white shadow-md backdrop-blur-md bg-opacity-95">
     <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
       <div class="flex items-center space-x-2.5">
@@ -78,11 +79,23 @@
           <i data-lucide="sprout" class="w-6 h-6 text-emerald-100"></i>
         </div>
         <div>
-          <h1 class="text-base sm:text-lg font-bold tracking-wide">甜蜜果物</h1>
-          <p class="text-[11px] text-emerald-100/80">進貨與上車管理工具 (iPad Pro 專用版)</p>
+          <h1 class="text-base sm:text-lg font-bold tracking-wide flex items-center gap-2">
+            甜蜜果物-進貨系統
+            <!-- 雲端連線狀態指示燈 -->
+            <span id="cloud-status-badge" class="text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 bg-amber-500 text-slate-950 shadow-2xs">
+              <i data-lucide="cloud-off" class="w-3 h-3"></i>
+              <span id="cloud-status-text">本機模式</span>
+            </span>
+          </h1>
+          <p class="text-[11px] text-emerald-100/80">進貨與上車管理工具 (支援即時雙向同步)</p>
         </div>
       </div>
       <div class="flex items-center space-x-2">
+        <!-- 雲端設定按鈕 -->
+        <button onclick="openCloudModal()" class="bg-emerald-800 hover:bg-emerald-900 text-emerald-200 text-xs sm:text-sm px-3 py-2 rounded-xl font-medium shadow-sm flex items-center space-x-1.5 transition">
+          <i data-lucide="cloud" class="w-4 h-4"></i>
+          <span>雲端設定</span>
+        </button>
         <a href="index.html" class="bg-emerald-700/80 hover:bg-emerald-800 text-white text-xs sm:text-sm px-3.5 py-2 rounded-xl font-medium shadow-sm flex items-center space-x-1.5 transition">
           <i data-lucide="home" class="w-4 h-4"></i>
           <span>回首頁</span>
@@ -104,43 +117,32 @@
         當日進貨統計總覽
       </h2>
       <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        
-        <!-- 總金額 -->
         <div class="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-3.5 shadow-2xs">
           <div class="text-xs text-emerald-700 font-medium">總金額</div>
           <div class="text-xl sm:text-2xl font-black text-emerald-900 mt-1" id="stat-total-amount">$0</div>
         </div>
-
-        <!-- 總箱數 -->
         <div class="bg-sky-50/70 border border-sky-100 rounded-2xl p-3.5 shadow-2xs">
           <div class="text-xs text-sky-700 font-medium">總箱數</div>
           <div class="text-xl sm:text-2xl font-black text-sky-900 mt-1"><span id="stat-total-boxes">0</span> <span class="text-xs font-normal">箱</span></div>
         </div>
-
-        <!-- 已上車箱數 -->
         <div class="bg-teal-50/80 border border-teal-100 rounded-2xl p-3.5 shadow-2xs">
           <div class="text-xs text-teal-800 font-medium flex items-center gap-1">
             <span class="w-2 h-2 rounded-full bg-teal-500"></span>已上車箱數
           </div>
           <div class="text-xl sm:text-2xl font-black text-teal-900 mt-1"><span id="stat-loaded-boxes">0</span> <span class="text-xs font-normal">箱</span></div>
         </div>
-
-        <!-- 未上車箱數 -->
         <div class="bg-amber-50/80 border border-amber-100 rounded-2xl p-3.5 shadow-2xs">
           <div class="text-xs text-amber-800 font-medium flex items-center gap-1">
             <span class="w-2 h-2 rounded-full bg-amber-500"></span>未上車箱數
           </div>
           <div class="text-xl sm:text-2xl font-black text-amber-900 mt-1"><span id="stat-unloaded-boxes">0</span> <span class="text-xs font-normal">箱</span></div>
         </div>
-
-        <!-- 未付款金額 -->
         <div class="col-span-2 sm:col-span-1 bg-rose-50/80 border border-rose-100 rounded-2xl p-3.5 shadow-2xs">
           <div class="text-xs text-rose-700 font-medium flex items-center gap-1">
             <span class="w-2 h-2 rounded-full bg-rose-500"></span>未付款金額
           </div>
           <div class="text-xl sm:text-2xl font-black text-rose-600 mt-1" id="stat-unpaid-amount">$0</div>
         </div>
-
       </div>
     </section>
 
@@ -166,7 +168,7 @@
       </div>
     </div>
 
-    <!-- 2. 進貨明細主表格 (iPad 觸控優化) -->
+    <!-- 2. 進貨明細主表格 -->
     <section class="bg-white rounded-2xl shadow-xs border border-emerald-100 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
@@ -181,14 +183,12 @@
               <th class="py-3.5 px-4 text-center min-w-[80px]">操作</th>
             </tr>
           </thead>
-          <tbody id="inventory-table-body" class="divide-y divide-slate-100 text-sm">
-            <!-- 動態渲染 -->
-          </tbody>
+          <tbody id="inventory-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
         </table>
       </div>
     </section>
 
-    <!-- 3. A4 PDF 專用排版預覽區塊 (防裁切、完美適應 A4 比例) -->
+    <!-- 3. A4 PDF 專用排版預覽區塊 -->
     <section class="bg-white rounded-2xl p-5 shadow-xs border border-emerald-100 space-y-4">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div class="flex items-center gap-2">
@@ -203,11 +203,8 @@
         </button>
       </div>
 
-      <!-- 實際用來生成 PDF 的包裝容器 (嚴格控制寬度 210mm 內，杜絕裁切) -->
       <div class="flex justify-center bg-slate-100/80 p-4 rounded-xl overflow-x-auto">
         <div id="pdf-export-container" class="bg-white w-[210mm] p-6 shadow-lg text-slate-800 box-border flex flex-col space-y-3" style="width: 210mm;">
-          
-          <!-- PDF 頁首 -->
           <div>
             <div class="border-b-2 border-emerald-600 pb-2 mb-3 flex justify-between items-end">
               <div>
@@ -219,7 +216,6 @@
               </div>
             </div>
 
-            <!-- PDF 表格 -->
             <div class="border border-slate-200 rounded-xl overflow-hidden mb-3">
               <table class="w-full text-left border-collapse text-xs">
                 <thead>
@@ -231,14 +227,11 @@
                     <th class="py-2.5 px-3.5 text-center">付款狀態</th>
                   </tr>
                 </thead>
-                <tbody id="pdf-summary-table-body" class="divide-y divide-slate-100">
-                  <!-- 動態填入 -->
-                </tbody>
+                <tbody id="pdf-summary-table-body" class="divide-y divide-slate-100"></tbody>
               </table>
             </div>
           </div>
 
-          <!-- PDF 頁尾統計數據 -->
           <div class="space-y-4">
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
               <div class="font-bold text-slate-700 text-xs flex items-center gap-1.5 border-b border-slate-200 pb-2">
@@ -266,26 +259,41 @@
             </div>
 
             <div class="text-center text-[11px] text-slate-400 pt-2 border-t border-slate-100">
-              甜蜜果物管理系統 © 2026 | iPad 專用極致優化版 (支援無損 PDF 輸出)
+              甜蜜果物管理系統 © 2026 | 雲端即時同步版
             </div>
           </div>
-
         </div>
       </div>
     </section>
-
-    <!-- 資料清除與備份列 -->
-    <div class="flex justify-between items-center text-xs text-slate-400 px-2">
-      <span>資料已自動安全儲存於 iPad 本地記憶體 (LocalStorage)</span>
-      <button onclick="clearAllData()" class="text-rose-500 hover:text-rose-600 font-medium underline flex items-center gap-1">
-        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-        <span>清除所有紀錄</span>
-      </button>
-    </div>
-
   </main>
 
-  <!-- ==================== 新增/編輯 彈窗 (Modal) ==================== -->
+  <!-- ==================== 雲端設定彈窗 ==================== -->
+  <div id="cloud-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col p-6 space-y-4">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+          <i data-lucide="cloud" class="w-5 h-5 text-emerald-600"></i>
+          <span>Firebase 即時雲端同步設定</span>
+        </h3>
+        <button onclick="closeCloudModal()" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <p class="text-xs text-slate-500">請貼上您在 Firebase 專案中複製的 JSON 設定碼。設定後，PC 與 iPad 即可自動雙向同步進貨資料。</p>
+      <div>
+        <label class="block font-bold text-slate-700 mb-1 text-xs">Firebase Config (JSON 格式)</label>
+        <textarea id="cloud-config-textarea" rows="6" placeholder='{
+  "apiKey": "...",
+  "databaseURL": "https://...",
+  "projectId": "..."
+}' class="w-full p-3 border border-slate-200 rounded-xl font-mono text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t">
+        <button onclick="closeCloudModal()" class="px-4 py-2 border rounded-xl text-xs font-bold text-slate-600">取消</button>
+        <button onclick="saveCloudConfig()" class="px-5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-emerald-700">儲存並連線</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 新增/編輯 彈窗 ==================== -->
   <div id="item-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center hidden p-4">
     <div class="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
       <div class="px-5 py-4 bg-emerald-50 border-b border-emerald-100 flex justify-between items-center">
@@ -304,7 +312,7 @@
         <div class="grid grid-cols-2 gap-3.5">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">水果名稱 <span class="text-rose-500">*</span></label>
-            <input type="text" id="input-name" required placeholder="如：日本青森蘋果、愛文芒果" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50/50 text-slate-800 font-medium">
+            <input type="text" id="input-name" required placeholder="如：日本青森蘋果" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50/50 text-slate-800 font-medium">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">進貨商</label>
@@ -369,35 +377,87 @@
           { specName: '特大果 64顆', boxes: 3, unitVal: '64顆/箱', pricePerBox: 1200 },
           { specName: '大果 72顆', boxes: 2, unitVal: '72顆/箱', pricePerBox: 1100 }
         ]
-      },
-      {
-        id: '2',
-        name: '愛文芒果',
-        supplier: '大發果商',
-        status: 'unloaded',
-        payment: 'unpaid',
-        multiSpecs: [
-          { specName: '10斤裝', boxes: 5, unitVal: '10斤/箱', pricePerBox: 900 },
-          { specName: '12斤裝', boxes: 3, unitVal: '12斤/箱', pricePerBox: 850 }
-        ]
       }
     ];
 
     let items = [];
+    let isCloudConnected = false;
+    let cloudConfigText = localStorage.getItem('fruit_cloud_config') || '';
 
     window.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem('fruit_inventory_items_ipad_v10');
+      document.getElementById('cloud-config-textarea').value = cloudConfigText;
+      const saved = localStorage.getItem('fruit_inventory_items_cloud_v1');
       if (saved) {
         try { items = JSON.parse(saved); } catch (e) { items = [...defaultData]; }
       } else {
         items = [...defaultData];
       }
+      initFirebase();
       render();
-      if (window.lucide) { try { lucide.createIcons(); } catch(e) { console.warn("Lucide failed:", e); } }
     });
 
+    function initFirebase() {
+      if (!cloudConfigText.trim()) return;
+      try {
+        let config = JSON.parse(cloudConfigText);
+        if (!firebase.apps.length) {
+          firebase.initializeApp(config);
+        }
+        const dbRef = firebase.database().ref('importInventoryData');
+        
+        // 聆聽雲端即時雙向同步
+        dbRef.on('value', (snapshot) => {
+          const cloudData = snapshot.val();
+          if (cloudData) {
+            items = Array.isArray(cloudData) ? cloudData : Object.values(cloudData);
+            localStorage.setItem('fruit_inventory_items_cloud_v1', JSON.stringify(items));
+            render();
+          }
+          isCloudConnected = true;
+          updateCloudStatusUI(true);
+        });
+      } catch (e) {
+        console.error('Firebase 連線失敗:', e);
+        isCloudConnected = false;
+        updateCloudStatusUI(false);
+      }
+    }
+
+    function updateCloudStatusUI(connected) {
+      const badge = document.getElementById('cloud-status-badge');
+      const text = document.getElementById('cloud-status-text');
+      if (connected) {
+        badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 bg-emerald-500 text-slate-950 shadow-2xs";
+        text.innerText = "雲端即時連線中";
+      } else {
+        badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 bg-amber-500 text-slate-950 shadow-2xs";
+        text.innerText = "本機模式";
+      }
+    }
+
+    function openCloudModal() {
+      document.getElementById('cloud-modal').classList.remove('hidden');
+    }
+
+    function closeCloudModal() {
+      document.getElementById('cloud-modal').classList.add('hidden');
+    }
+
+    function saveCloudConfig() {
+      const val = document.getElementById('cloud-config-textarea').value.trim();
+      localStorage.setItem('fruit_cloud_config', val);
+      cloudConfigText = val;
+      closeCloudModal();
+      initFirebase();
+      alert('雲端設定已儲存並重新連線！');
+    }
+
     function saveData() {
-      localStorage.setItem('fruit_inventory_items_ipad_v10', JSON.stringify(items));
+      localStorage.setItem('fruit_inventory_items_cloud_v1', JSON.stringify(items));
+      // 自動同步推送到 Firebase
+      if (isCloudConnected && firebase.apps.length) {
+        firebase.database().ref('importInventoryData').set(items);
+      }
     }
 
     function render() {
@@ -581,13 +641,6 @@
       }
     }
 
-    function clearAllData() {
-      if (confirm('確定要清空所有進貨紀錄嗎？')) {
-        items = [];
-        render();
-      }
-    }
-
     function deleteItem(id) {
       if (confirm('確定要刪除此筆條目嗎？')) {
         items = items.filter(i => i.id !== id);
@@ -688,10 +741,8 @@
 
     function generateSummaryText() {
       if (items.length === 0) return '';
-
       let txt = `📦 【甜蜜果物 - 當日進貨與上車明細】\n`;
-      let totalB = 0;
-      let totalP = 0;
+      let totalB = 0, totalP = 0;
 
       items.forEach((item, index) => {
         const statusStr = item.status === 'loaded' ? '🟢已上車' : '🟠未上車';
@@ -699,7 +750,6 @@
         const supp = item.supplier ? ` (${item.supplier})` : '';
 
         txt += `\n${index + 1}. ${item.name}${supp} [${statusStr} / ${payStr}]\n`;
-        
         if (item.multiSpecs) {
           item.multiSpecs.forEach(s => {
             const subTotal = s.boxes * s.pricePerBox;
@@ -709,7 +759,6 @@
           });
         }
       });
-
       txt += `\n------------------\n📊 總計: ${totalB}箱 / 總金額 $${totalP.toLocaleString()}`;
       return txt;
     }
@@ -717,12 +766,7 @@
     function copyLineSummary() {
       const txt = generateSummaryText();
       if (!txt) return alert('目前沒有資料可複製');
-
-      navigator.clipboard.writeText(txt).then(() => {
-        alert('已成功複製 LINE 簡報文字！');
-      }).catch(() => {
-        alert('複製失敗');
-      });
+      navigator.clipboard.writeText(txt).then(() => { alert('已成功複製 LINE 簡報文字！'); });
     }
 
     function shareToLine() {
@@ -731,17 +775,13 @@
       window.open(`https://line.me/R/msg/text/?${encodeURIComponent(txt)}`, '_blank');
     }
 
-    // 使用 html2pdf.js 在 iPad 上完美生成 PDF 檔案下載，徹底解決表格被裁切的問題
     function downloadPdfDirect() {
       renderPdfSummary();
-      // 自動設定當日日期作為 PDF 檔名 (例如: 2026-10-30進貨單)
       const now = new Date();
       const y = now.getFullYear();
       const m = String(now.getMonth() + 1).padStart(2, '0');
       const d = String(now.getDate()).padStart(2, '0');
       document.title = `${y}-${m}-${d}進貨單`;
-      
-      // 呼叫原生列印/儲存 PDF
       window.print();
     }
   </script>
