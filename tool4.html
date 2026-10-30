@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-  <title>包裝材料採購對照單與庫存管理系統</title>
+  <title>包裝材料盤點與叫貨管理系統</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -96,7 +96,7 @@
           </div>
           <div>
             <h1 class="text-sm sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              甜蜜果物-包材即時同步系統
+              甜蜜果物-包材盤點/叫貨系統
               <!-- 雲端連線狀態指示燈 -->
               <span class="text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-2xs"
                     :class="isCloudConnected ? 'bg-emerald-500 text-slate-950' : 'bg-amber-500 text-slate-950'">
@@ -249,8 +249,8 @@
                   <div class="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-slate-200/80 flex flex-col gap-2 my-2.5">
                     <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
                       <span>現有庫存</span>
-                      <select x-model="item.unit" @change="saveInventory()" class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg px-2.5 py-1 focus:outline-none font-bold shadow-2xs">
-                        <option value="個">個</option><option value="包">包</option><option value="瓶">瓶</option><option value="箱">箱</option>
+                      <select x-model="item.unit" @change="saveInventory()" class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg px-2 py-1 focus:outline-none font-bold shadow-2xs">
+                        <option value="個">個</option><option value="包">包</option><option value="瓶">瓶</option><option value="箱">箱</option><option value="條">條</option><option value="支">支</option><option value="組">組</option>
                       </select>
                     </div>
                     <div class="flex items-center justify-between gap-2 mt-0.5">
@@ -310,7 +310,7 @@
                   <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
                     <span>現有庫存</span>
                     <select x-model="item.unit" @change="saveInventory()" class="bg-white border rounded-lg px-2.5 py-1 text-sm font-bold">
-                      <option value="個">個</option><option value="包">包</option><option value="瓶">瓶</option><option value="箱">箱</option>
+                      <option value="個">個</option><option value="包">包</option><option value="瓶">瓶</option><option value="箱">箱</option><option value="條">條</option><option value="支">支</option><option value="組">組</option>
                     </select>
                   </div>
                   <div class="flex items-center justify-between gap-2 mt-0.5">
@@ -334,60 +334,113 @@
 
     <!-- TAB 3: ORDER SHEET -->
     <div x-show="currentTab === 'order'" class="space-y-6">
-      <div class="bg-white p-4.5 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 class="text-base sm:text-lg font-bold text-slate-900">今日採購叫貨清單</h2>
-          <p class="text-xs sm:text-sm text-slate-600">已選取 <span x-text="orderedItems.length" class="font-bold text-teal-600"></span> 項包材</p>
+          <h2 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">今日採購叫貨清單</h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">已選取 <span x-text="orderedItems.length" class="font-extrabold text-teal-600"></span> 項包材，可直接調整數量與單位後匯出 PDF</p>
         </div>
-        <div class="flex items-center gap-2.5">
-          <button @click="clearOrderList()" x-show="orderedItems.length > 0" class="touch-btn bg-slate-100 text-slate-700 text-sm font-bold px-3.5 py-2 rounded-xl">清空</button>
-          <button @click="exportToPDF()" x-show="orderedItems.length > 0" class="touch-btn bg-teal-600 text-white text-sm font-bold px-4.5 py-2.5 rounded-xl shadow-xs"><i class="fa-solid fa-file-pdf mr-1.5"></i> 匯出 PDF</button>
+        <div class="flex items-center gap-3">
+          <button @click="clearOrderList()" x-show="orderedItems.length > 0" class="touch-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-2xl transition flex items-center gap-2 border border-slate-200 shadow-2xs">
+            <i class="fa-solid fa-trash-can text-slate-400"></i> 清空
+          </button>
+          <button @click="exportToPDF()" x-show="orderedItems.length > 0" class="touch-btn bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 active:scale-98 text-white text-sm font-bold px-5 py-2.5 rounded-2xl shadow-md shadow-teal-900/10 transition flex items-center gap-2">
+            <i class="fa-solid fa-file-pdf text-base"></i> 匯出 PDF
+          </button>
         </div>
       </div>
 
+      <div x-show="orderedItems.length === 0" class="bg-white rounded-3xl border border-slate-200/80 p-16 text-center text-slate-400 space-y-3 shadow-2xs">
+        <div class="w-16 h-16 bg-slate-50 rounded-2xl mx-auto flex items-center justify-center text-slate-300 text-2xl">
+          <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+        <p class="text-sm font-bold text-slate-600">目前沒有任何叫貨項目</p>
+        <p class="text-xs text-slate-400">請至「庫存」或「常叫貨」頁面點選「+ 叫貨」來加入採購單</p>
+      </div>
+
       <div x-show="orderedItems.length > 0" class="flex justify-center py-2">
-        <div id="printable-purchase-order" class="w-full max-w-[760px] bg-white p-5 rounded-2xl border shadow-sm space-y-6 text-sm">
-          <div class="text-center border-b pb-4">
-            <h1 class="text-lg font-bold text-slate-900">甜蜜果物 - 包裝材料採購對照單</h1>
-            <div class="text-xs text-slate-600 mt-1">日期：<span x-text="currentDateFormatted"></span></div>
+        <div id="printable-purchase-order" class="w-full max-w-[800px] bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-md space-y-6 text-sm">
+          
+          <!-- Header -->
+          <div class="text-center border-b border-slate-100 pb-5 space-y-1.5">
+            <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">甜蜜果物 - 包裝材料採購對照單</h1>
+            <div class="text-xs sm:text-sm text-slate-500 font-medium">
+              日期：<span x-text="currentDateFormatted" class="font-bold text-slate-800"></span> &nbsp;&nbsp;|&nbsp;&nbsp; 叫貨總品項：<span x-text="orderedItems.length" class="font-bold text-teal-600"></span> 項
+            </div>
           </div>
-          <div class="space-y-6">
+
+          <!-- Suppliers Grid with Color Variations for Clear Distinction -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <template x-for="supplier in activeOrderSuppliers" :key="supplier">
-              <div class="rounded-2xl border shadow-xs overflow-hidden bg-slate-50">
-                <div class="px-4.5 py-3 font-bold bg-slate-200 text-slate-900 flex justify-between items-center text-sm">
-                  <span x-text="supplier + ' 採購單'"></span>
-                </div>
-                <div class="p-3.5 overflow-x-auto">
-                  <table class="w-full text-left text-sm">
-                    <thead>
-                      <tr class="text-slate-600 border-b text-xs font-bold">
-                        <th class="pb-2.5 px-2">品名</th>
-                        <th class="pb-2.5 px-2">數量</th>
-                        <th class="pb-2.5 px-2">備註</th>
-                        <th class="pb-2.5 text-right px-2">操作</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y">
-                      <template x-for="item in getOrderedItemsBySupplier(supplier)" :key="item.id">
-                        <tr>
-                          <td class="py-3 px-2 font-bold" x-text="item.name"></td>
-                          <td class="py-3 px-2">
-                            <div class="inline-flex items-center border-2 rounded-xl p-1 gap-1">
-                              <button @click="item.orderWeight = Math.max(0, item.orderWeight - 1); saveInventory()" class="w-8 h-8 font-black">-</button>
-                              <input type="number" x-model.number="item.orderWeight" @input="saveInventory()" class="w-12 text-center font-black bg-transparent">
-                              <button @click="item.orderWeight = Math.max(0, item.orderWeight + 1); saveInventory()" class="w-8 h-8 font-black">+</button>
-                            </div>
-                          </td>
-                          <td class="py-3 px-2"><input type="text" x-model="item.orderRemark" @input="saveInventory()" placeholder="備註..." class="w-32 px-2 py-1 border rounded-lg"></td>
-                          <td class="py-3 px-2 text-right"><button @click="removeFromOrder(item.id)" class="text-rose-600"><i class="fa-solid fa-trash-can"></i></button></td>
+              <div class="rounded-2xl border shadow-2xs overflow-hidden flex flex-col justify-between"
+                   :class="getOrderSupplierBlockStyle(supplier)">
+                <div>
+                  <!-- Supplier Header Badge -->
+                  <div class="px-4 py-3 border-b flex items-center justify-between"
+                       :class="getOrderSupplierHeaderStyle(supplier)">
+                    <h3 class="font-bold flex items-center gap-2" :class="getOrderSupplierTitleStyle(supplier)">
+                      <i class="fa-solid fa-building"></i>
+                      <span x-text="supplier"></span>
+                    </h3>
+                    <span class="text-xs px-2.5 py-0.5 rounded-full font-bold shadow-2xs"
+                          :class="getOrderSupplierBadgeStyle(supplier)"
+                          x-text="getOrderedItemsBySupplier(supplier).length + ' 項'"></span>
+                  </div>
+
+                  <!-- Table -->
+                  <div class="p-3">
+                    <table class="w-full text-left text-xs sm:text-sm">
+                      <thead>
+                        <tr class="text-slate-500 border-b border-slate-200/60 text-xs font-bold">
+                          <th class="pb-2 px-2">品名</th>
+                          <th class="pb-2 px-2 text-center w-40">叫貨數量</th>
+                          <th class="pb-2 px-2 text-right">操作</th>
                         </tr>
-                      </template>
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody class="divide-y divide-slate-200/40">
+                        <template x-for="item in getOrderedItemsBySupplier(supplier)" :key="item.id">
+                          <tr class="hover:bg-white/60">
+                            <td class="py-3 px-2 font-bold text-slate-900">
+                              <span x-text="item.name"></span>
+                            </td>
+                            <td class="py-3 px-2 text-center">
+                              <!-- Free number input & unit selector -->
+                              <div class="inline-flex items-center gap-1 bg-white border border-slate-300 rounded-xl p-1 shadow-2xs">
+                                <input type="number" inputmode="numeric" 
+                                       x-model.number="item.orderWeight"
+                                       @input="saveInventory()"
+                                       @blur="if (item.orderWeight === '' || isNaN(item.orderWeight)) item.orderWeight = 1; saveInventory()"
+                                       class="w-14 text-center font-black text-sm bg-transparent focus:outline-none text-slate-900">
+                                <select x-model="item.unit" @change="saveInventory()" 
+                                        class="bg-slate-100 border border-slate-200 text-slate-800 text-xs rounded-lg px-1.5 py-1 font-bold focus:outline-none">
+                                  <option value="個">個</option>
+                                  <option value="包">包</option>
+                                  <option value="瓶">瓶</option>
+                                  <option value="箱">箱</option>
+                                  <option value="條">條</option>
+                                  <option value="支">支</option>
+                                  <option value="組">組</option>
+                                </select>
+                              </div>
+                            </td>
+                            <td class="py-3 px-2 text-right">
+                              <button @click="removeFromOrder(item.id)" class="text-slate-400 hover:text-rose-600 p-1.5 transition" title="移除"><i class="fa-solid fa-trash-can"></i></button>
+                            </td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </template>
           </div>
+
+          <!-- Footer Signature -->
+          <div class="pt-6 mt-6 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 font-medium">
+            <div>採購簽核：___________________________</div>
+            <div>甜蜜果物包材盤點/叫貨系統 • A4 直式</div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -604,6 +657,40 @@
           return supplier === '必堅' ? 'bg-blue-100/80 border-blue-300' : (supplier === '利泰' ? 'bg-emerald-100/80 border-emerald-300' : (supplier === '淘寶' ? 'bg-amber-100/80 border-amber-300' : 'bg-white border-slate-200'));
         },
 
+        // Order Sheet Supplier Color Styles (跳色區分)
+        getOrderSupplierBlockStyle(supplier) {
+          switch (supplier) {
+            case '必堅': return 'bg-blue-50/70 border-blue-200';
+            case '利泰': return 'bg-emerald-50/70 border-emerald-200';
+            case '淘寶': return 'bg-amber-50/70 border-amber-200';
+            default: return 'bg-purple-50/70 border-purple-200';
+          }
+        },
+        getOrderSupplierHeaderStyle(supplier) {
+          switch (supplier) {
+            case '必堅': return 'bg-blue-100/80 border-blue-200';
+            case '利泰': return 'bg-emerald-100/80 border-emerald-200';
+            case '淘寶': return 'bg-amber-100/80 border-amber-200';
+            default: return 'bg-purple-100/80 border-purple-200';
+          }
+        },
+        getOrderSupplierTitleStyle(supplier) {
+          switch (supplier) {
+            case '必堅': return 'text-blue-950';
+            case '利泰': return 'text-emerald-950';
+            case '淘寶': return 'text-amber-950';
+            default: return 'text-purple-950';
+          }
+        },
+        getOrderSupplierBadgeStyle(supplier) {
+          switch (supplier) {
+            case '必堅': return 'bg-blue-200 text-blue-900';
+            case '利泰': return 'bg-emerald-200 text-emerald-900';
+            case '淘寶': return 'bg-amber-200 text-amber-900';
+            default: return 'bg-purple-200 text-purple-900';
+          }
+        },
+
         getFavoriteItems() {
           return this.inventory.filter(item => {
             const matchesSearch = !this.searchQuery || item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || (item.spec && item.spec.toLowerCase().includes(this.searchQuery.toLowerCase()));
@@ -663,7 +750,7 @@
             this.orderedItems = this.orderedItems.filter(o => o.id !== item.id);
             this.showToast(`已從叫貨單移除「${item.name}」`);
           } else {
-            this.orderedItems.push({ ...item, orderBox: 1, orderWeight: 0, orderRemark: '' });
+            this.orderedItems.push({ ...item, orderWeight: item.orderWeight ?? 1 });
             this.showToast(`已加入叫貨單：「${item.name}」`);
           }
           this.saveInventory();
@@ -793,8 +880,31 @@
           this.showToast('正在生成 PDF...');
           const element = document.getElementById('printable-purchase-order');
           if (!element) return;
+
+          // 針對 html2canvas 無法截取 input/select 內容的問題，暫時在複製節點中將其轉為文字顯示
+          const inputs = element.querySelectorAll('input[type="number"]');
+          const selects = element.querySelectorAll('select');
+          const inputValues = [];
+          const selectValues = [];
+
+          inputs.forEach((input, idx) => {
+            inputValues.push(input.value);
+            const span = document.createElement('span');
+            span.className = 'font-black text-sm px-2 pdf-temp-text';
+            span.textContent = input.value + ' ' + (selects[idx] ? selects[idx].value : '');
+            input.style.display = 'none';
+            if (selects[idx]) selects[idx].style.display = 'none';
+            input.parentNode.appendChild(span);
+          });
+
           try {
             const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+            
+            // 恢復原狀
+            element.querySelectorAll('.pdf-temp-text').forEach(el => el.remove());
+            inputs.forEach(input => input.style.display = '');
+            selects.forEach(select => select.style.display = '');
+
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -803,7 +913,12 @@
             pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 15, imgWidth, imgHeight);
             pdf.save(`採購單_${this.currentDateFormatted.replace(/\//g, '-')}.pdf`);
             this.showToast('PDF 匯出成功！');
-          } catch (error) { alert('發生錯誤'); }
+          } catch (error) {
+            element.querySelectorAll('.pdf-temp-text').forEach(el => el.remove());
+            inputs.forEach(input => input.style.display = '');
+            selects.forEach(select => select.style.display = '');
+            alert('發生錯誤');
+          }
         }
       };
     }
