@@ -201,11 +201,11 @@
 
       <!-- 實際用來生成 PDF 的包裝容器 (嚴格控制寬度 210mm 內，杜絕裁切) -->
       <div class="flex justify-center bg-slate-100/80 p-4 rounded-xl overflow-x-auto">
-        <div id="pdf-export-container" class="bg-white w-[210mm] min-h-[297mm] p-10 shadow-lg text-slate-800 box-border flex flex-col justify-between">
+        <div id="pdf-export-container" class="bg-white w-[210mm] p-6 shadow-lg text-slate-800 box-border flex flex-col space-y-3" style="width: 210mm;">
           
           <!-- PDF 頁首 -->
           <div>
-            <div class="border-b-2 border-emerald-600 pb-4 mb-6 flex justify-between items-end">
+            <div class="border-b-2 border-emerald-600 pb-2 mb-3 flex justify-between items-end">
               <div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-wide">甜蜜果物 - 當日進貨摘要報表</h1>
                 <p class="text-xs text-slate-500 mt-1">列印日期：<span id="pdf-date"></span> | 報表格式：A4 直式標準版</p>
@@ -216,7 +216,7 @@
             </div>
 
             <!-- PDF 表格 -->
-            <div class="border border-slate-200 rounded-xl overflow-hidden mb-6">
+            <div class="border border-slate-200 rounded-xl overflow-hidden mb-3">
               <table class="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr class="bg-emerald-50 border-b border-slate-200 text-emerald-900 font-bold">
@@ -389,7 +389,7 @@
         items = [...defaultData];
       }
       render();
-      lucide.createIcons();
+      if (window.lucide) { try { lucide.createIcons(); } catch(e) { console.warn("Lucide failed:", e); } }
     });
 
     function saveData() {
@@ -401,7 +401,7 @@
       renderTable();
       renderPdfSummary();
       saveData();
-      lucide.createIcons();
+      if (window.lucide) { try { lucide.createIcons(); } catch(e) { console.warn("Lucide failed:", e); } }
     }
 
     function renderStats() {
@@ -603,7 +603,7 @@
         <div class="col-span-1 text-center"><button type="button" onclick="this.closest('.multi-row').remove();" class="text-rose-400 hover:text-rose-600 p-1"><i data-lucide="minus-circle" class="w-5 h-5"></i></button></div>
       `;
       container.appendChild(div);
-      lucide.createIcons();
+      if (window.lucide) { try { lucide.createIcons(); } catch(e) { console.warn("Lucide failed:", e); } }
     }
 
     function openModal() {
@@ -614,7 +614,7 @@
       document.getElementById('multi-spec-rows').innerHTML = '';
       addMultiSpecRow();
       document.getElementById('item-modal').classList.remove('hidden');
-      lucide.createIcons();
+      if (window.lucide) { try { lucide.createIcons(); } catch(e) { console.warn("Lucide failed:", e); } }
     }
 
     function closeModal() {
@@ -640,7 +640,7 @@
 
       document.getElementById('modal-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-emerald-600"></i><span>編輯進貨紀錄</span>';
       document.getElementById('item-modal').classList.remove('hidden');
-      lucide.createIcons();
+      if (window.lucide) { try { lucide.createIcons(); } catch(e) { console.warn("Lucide failed:", e); } }
     }
 
     function handleFormSubmit(e) {
@@ -730,20 +730,8 @@
     // 使用 html2pdf.js 在 iPad 上完美生成 PDF 檔案下載，徹底解決表格被裁切的問題
     function downloadPdfDirect() {
       renderPdfSummary();
-      const element = document.getElementById('pdf-export-container');
-      const opt = {
-        margin:       0,
-        filename:     `甜蜜果物進貨報表_${new Date().toISOString().slice(0,10)}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      // 執行匯出
-      html2pdf().from(element).set(opt).save().catch(err => {
-        console.error(err);
-        window.print(); // 若 html2pdf 載入失敗則退回原生列印
-      });
+      // 在 iPad / 行動裝置上使用原生列印儲存為 PDF，最穩定且絕不全白
+      window.print();
     }
   </script>
 </body>
