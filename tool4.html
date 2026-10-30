@@ -112,19 +112,29 @@
             <button 
               @click="currentTab = 'inventory'"
               :class="currentTab === 'inventory' ? 'bg-teal-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'"
-              class="touch-btn px-4 sm:px-5 py-2 rounded-xl transition-all flex items-center gap-2 font-bold text-sm sm:text-base">
-              <i class="fa-solid fa-boxes-stacked text-base"></i>
+              class="touch-btn px-3 sm:px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold text-xs sm:text-sm">
+              <i class="fa-solid fa-boxes-stacked"></i>
               庫存
+            </button>
+            <button 
+              @click="currentTab = 'favorites'"
+              :class="currentTab === 'favorites' ? 'bg-amber-400 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'"
+              class="touch-btn px-3 sm:px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold text-xs sm:text-sm relative">
+              <i class="fa-solid fa-star text-amber-500" :class="currentTab === 'favorites' ? 'text-slate-950' : ''"></i>
+              常叫貨
+              <span x-show="getFavoriteItems().length > 0" 
+                    x-text="getFavoriteItems().length" 
+                    class="ml-0.5 px-1.5 py-0.2 bg-slate-900 text-white text-[10px] rounded-full font-bold"></span>
             </button>
             <button 
               @click="currentTab = 'order'"
               :class="currentTab === 'order' ? 'bg-teal-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'"
-              class="touch-btn px-4 sm:px-5 py-2 rounded-xl transition-all flex items-center gap-2 relative font-bold text-sm sm:text-base">
-              <i class="fa-solid fa-clipboard-check text-base"></i>
+              class="touch-btn px-3 sm:px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 relative font-bold text-xs sm:text-sm">
+              <i class="fa-solid fa-clipboard-check"></i>
               叫貨
               <span x-show="orderedItems.length > 0" 
                     x-text="orderedItems.length" 
-                    class="ml-1 px-2 py-0.5 bg-amber-400 text-slate-950 text-xs rounded-full font-bold"></span>
+                    class="ml-0.5 px-1.5 py-0.2 bg-amber-400 text-slate-950 text-[10px] rounded-full font-bold"></span>
             </button>
           </div>
 
@@ -137,8 +147,8 @@
   <!-- MAIN CONTENT CONTAINER -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-5 sm:py-7">
 
-    <!-- TOOLBAR & GLOBAL CONTROLS -->
-    <div class="mb-6 bg-white p-4 sm:p-4.5 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
+    <!-- TOOLBAR & GLOBAL CONTROLS (僅在庫存與常叫貨分頁顯示) -->
+    <div x-show="currentTab === 'inventory' || currentTab === 'favorites'" class="mb-6 bg-white p-4 sm:p-4.5 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
       
       <!-- Search & Quick Filters -->
       <div class="flex items-center gap-2.5 flex-1 min-w-[240px]">
@@ -150,14 +160,6 @@
             placeholder="搜尋品名、規格、廠商..." 
             class="w-full pl-10 pr-3.5 py-2.5 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition">
         </div>
-
-        <button 
-          @click="favoriteFilterOnly = !favoriteFilterOnly"
-          :class="favoriteFilterOnly ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'"
-          class="touch-btn px-4 py-2 rounded-xl border text-sm font-bold transition flex items-center gap-1.5 shrink-0">
-          <i class="fa-solid fa-star text-base" :class="favoriteFilterOnly ? 'text-amber-500' : 'text-slate-400'"></i>
-          <span x-text="favoriteFilterOnly ? '顯示全部' : '常叫包材'"></span>
-        </button>
       </div>
 
       <!-- Action Buttons Group (RWD Wrap) -->
@@ -213,125 +215,6 @@
     <!-- TAB 1: INVENTORY MANAGEMENT -->
     <div x-show="currentTab === 'inventory'" class="space-y-6">
       
-      <!-- FAVORITE / CONSTANT ORDER SECTION (常叫貨分類專區) -->
-      <div x-show="getFavoriteItems().length > 0 && !searchQuery" 
-           class="rounded-2xl border p-4 sm:p-5 transition-all space-y-4 bg-amber-50/70 border-amber-300 shadow-xs">
-        
-        <!-- Header -->
-        <div class="flex items-center justify-between border-b border-amber-300 pb-3">
-          <div class="flex items-center gap-3">
-            <span class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-bold shadow-xs text-white bg-amber-500">
-              <i class="fa-solid fa-star"></i>
-            </span>
-            <div>
-              <h2 class="text-sm sm:text-base font-bold tracking-tight flex items-center gap-2.5 text-amber-950">
-                <span>常叫貨分類</span>
-                <span class="text-xs font-semibold opacity-75" x-text="'(' + getFavoriteItems().length + ' 品項)'"></span>
-              </h2>
-              <p class="text-xs opacity-70 mt-0.5 text-amber-900">所有加星號的常用包材快速檢視</p>
-            </div>
-          </div>
-
-          <span class="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-amber-200 text-amber-900">常叫貨專區</span>
-        </div>
-
-        <!-- Cards Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-          <template x-for="item in getFavoriteItems()" :key="'fav-' + item.id">
-            <div 
-              class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group bg-amber-100/70 border-amber-300 hover:border-amber-500"
-              :class="item.currentStock <= item.safetyStock ? 'border-amber-500 ring-2 ring-amber-400' : ''">
-              
-              <div>
-                <!-- Top Row -->
-                <div class="flex items-start justify-between gap-1 mb-1.5">
-                  <button 
-                    @click="toggleFavorite(item)" 
-                    class="touch-btn p-1 text-lg focus:outline-none transition transform active:scale-125"
-                    title="取消常叫標記">
-                    <i class="fa-solid fa-star text-amber-500 fill-amber-500"></i>
-                  </button>
-
-                  <div class="flex-1 px-1">
-                    <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2" x-text="item.name"></h3>
-                    <p class="text-xs text-slate-600 font-semibold mt-1" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></p>
-                  </div>
-
-                  <!-- Edit & Delete Action Group -->
-                  <div class="flex items-center gap-0.5">
-                    <button 
-                      @click="openEditModal(item)" 
-                      class="touch-btn text-slate-400 hover:text-teal-600 text-xs p-1.5 transition"
-                      title="編輯此品項">
-                      <i class="fa-solid fa-pen-to-square"></i>
-                    </button>
-                    <button 
-                      @click="deleteItem(item.id)" 
-                      class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5 transition"
-                      title="刪除此品項">
-                      <i class="fa-solid fa-trash"></i>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Low Stock Warning Badge -->
-                <div x-show="item.currentStock <= item.safetyStock" class="mb-2">
-                  <span class="bg-amber-200 text-amber-900 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 w-max">
-                    <i class="fa-solid fa-triangle-exclamation text-amber-700"></i> 低於安全庫存
-                  </span>
-                </div>
-
-                <!-- Stock Counter & Unit Selector -->
-                <div class="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-amber-200/80 flex flex-col gap-2 my-2.5">
-                  <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
-                    <span>現有庫存</span>
-                    <select 
-                      x-model="item.unit" 
-                      @change="saveInventory()" 
-                      class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-teal-500 font-bold shadow-2xs">
-                      <option value="個">個</option>
-                      <option value="包">包</option>
-                      <option value="瓶">瓶</option>
-                      <option value="箱">箱</option>
-                    </select>
-                  </div>
-
-                  <div class="flex items-center justify-between gap-2 mt-0.5">
-                    <button @click="updateStock(item, -1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">-</button>
-                    
-                    <input 
-                      type="number" 
-                      inputmode="numeric"
-                      :value="item.currentStock ?? 0"
-                      @input="item.currentStock = $event.target.value === '' ? 0 : Math.max(0, parseInt($event.target.value) || 0); saveInventory()"
-                      @blur="if (item.currentStock === '' || isNaN(item.currentStock)) item.currentStock = 0; saveInventory()"
-                      class="w-16 h-11 text-center text-base sm:text-lg font-black bg-white border-2 border-amber-500 rounded-xl shadow-inner text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-600 transition">
-                      
-                    <button @click="updateStock(item, 1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">+</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Bottom Action: Add to Order List -->
-              <div class="pt-2 mt-1 border-t border-amber-200/60 flex items-center justify-between gap-1">
-                <div class="text-xs text-slate-600 font-medium">
-                  廠商: <span class="font-bold text-amber-950" x-text="item.origin"></span>
-                </div>
-
-                <button 
-                  @click="addToOrder(item)" 
-                  :class="isItemOrdered(item.id) ? 'bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white' : 'bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white border border-teal-800'"
-                  class="touch-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs">
-                  <i class="fa-solid text-sm" :class="isItemOrdered(item.id) ? 'fa-check' : 'fa-plus'"></i>
-                  <span x-text="isItemOrdered(item.id) ? '已叫貨' : '+ 叫貨'"></span>
-                </button>
-              </div>
-
-            </div>
-          </template>
-        </div>
-      </div>
-
       <!-- SUPPLIER SECTIONS WITH DISTINCT COLOR THEMING -->
       <template x-for="supplier in suppliers" :key="supplier">
         <div x-show="getFilteredItemsBySupplier(supplier).length > 0 || !searchQuery" 
@@ -482,7 +365,140 @@
 
     </div>
 
-    <!-- TAB 2: ORDER PURCHASE SHEET -->
+    <!-- TAB 2: FAVORITES / CONSTANT ORDER SECTION (獨立常叫貨分頁) -->
+    <div x-show="currentTab === 'favorites'" class="space-y-6">
+      
+      <div class="rounded-2xl border p-4 sm:p-6 transition-all space-y-4 bg-amber-50/70 border-amber-300 shadow-xs">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-amber-300 pb-3.5">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shadow-xs text-white bg-amber-500">
+              <i class="fa-solid fa-star"></i>
+            </span>
+            <div>
+              <h2 class="text-base sm:text-lg font-bold tracking-tight flex items-center gap-2.5 text-amber-950">
+                <span>常叫貨包材專區</span>
+                <span class="text-xs sm:text-sm font-semibold px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900" x-text="getFavoriteItems().length + ' 項品項'"></span>
+              </h2>
+              <p class="text-xs sm:text-sm opacity-80 mt-0.5 text-amber-900">集中管理所有標記星號的常用包材，方便日常快速盤點與叫貨</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+          <template x-for="item in getFavoriteItems()" :key="'fav-tab-' + item.id">
+            <div 
+              class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group bg-amber-100/70 border-amber-300 hover:border-amber-500"
+              :class="item.currentStock <= item.safetyStock ? 'border-amber-500 ring-2 ring-amber-400' : ''">
+              
+              <div>
+                <!-- Top Row -->
+                <div class="flex items-start justify-between gap-1 mb-1.5">
+                  <button 
+                    @click="toggleFavorite(item)" 
+                    class="touch-btn p-1 text-lg focus:outline-none transition transform active:scale-125"
+                    title="取消常叫標記">
+                    <i class="fa-solid fa-star text-amber-500 fill-amber-500"></i>
+                  </button>
+
+                  <div class="flex-1 px-1">
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2" x-text="item.name"></h3>
+                    <p class="text-xs text-slate-600 font-semibold mt-1" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></p>
+                  </div>
+
+                  <!-- Edit & Delete Action Group -->
+                  <div class="flex items-center gap-0.5">
+                    <button 
+                      @click="openEditModal(item)" 
+                      class="touch-btn text-slate-400 hover:text-teal-600 text-xs p-1.5 transition"
+                      title="編輯此品項">
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button 
+                      @click="deleteItem(item.id)" 
+                      class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5 transition"
+                      title="刪除此品項">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Low Stock Warning Badge -->
+                <div x-show="item.currentStock <= item.safetyStock" class="mb-2">
+                  <span class="bg-amber-200 text-amber-900 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 w-max">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-700"></i> 低於安全庫存
+                  </span>
+                </div>
+
+                <!-- Stock Counter & Unit Selector -->
+                <div class="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-amber-200/80 flex flex-col gap-2 my-2.5">
+                  <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
+                    <span>現有庫存</span>
+                    <select 
+                      x-model="item.unit" 
+                      @change="saveInventory()" 
+                      class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-teal-500 font-bold shadow-2xs">
+                      <option value="個">個</option>
+                      <option value="包">包</option>
+                      <option value="瓶">瓶</option>
+                      <option value="箱">箱</option>
+                    </select>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-2 mt-0.5">
+                    <button @click="updateStock(item, -1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">-</button>
+                    
+                    <input 
+                      type="number" 
+                      inputmode="numeric"
+                      :value="item.currentStock ?? 0"
+                      @input="item.currentStock = $event.target.value === '' ? 0 : Math.max(0, parseInt($event.target.value) || 0); saveInventory()"
+                      @blur="if (item.currentStock === '' || isNaN(item.currentStock)) item.currentStock = 0; saveInventory()"
+                      class="w-16 h-11 text-center text-base sm:text-lg font-black bg-white border-2 border-amber-500 rounded-xl shadow-inner text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-600 transition">
+                      
+                    <button @click="updateStock(item, 1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Action: Add to Order List -->
+              <div class="pt-2 mt-1 border-t border-amber-200/60 flex items-center justify-between gap-1">
+                <div class="text-xs text-slate-600 font-medium">
+                  廠商: <span class="font-bold text-amber-950" x-text="item.origin"></span>
+                </div>
+
+                <button 
+                  @click="addToOrder(item)" 
+                  :class="isItemOrdered(item.id) ? 'bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white' : 'bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white border border-teal-800'"
+                  class="touch-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs">
+                  <i class="fa-solid text-sm" :class="isItemOrdered(item.id) ? 'fa-check' : 'fa-plus'"></i>
+                  <span x-text="isItemOrdered(item.id) ? '已叫貨' : '+ 叫貨'"></span>
+                </button>
+              </div>
+
+            </div>
+          </template>
+        </div>
+
+        <!-- Empty State for Favorites -->
+        <div x-show="getFavoriteItems().length === 0" class="text-center py-16 bg-white/70 rounded-2xl border border-dashed border-amber-300 space-y-3">
+          <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-xl">
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <h3 class="text-sm font-bold text-slate-800">尚未設定任何常叫貨品項</h3>
+          <p class="text-xs text-slate-500 max-w-sm mx-auto">請至「庫存」頁面點擊品項卡片左上角的 **【星號】**，即可將其加入常叫貨專區。</p>
+          <button @click="currentTab = 'inventory'" class="touch-btn bg-teal-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition hover:bg-teal-700">
+            前往庫存頁面標記星號
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- TAB 3: ORDER PURCHASE SHEET -->
     <div x-show="currentTab === 'order'" class="space-y-6">
       
       <!-- Top Actions Bar for Order Sheet -->
@@ -517,7 +533,7 @@
           <i class="fa-solid fa-clipboard-list"></i>
         </div>
         <h3 class="text-base sm:text-lg font-bold text-slate-800">叫貨清單預設為空</h3>
-        <p class="text-sm text-slate-500 max-w-sm mx-auto">請先回到「庫存」頁面，點擊品項卡片上的 **【+ 叫貨】** 按鈕，即可將品項轉移至此處。</p>
+        <p class="text-sm text-slate-500 max-w-sm mx-auto">請先回到「庫存」或「常叫貨」頁面，點擊品項卡片上的 **【+ 叫貨】** 按鈕，即可將品項轉移至此處。</p>
         <button @click="currentTab = 'inventory'" class="touch-btn bg-teal-600 text-white text-sm font-bold px-6 py-3 rounded-xl transition hover:bg-teal-700 shadow-sm">
           前往庫存盤點選取品項
         </button>
@@ -917,7 +933,6 @@
       return {
         currentTab: 'inventory',
         searchQuery: '',
-        favoriteFilterOnly: false,
         showBatchModal: false,
         showSupplierModal: false,
         showEditModal: false,
@@ -1033,9 +1048,8 @@
             const matchesSearch = !this.searchQuery || 
               item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
               (item.spec && item.spec.toLowerCase().includes(this.searchQuery.toLowerCase()));
-            const matchesFavorite = !this.favoriteFilterOnly || item.isFavorite;
 
-            return matchesSupplier && matchesSearch && matchesFavorite;
+            return matchesSupplier && matchesSearch;
           });
         },
 
