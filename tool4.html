@@ -42,7 +42,7 @@
 
     @media (min-width: 640px) {
       input[type="text"], input[type="number"], select, textarea {
-        font-size: 14px !important;
+        font-size: 15px !important;
       }
     }
 
@@ -58,7 +58,7 @@
 
     /* 觸控熱區最佳化 */
     .touch-btn {
-      min-height: 40px;
+      min-height: 44px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -87,44 +87,44 @@
   <!-- TOP HEADER & NAVBAR -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-md text-white">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16 gap-2">
+      <div class="flex items-center justify-between h-18 gap-2">
         
         <!-- App Title / Logo -->
-        <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-teal-500 via-cyan-400 to-blue-500 text-slate-950 flex items-center justify-center shadow-md shadow-teal-900/50 shrink-0">
-            <i class="fa-solid fa-boxes-packing text-lg sm:text-xl"></i>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-teal-500 via-cyan-400 to-blue-500 text-slate-950 flex items-center justify-center shadow-md shadow-teal-900/50 shrink-0">
+            <i class="fa-solid fa-boxes-packing text-xl sm:text-2xl"></i>
           </div>
           <div>
-            <h1 class="text-xs sm:text-base font-bold text-white tracking-tight">甜蜜果物-包材點貨/叫貨系統</h1>
+            <h1 class="text-sm sm:text-lg font-bold text-white tracking-tight">甜蜜果物-包材點貨/叫貨系統</h1>
           </div>
         </div>
 
         <!-- Navigation Tabs & Actions -->
-        <div class="flex items-center gap-1.5 sm:gap-2">
+        <div class="flex items-center gap-2 sm:gap-3">
           
           <!-- Home Link Button -->
-          <a href="index.html" class="touch-btn bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
-            <i class="fa-solid fa-house text-slate-400"></i> 回首頁
+          <a href="index.html" class="touch-btn bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 px-3.5 sm:px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 border border-slate-700">
+            <i class="fa-solid fa-house text-slate-400 text-base"></i> 回首頁
           </a>
 
           <!-- Tab Switcher -->
-          <div class="bg-slate-800 p-1 rounded-xl flex gap-1 border border-slate-700 text-xs font-semibold">
+          <div class="bg-slate-800 p-1.5 rounded-2xl flex gap-1.5 border border-slate-700 text-sm font-semibold">
             <button 
               @click="currentTab = 'inventory'"
               :class="currentTab === 'inventory' ? 'bg-teal-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'"
-              class="touch-btn px-2.5 sm:px-3 py-1 rounded-lg transition-all flex items-center gap-1 font-bold">
-              <i class="fa-solid fa-boxes-stacked"></i>
+              class="touch-btn px-4 sm:px-5 py-2 rounded-xl transition-all flex items-center gap-2 font-bold text-sm sm:text-base">
+              <i class="fa-solid fa-boxes-stacked text-base"></i>
               庫存
             </button>
             <button 
               @click="currentTab = 'order'"
               :class="currentTab === 'order' ? 'bg-teal-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'"
-              class="touch-btn px-2.5 sm:px-3 py-1 rounded-lg transition-all flex items-center gap-1 relative font-bold">
-              <i class="fa-solid fa-clipboard-check"></i>
+              class="touch-btn px-4 sm:px-5 py-2 rounded-xl transition-all flex items-center gap-2 relative font-bold text-sm sm:text-base">
+              <i class="fa-solid fa-clipboard-check text-base"></i>
               叫貨
               <span x-show="orderedItems.length > 0" 
                     x-text="orderedItems.length" 
-                    class="ml-0.5 px-1.5 py-0.2 bg-amber-400 text-slate-950 text-[10px] rounded-full font-bold"></span>
+                    class="ml-1 px-2 py-0.5 bg-amber-400 text-slate-950 text-xs rounded-full font-bold"></span>
             </button>
           </div>
 
@@ -135,76 +135,76 @@
   </header>
 
   <!-- MAIN CONTENT CONTAINER -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:py-6">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-5 sm:py-7">
 
     <!-- TOOLBAR & GLOBAL CONTROLS -->
-    <div class="mb-5 bg-white p-3 sm:p-3.5 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
+    <div class="mb-6 bg-white p-4 sm:p-4.5 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
       
       <!-- Search & Quick Filters -->
-      <div class="flex items-center gap-2 flex-1 min-w-[220px]">
-        <div class="relative w-full max-w-xs">
-          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+      <div class="flex items-center gap-2.5 flex-1 min-w-[240px]">
+        <div class="relative w-full max-w-sm">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
           <input 
             type="text" 
             x-model="searchQuery" 
             placeholder="搜尋品名、規格、廠商..." 
-            class="w-full pl-8 pr-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition">
+            class="w-full pl-10 pr-3.5 py-2.5 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition">
         </div>
 
         <button 
           @click="favoriteFilterOnly = !favoriteFilterOnly"
-          :class="favoriteFilterOnly ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
-          class="touch-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-1 shrink-0">
-          <i class="fa-solid fa-star" :class="favoriteFilterOnly ? 'text-amber-500' : 'text-slate-400'"></i>
+          :class="favoriteFilterOnly ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'"
+          class="touch-btn px-4 py-2 rounded-xl border text-sm font-bold transition flex items-center gap-1.5 shrink-0">
+          <i class="fa-solid fa-star text-base" :class="favoriteFilterOnly ? 'text-amber-500' : 'text-slate-400'"></i>
           <span x-text="favoriteFilterOnly ? '顯示全部' : '常叫包材'"></span>
         </button>
       </div>
 
       <!-- Action Buttons Group (RWD Wrap) -->
-      <div class="flex items-center flex-wrap gap-1.5 sm:gap-2 text-xs">
+      <div class="flex items-center flex-wrap gap-2 text-sm">
         
         <!-- Batch Add -->
         <button 
           @click="showBatchModal = true" 
-          class="touch-btn bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-medium px-3 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1.5">
-          <i class="fa-solid fa-layer-group"></i> 批量新增
+          class="touch-btn bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-2">
+          <i class="fa-solid fa-layer-group text-base"></i> 批量新增
         </button>
 
         <!-- Manage Suppliers Modal -->
         <button 
           @click="showSupplierModal = true" 
-          class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100 font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
-          <i class="fa-solid fa-industry text-teal-600"></i> 管理廠商
+          class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100 font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-2">
+          <i class="fa-solid fa-industry text-teal-600 text-base"></i> 管理廠商
         </button>
 
         <!-- Export JSON -->
         <button 
           @click="exportData()" 
-          class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
+          class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5"
           title="匯出JSON備份檔">
-          <i class="fa-solid fa-file-export text-slate-500"></i> 匯出
+          <i class="fa-solid fa-file-export text-slate-500 text-base"></i> 匯出
         </button>
 
         <!-- Import JSON -->
-        <label class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium px-2.5 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1">
-          <i class="fa-solid fa-file-import text-slate-500"></i> 匯入
+        <label class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5">
+          <i class="fa-solid fa-file-import text-slate-500 text-base"></i> 匯入
           <input type="file" accept=".json" class="hidden" @change="importData($event)">
         </label>
 
         <!-- Zero Stock Button -->
         <button 
           @click="confirmZeroStock()" 
-          class="touch-btn bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 font-medium px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
+          class="touch-btn bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5"
           title="將現有庫存批次清零">
-          <i class="fa-solid fa-arrow-rotate-left text-amber-600"></i> 歸零
+          <i class="fa-solid fa-arrow-rotate-left text-amber-600 text-base"></i> 歸零
         </button>
 
         <!-- Clear All Data Button -->
         <button 
           @click="confirmClearAll()" 
-          class="touch-btn bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 font-medium px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
+          class="touch-btn bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5"
           title="清空所有品項與叫貨資料">
-          <i class="fa-solid fa-trash-can text-rose-600"></i> 清空
+          <i class="fa-solid fa-trash-can text-rose-600 text-base"></i> 清空
         </button>
 
       </div>
@@ -216,13 +216,13 @@
       <!-- SUPPLIER SECTIONS WITH DISTINCT COLOR THEMING -->
       <template x-for="supplier in suppliers" :key="supplier">
         <div x-show="getFilteredItemsBySupplier(supplier).length > 0 || !searchQuery" 
-             class="rounded-2xl border p-3.5 sm:p-4 transition-all space-y-3"
+             class="rounded-2xl border p-4 sm:p-5 transition-all space-y-4"
              :class="getSupplierBlockStyle(supplier)">
           
           <!-- Supplier Section Distinct Header -->
-          <div class="flex items-center justify-between border-b pb-2.5" :class="getSupplierHeaderBorderStyle(supplier)">
-            <div class="flex items-center gap-2.5">
-              <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shadow-xs text-white"
+          <div class="flex items-center justify-between border-b pb-3" :class="getSupplierHeaderBorderStyle(supplier)">
+            <div class="flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-bold shadow-xs text-white"
                     :class="getSupplierBadgeStyle(supplier)">
                 <i class="fa-solid" :class="{
                   'fa-building': supplier === '必堅',
@@ -232,22 +232,22 @@
                 }"></i>
               </span>
               <div>
-                <h2 class="text-xs sm:text-sm font-bold tracking-tight flex items-center gap-2" :class="getSupplierTitleTextStyle(supplier)">
+                <h2 class="text-sm sm:text-base font-bold tracking-tight flex items-center gap-2.5" :class="getSupplierTitleTextStyle(supplier)">
                   <span x-text="supplier"></span>
-                  <span class="text-[11px] font-medium opacity-75" x-text="'(' + getFilteredItemsBySupplier(supplier).length + ' 品項)'"></span>
+                  <span class="text-xs font-semibold opacity-75" x-text="'(' + getFilteredItemsBySupplier(supplier).length + ' 品項)'"></span>
                 </h2>
-                <p class="text-[10px] opacity-70" x-text="supplier === '淘寶' ? '外購/跨境進口專區' : '國內合作廠商'"></p>
+                <p class="text-xs opacity-70 mt-0.5" x-text="supplier === '淘寶' ? '外購/跨境進口專區' : '國內合作廠商'"></p>
               </div>
             </div>
 
-            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" :class="getSupplierTagStyle(supplier)" x-text="supplier"></span>
+            <span class="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider" :class="getSupplierTagStyle(supplier)" x-text="supplier"></span>
           </div>
 
           <!-- Inventory Cards Grid (Mobile: 2 cols / Tablet: 3-4 cols / Desktop: 5 cols) -->
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             <template x-for="item in getFilteredItemsBySupplier(supplier)" :key="item.id">
               <div 
-                class="rounded-xl border p-3 transition shadow-xs hover:shadow flex flex-col justify-between relative group"
+                class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group"
                 :class="[
                   getItemCardBgStyle(supplier),
                   item.currentStock <= item.safetyStock ? 'border-amber-400 ring-2 ring-amber-300' : ''
@@ -255,23 +255,23 @@
                 
                 <div>
                   <!-- Top Row: Favorite Star & Name & Unit Selector & Delete Button -->
-                  <div class="flex items-start justify-between gap-1 mb-1">
+                  <div class="flex items-start justify-between gap-1.5 mb-1.5">
                     <button 
                       @click="toggleFavorite(item)" 
-                      class="touch-btn p-1 text-base focus:outline-none transition transform active:scale-125"
+                      class="touch-btn p-1.5 text-lg focus:outline-none transition transform active:scale-125"
                       title="標記為常叫包材">
                       <i class="fa-solid fa-star" :class="item.isFavorite ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-300'"></i>
                     </button>
 
                     <div class="flex-1 px-1">
-                      <h3 class="text-xs sm:text-sm font-bold text-slate-800 leading-snug line-clamp-2" x-text="item.name"></h3>
-                      <p class="text-[10px] text-slate-500 font-medium mt-0.5" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></p>
+                      <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2" x-text="item.name"></h3>
+                      <p class="text-xs text-slate-600 font-semibold mt-1" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></p>
                     </div>
 
                     <!-- Delete Single Item Button -->
                     <button 
                       @click="deleteItem(item.id)" 
-                      class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5 transition"
+                      class="touch-btn text-slate-300 hover:text-rose-500 text-sm p-1.5 transition"
                       title="刪除此品項">
                       <i class="fa-solid fa-trash"></i>
                     </button>
@@ -279,20 +279,20 @@
 
                   <!-- Low Stock Warning Badge -->
                   <div x-show="item.currentStock <= item.safetyStock" class="mb-2">
-                    <span class="bg-amber-100 text-amber-800 text-[9px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-1 w-max">
+                    <span class="bg-amber-100 text-amber-800 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 w-max">
                       <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> 低於安全庫存
                     </span>
                   </div>
 
-                  <!-- Stock Counter & Unit Selector -->
-                  <div class="bg-white/85 backdrop-blur-xs p-2 rounded-xl border border-slate-200/60 flex flex-col gap-1.5 my-2">
-                    <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                  <!-- Stock Counter & Unit Selector (放大按鈕區塊) -->
+                  <div class="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-slate-200/80 flex flex-col gap-2 my-2.5">
+                    <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
                       <span>現有庫存</span>
                       <!-- Flexible Unit Selector -->
                       <select 
                         x-model="item.unit" 
                         @change="saveInventory()" 
-                        class="bg-white border border-slate-300 text-slate-800 text-xs rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-teal-500 font-bold shadow-2xs">
+                        class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-teal-500 font-bold shadow-2xs">
                         <option value="個">個</option>
                         <option value="包">包</option>
                         <option value="瓶">瓶</option>
@@ -300,8 +300,9 @@
                       </select>
                     </div>
 
-                    <div class="flex items-center justify-between gap-1.5 mt-0.5">
-                      <button @click="updateStock(item, -1)" class="touch-btn w-8 h-8 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-100 active:bg-slate-200 text-xs font-bold flex items-center justify-center shadow-2xs transition">-</button>
+                    <div class="flex items-center justify-between gap-2 mt-0.5">
+                      <!-- 調整後的放大減號按鈕 -->
+                      <button @click="updateStock(item, -1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">-</button>
                       
                       <!-- 明顯且突出的庫存數字輸入框 -->
                       <input 
@@ -310,24 +311,25 @@
                         :value="item.currentStock ?? 0"
                         @input="item.currentStock = $event.target.value === '' ? 0 : Math.max(0, parseInt($event.target.value) || 0); saveInventory()"
                         @blur="if (item.currentStock === '' || isNaN(item.currentStock)) item.currentStock = 0; saveInventory()"
-                        class="w-14 h-8 text-center text-sm font-extrabold bg-white border-2 border-teal-500 rounded-lg shadow-inner text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-600 transition">
+                        class="w-16 h-11 text-center text-base sm:text-lg font-black bg-white border-2 border-teal-500 rounded-xl shadow-inner text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-600 transition">
                         
-                      <button @click="updateStock(item, 1)" class="touch-btn w-8 h-8 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-100 active:bg-slate-200 text-xs font-bold flex items-center justify-center shadow-2xs transition">+</button>
+                      <!-- 調整後的放大加號按鈕 -->
+                      <button @click="updateStock(item, 1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">+</button>
                     </div>
                   </div>
                 </div>
 
                 <!-- Bottom Action: Add to Order List -->
-                <div class="pt-1.5 mt-1 border-t border-slate-200/50 flex items-center justify-between gap-1">
-                  <div class="text-[10px] text-slate-400">
-                    預警: <span x-text="item.safetyStock"></span> <span x-text="item.unit || '個'"></span>
+                <div class="pt-2 mt-1 border-t border-slate-200/60 flex items-center justify-between gap-1">
+                  <div class="text-xs text-slate-500 font-medium">
+                    預警: <span class="font-bold" x-text="item.safetyStock"></span> <span x-text="item.unit || '個'"></span>
                   </div>
 
                   <button 
                     @click="addToOrder(item)" 
                     :class="isItemOrdered(item.id) ? 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white' : 'bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white border border-teal-800'"
-                    class="touch-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs">
-                    <i class="fa-solid" :class="isItemOrdered(item.id) ? 'fa-check' : 'fa-plus'"></i>
+                    class="touch-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs">
+                    <i class="fa-solid text-sm" :class="isItemOrdered(item.id) ? 'fa-check' : 'fa-plus'"></i>
                     <span x-text="isItemOrdered(item.id) ? '已叫貨' : '+ 叫貨'"></span>
                   </button>
                 </div>
@@ -337,20 +339,20 @@
           </div>
 
           <!-- Empty State for Supplier -->
-          <div x-show="getFilteredItemsBySupplier(supplier).length === 0 && searchQuery" class="text-center py-4 bg-white/70 rounded-xl border border-dashed border-slate-200 text-slate-400 text-xs">
-            查無符合「<span x-text="searchQuery"></span>」的包材品項
+          <div x-show="getFilteredItemsBySupplier(supplier).length === 0 && searchQuery" class="text-center py-6 bg-white/70 rounded-2xl border border-dashed border-slate-300 text-slate-500 text-sm font-medium">
+            查無符合「<span x-text="searchQuery" class="font-bold"></span>」的包材品項
           </div>
 
         </div>
       </template>
 
       <!-- Global Empty Inventory State -->
-      <div x-show="inventory.length === 0" class="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 space-y-3">
-        <div class="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto text-xl">
+      <div x-show="inventory.length === 0" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 space-y-4">
+        <div class="w-16 h-16 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto text-2xl">
           <i class="fa-solid fa-box-open"></i>
         </div>
-        <h3 class="text-sm font-bold text-slate-700">尚未建立任何包材庫存品項</h3>
-        <p class="text-xs text-slate-400 max-w-sm mx-auto">請點選右上角的 **【批量新增】** 建立品項資料。</p>
+        <h3 class="text-base sm:text-lg font-bold text-slate-800">尚未建立任何包材庫存品項</h3>
+        <p class="text-sm text-slate-500 max-w-sm mx-auto">請點選右上角的 **【批量新增】** 建立品項資料。</p>
       </div>
 
     </div>
@@ -359,39 +361,39 @@
     <div x-show="currentTab === 'order'" class="space-y-6">
       
       <!-- Top Actions Bar for Order Sheet -->
-      <div class="bg-white p-4 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      <div class="bg-white p-4.5 sm:p-5 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 class="text-sm font-bold text-slate-900">今日採購叫貨清單</h2>
-          <p class="text-xs text-slate-500">已選取 <span x-text="orderedItems.length" class="font-bold text-teal-600"></span> 項包材叫貨需求</p>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900">今日採購叫貨清單</h2>
+          <p class="text-xs sm:text-sm text-slate-600 mt-0.5">已選取 <span x-text="orderedItems.length" class="font-bold text-teal-600 text-base"></span> 項包材叫貨需求</p>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2.5">
           <!-- Clear Order List Button -->
           <button 
             @click="clearOrderList()" 
             x-show="orderedItems.length > 0"
-            class="touch-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1">
-            <i class="fa-solid fa-broom text-slate-500"></i> 清空
+            class="touch-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
+            <i class="fa-solid fa-broom text-slate-500 text-base"></i> 清空
           </button>
 
           <!-- Export PDF Button -->
           <button 
             @click="exportToPDF()" 
             x-show="orderedItems.length > 0"
-            class="touch-btn bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5">
-            <i class="fa-solid fa-file-pdf"></i> 匯出 A4 PDF 叫貨單
+            class="touch-btn bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs sm:text-sm font-bold px-4.5 py-2.5 rounded-xl transition shadow-xs flex items-center gap-2">
+            <i class="fa-solid fa-file-pdf text-base"></i> 匯出 A4 PDF 叫貨單
           </button>
         </div>
       </div>
 
       <!-- Empty State for Order List -->
-      <div x-show="orderedItems.length === 0" class="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 space-y-3">
-        <div class="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto text-xl">
+      <div x-show="orderedItems.length === 0" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 space-y-4">
+        <div class="w-16 h-16 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto text-2xl">
           <i class="fa-solid fa-clipboard-list"></i>
         </div>
-        <h3 class="text-sm font-bold text-slate-700">叫貨清單預設為空</h3>
-        <p class="text-xs text-slate-400 max-w-sm mx-auto">請先回到「庫存」頁面，點擊品項卡片上的 **【+ 叫貨】** 按鈕，即可將品項轉移至此處。</p>
-        <button @click="currentTab = 'inventory'" class="touch-btn bg-teal-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition hover:bg-teal-700">
+        <h3 class="text-base sm:text-lg font-bold text-slate-800">叫貨清單預設為空</h3>
+        <p class="text-sm text-slate-500 max-w-sm mx-auto">請先回到「庫存」頁面，點擊品項卡片上的 **【+ 叫貨】** 按鈕，即可將品項轉移至此處。</p>
+        <button @click="currentTab = 'inventory'" class="touch-btn bg-teal-600 text-white text-sm font-bold px-6 py-3 rounded-xl transition hover:bg-teal-700 shadow-sm">
           前往庫存盤點選取品項
         </button>
       </div>
@@ -400,21 +402,21 @@
       <div x-show="orderedItems.length > 0" class="flex justify-center py-2">
         
         <!-- Target Wrapper for PDF Export -->
-        <div id="printable-purchase-order" class="w-full max-w-[720px] bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5 text-xs text-slate-800">
+        <div id="printable-purchase-order" class="w-full max-w-[760px] bg-white p-5 sm:p-7 rounded-2xl border border-slate-200 shadow-sm space-y-6 text-sm text-slate-800">
           
           <!-- Printable Header -->
-          <div class="text-center border-b border-slate-200 pb-3">
-            <h1 class="text-base sm:text-lg font-bold tracking-wider text-slate-900">甜蜜果物 - 包裝材料採購對照單</h1>
-            <div class="text-xs text-slate-500 mt-1 flex justify-center items-center gap-4">
-              <span>日期：<span x-text="currentDateFormatted" class="font-medium text-slate-700"></span></span>
-              <span>叫貨總品項：<span x-text="orderedItems.length" class="font-bold text-teal-700"></span> 項</span>
+          <div class="text-center border-b border-slate-200 pb-4">
+            <h1 class="text-lg sm:text-xl font-bold tracking-wider text-slate-900">甜蜜果物 - 包裝材料採購對照單</h1>
+            <div class="text-xs sm:text-sm text-slate-600 mt-1.5 flex justify-center items-center gap-5">
+              <span>日期：<span x-text="currentDateFormatted" class="font-bold text-slate-800"></span></span>
+              <span>叫貨總品項：<span x-text="orderedItems.length" class="font-bold text-teal-700 text-base"></span> 項</span>
             </div>
           </div>
 
           <!-- INDEPENDENT SUPPLIER TABLES WITH DISTINCT BACKGROUND -->
           <div class="space-y-6">
             <template x-for="supplier in activeOrderSuppliers" :key="supplier">
-              <div class="rounded-xl border shadow-xs overflow-hidden transition-all"
+              <div class="rounded-2xl border shadow-xs overflow-hidden transition-all"
                    :class="{
                      'bg-blue-50/70 border-blue-300': supplier === '必堅',
                      'bg-emerald-50/70 border-emerald-300': supplier === '利泰',
@@ -423,15 +425,15 @@
                    }">
                 
                 <!-- Table Header Title -->
-                <div class="px-4 py-2.5 font-bold flex justify-between items-center text-xs border-b"
+                <div class="px-4.5 py-3 font-bold flex justify-between items-center text-sm border-b"
                      :class="{
                        'bg-blue-100/90 text-blue-950 border-blue-300': supplier === '必堅',
                        'bg-emerald-100/90 text-emerald-950 border-emerald-300': supplier === '利泰',
                        'bg-amber-100/90 text-amber-950 border-amber-300': supplier === '淘寶',
-                       'bg-slate-200 text-slate-800 border-slate-300': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
+                       'bg-slate-200 text-slate-900 border-slate-300': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
                      }">
-                  <span class="flex items-center gap-2">
-                    <span class="w-6 h-6 rounded-md flex items-center justify-center text-xs text-white"
+                  <span class="flex items-center gap-2.5">
+                    <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm text-white shadow-2xs"
                           :class="{
                             'bg-blue-600': supplier === '必堅',
                             'bg-emerald-600': supplier === '利泰',
@@ -445,10 +447,10 @@
                         'fa-truck-field': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
                       }"></i>
                     </span>
-                    <span class="font-bold text-sm" x-text="supplier + ' 採購單'"></span>
+                    <span class="font-bold text-base" x-text="supplier + ' 採購單'"></span>
                   </span>
                   
-                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold shadow-2xs" 
+                  <span class="text-xs px-2.5 py-1 rounded-full font-bold shadow-2xs" 
                         :class="{
                           'bg-blue-200 text-blue-900': supplier === '必堅',
                           'bg-emerald-200 text-emerald-900': supplier === '利泰',
@@ -459,14 +461,14 @@
                 </div>
 
                 <!-- Supplier Form Table (Overflow-x for mobile) -->
-                <div class="p-3 overflow-x-auto">
-                  <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
+                <div class="p-3.5 overflow-x-auto">
+                  <table class="w-full text-left text-sm border-collapse whitespace-nowrap">
                     <thead>
-                      <tr class="text-slate-500 border-b border-slate-200/80 text-[11px]">
-                        <th class="pb-2 font-semibold px-2">品名</th>
-                        <th class="pb-2 font-semibold px-2">叫貨數量</th>
-                        <th class="pb-2 font-semibold px-2">備註</th>
-                        <th class="pb-2 text-right font-semibold px-2">操作</th>
+                      <tr class="text-slate-600 border-b border-slate-200/80 text-xs sm:text-sm font-bold">
+                        <th class="pb-2.5 px-2">品名</th>
+                        <th class="pb-2.5 px-2">叫貨數量</th>
+                        <th class="pb-2.5 px-2">備註</th>
+                        <th class="pb-2.5 text-right px-2">操作</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200/60">
@@ -474,33 +476,33 @@
                         <tr class="hover:bg-white/60 transition-colors">
                           
                           <!-- Item Name & Spec -->
-                          <td class="py-2.5 px-2 align-middle">
-                            <div class="font-bold text-slate-800" x-text="item.name"></div>
-                            <div class="text-[10px] text-slate-500 mt-0.5" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></div>
+                          <td class="py-3 px-2 align-middle">
+                            <div class="font-bold text-slate-900 text-base" x-text="item.name"></div>
+                            <div class="text-xs text-slate-600 font-semibold mt-0.5" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></div>
                           </td>
                           
-                          <!-- Order Quantity Input & Unit Selector -->
-                          <td class="py-2.5 px-2 align-middle">
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                              <div class="inline-flex items-center bg-white border border-slate-300 rounded-lg shadow-2xs p-0.5">
+                          <!-- Order Quantity Input & Unit Selector (叫貨單內的 +- 按鈕同步放大) -->
+                          <td class="py-3 px-2 align-middle">
+                            <div class="flex items-center gap-2 flex-wrap">
+                              <div class="inline-flex items-center bg-white border-2 border-slate-300 rounded-xl shadow-xs p-1 gap-1">
                                 <button 
                                   @click="item.orderWeight = Math.max(0, item.orderWeight - 1)" 
-                                  class="touch-btn w-7 h-7 text-slate-600 hover:bg-slate-100 rounded font-bold text-xs flex items-center justify-center transition">-</button>
+                                  class="touch-btn w-9 h-9 text-slate-800 hover:bg-slate-100 rounded-lg font-black text-base flex items-center justify-center transition">-</button>
                                 <input 
                                   type="number" 
                                   inputmode="decimal"
                                   min="0"
                                   x-model.number="item.orderWeight" 
-                                  class="w-12 text-center text-xs font-bold text-slate-900 bg-transparent focus:outline-none">
+                                  class="w-14 text-center text-sm sm:text-base font-black text-slate-900 bg-transparent focus:outline-none">
                                 <button 
                                   @click="item.orderWeight = Math.max(0, item.orderWeight + 1)" 
-                                  class="touch-btn w-7 h-7 text-slate-600 hover:bg-slate-100 rounded font-bold text-xs flex items-center justify-center transition">+</button>
+                                  class="touch-btn w-9 h-9 text-slate-800 hover:bg-slate-100 rounded-lg font-black text-base flex items-center justify-center transition">+</button>
                               </div>
 
                               <!-- Unit Dropdown Selector -->
                               <select 
                                 x-model="item.unit" 
-                                class="bg-white border border-slate-300 text-slate-800 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-teal-500 font-medium">
+                                class="bg-white border-2 border-slate-300 text-slate-900 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-500 font-bold">
                                 <option value="個">個</option>
                                 <option value="包">包</option>
                                 <option value="瓶">瓶</option>
@@ -510,19 +512,19 @@
                           </td>
 
                           <!-- Order Remark Input -->
-                          <td class="py-2.5 px-2 align-middle">
+                          <td class="py-3 px-2 align-middle">
                             <input 
                               type="text" 
                               x-model="item.orderRemark" 
                               placeholder="填寫備註..." 
-                              class="w-32 text-xs px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500">
+                              class="w-36 text-sm px-3 py-2 bg-white border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500 font-medium">
                           </td>
 
                           <!-- Remove Button -->
-                          <td class="py-2.5 px-2 align-middle text-right">
+                          <td class="py-3 px-2 align-middle text-right">
                             <button 
                               @click="removeFromOrder(item.id)" 
-                              class="touch-btn text-slate-300 hover:text-rose-500 p-2 transition"
+                              class="touch-btn text-slate-400 hover:text-rose-600 p-2 text-base transition"
                               title="從叫貨單移除">
                               <i class="fa-solid fa-trash-can"></i>
                             </button>
@@ -539,20 +541,20 @@
           </div>
 
           <!-- COMPACT SUMMARY SECTION -->
-          <div id="compact-summary-export-target" class="pt-4 border-t-2 border-dashed border-slate-300 space-y-3 p-4 bg-white rounded-xl">
+          <div id="compact-summary-export-target" class="pt-5 border-t-2 border-dashed border-slate-300 space-y-4 p-4.5 sm:p-5 bg-white rounded-2xl">
             <div class="flex items-center justify-between">
-              <h3 class="text-xs font-bold text-slate-700 flex items-center gap-1.5 uppercase tracking-wider">
-                <i class="fa-solid fa-list-check text-teal-600"></i> 精簡採購摘要單
+              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+                <i class="fa-solid fa-list-check text-teal-600 text-base"></i> 精簡採購摘要單
               </h3>
-              <span class="text-[10px] text-slate-400">供快速對照 / 單一廠商截圖叫貨使用</span>
+              <span class="text-xs text-slate-500 font-medium">供快速對照 / 單一廠商截圖叫貨使用</span>
             </div>
 
             <!-- Grid for Independent Compact Supplier Tables -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
               <template x-for="supplier in activeOrderSuppliers" :key="'summary-' + supplier">
                 <div 
                   :id="'summary-card-' + supplier"
-                  class="bg-slate-50 rounded-xl border p-3 text-xs space-y-2 shadow-2xs relative"
+                  class="bg-slate-50 rounded-2xl border p-3.5 text-sm space-y-2.5 shadow-2xs relative"
                   :class="{
                     'border-blue-200 bg-blue-50/40': supplier === '必堅',
                     'border-emerald-200 bg-emerald-50/40': supplier === '利泰',
@@ -561,15 +563,15 @@
                   }">
                   
                   <!-- Compact Table Supplier Title with Download Image Button -->
-                  <div class="font-bold flex items-center justify-between border-b pb-1.5 text-slate-800"
+                  <div class="font-bold flex items-center justify-between border-b pb-2 text-slate-900"
                        :class="{
-                         'border-blue-200 text-blue-900': supplier === '必堅',
-                         'border-emerald-200 text-emerald-900': supplier === '利泰',
-                         'border-amber-200 text-amber-900': supplier === '淘寶',
+                         'border-blue-200 text-blue-950': supplier === '必堅',
+                         'border-emerald-200 text-emerald-950': supplier === '利泰',
+                         'border-amber-200 text-amber-950': supplier === '淘寶',
                          'border-slate-200': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
                        }">
-                    <span class="flex items-center gap-1.5">
-                      <span class="w-2.5 h-2.5 rounded-full"
+                    <span class="flex items-center gap-2 text-base">
+                      <span class="w-3 h-3 rounded-full"
                             :class="{
                               'bg-blue-600': supplier === '必堅',
                               'bg-emerald-600': supplier === '利泰',
@@ -580,15 +582,15 @@
                     </span>
 
                     <div class="flex items-center gap-2">
-                      <span class="text-[10px] font-normal opacity-75" x-text="getOrderedItemsBySupplier(supplier).length + ' 項'"></span>
+                      <span class="text-xs font-bold text-slate-600" x-text="getOrderedItemsBySupplier(supplier).length + ' 項'"></span>
                       
                       <!-- Individual Supplier Image Download Button -->
                       <button 
                         @click="downloadSupplierSummaryImage(supplier)" 
                         data-html2canvas-ignore="true"
-                        class="touch-btn px-2 py-1 rounded-md bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 text-[10px] font-bold shadow-2xs flex items-center gap-1 transition"
+                        class="touch-btn px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold shadow-2xs flex items-center gap-1.5 transition"
                         title="下載此廠商對照單圖片">
-                        <i class="fa-solid fa-camera text-teal-600"></i>
+                        <i class="fa-solid fa-camera text-teal-600 text-sm"></i>
                         <span>截圖</span>
                       </button>
                     </div>
@@ -597,24 +599,24 @@
                   <!-- Compact Table -->
                   <table class="w-full text-left border-collapse">
                     <thead>
-                      <tr class="text-[11px] text-slate-400 border-b border-slate-200/60">
-                        <th class="pb-1 font-semibold">品名</th>
-                        <th class="pb-1 font-semibold text-center w-16">數量</th>
-                        <th class="pb-1 font-semibold text-right">備註</th>
+                      <tr class="text-xs text-slate-500 font-bold border-b border-slate-200/80">
+                        <th class="pb-1.5 font-bold">品名</th>
+                        <th class="pb-1.5 font-bold text-center w-20">數量</th>
+                        <th class="pb-1.5 font-bold text-right">備註</th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-200/40">
+                    <tbody class="divide-y divide-slate-200/50">
                       <template x-for="item in getOrderedItemsBySupplier(supplier)" :key="'sum-item-' + item.id">
-                        <tr class="text-slate-700">
-                          <td class="py-1.5 pr-1 font-medium leading-tight">
+                        <tr class="text-slate-800">
+                          <td class="py-2 pr-1 font-bold leading-snug text-sm">
                             <span x-text="item.name"></span>
-                            <span x-show="item.spec" x-text="'(' + item.spec + ')'" class="text-[10px] text-slate-400 block"></span>
+                            <span x-show="item.spec" x-text="'(' + item.spec + ')'" class="text-xs text-slate-500 block font-normal"></span>
                           </td>
-                          <td class="py-1.5 text-center font-bold text-teal-700 whitespace-nowrap">
+                          <td class="py-2 text-center font-black text-teal-700 text-base whitespace-nowrap">
                             <span x-text="item.orderWeight"></span>
-                            <span x-text="item.unit || '個'" class="text-[10px] font-normal text-slate-500"></span>
+                            <span x-text="item.unit || '個'" class="text-xs font-semibold text-slate-600"></span>
                           </td>
-                          <td class="py-1.5 text-right text-[11px] text-slate-500 truncate max-w-[90px]" x-text="item.orderRemark || '-'"></td>
+                          <td class="py-2 text-right text-xs text-slate-600 font-medium truncate max-w-[100px]" x-text="item.orderRemark || '-'"></td>
                         </tr>
                       </template>
                     </tbody>
@@ -625,7 +627,7 @@
           </div>
 
           <!-- Printable Footer -->
-          <div class="pt-3 border-t border-slate-300 text-[10px] text-slate-400 flex justify-between items-center">
+          <div class="pt-4 border-t border-slate-300 text-xs text-slate-500 flex justify-between items-center font-semibold">
             <span>採購簽核：____________________</span>
             <span>甜蜜果物 · 包裝材料採購系統 A4 對照表</span>
           </div>
@@ -640,19 +642,19 @@
 
   <!-- MODAL 1: BATCH ADD ITEMS -->
   <div x-show="showBatchModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
-    <div @click.away="showBatchModal = false" class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
-          <i class="fa-solid fa-layer-group text-sky-600"></i> 批量新增包材品項
+    <div @click.away="showBatchModal = false" class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2.5">
+          <i class="fa-solid fa-layer-group text-sky-600 text-lg"></i> 批量新增包材品項
         </h3>
-        <button @click="showBatchModal = false" class="touch-btn text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <button @click="showBatchModal = false" class="touch-btn text-slate-400 hover:text-slate-600 p-2 text-lg"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <div class="space-y-3 text-xs sm:text-sm">
-        <div class="grid grid-cols-2 gap-3">
+      <div class="space-y-4 text-sm sm:text-base">
+        <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">預設廠商</label>
-            <select x-model="batchSupplier" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none font-medium">
+            <label class="block font-bold text-slate-700 mb-1.5">預設廠商</label>
+            <select x-model="batchSupplier" class="w-full p-3 border-2 border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none font-bold text-slate-800">
               <template x-for="sup in suppliers" :key="sup">
                 <option :value="sup" x-text="sup"></option>
               </template>
@@ -660,8 +662,8 @@
           </div>
 
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">預設單位</label>
-            <select x-model="batchUnit" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none font-medium">
+            <label class="block font-bold text-slate-700 mb-1.5">預設單位</label>
+            <select x-model="batchUnit" class="w-full p-3 border-2 border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none font-bold text-slate-800">
               <option value="個">個</option>
               <option value="包">包</option>
               <option value="瓶">瓶</option>
@@ -671,53 +673,53 @@
         </div>
 
         <div>
-          <label class="block font-semibold text-slate-700 mb-1">輸入品項與規格 (每行一項)</label>
+          <label class="block font-bold text-slate-700 mb-1.5">輸入品項與規格 (每行一項)</label>
           <textarea 
             x-model="batchInputText" 
             rows="6" 
             placeholder="例如：
 瓦楞紙箱 3號,5號,8號 必堅
 透明封箱膠帶 48mm 利泰"
-            class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none font-mono text-xs sm:text-sm leading-relaxed"></textarea>
-          <p class="text-[11px] text-slate-400 mt-1">小撇步：可將逗號分隔的規格寫在一起，系統會自動拆解為獨立的規格卡片。</p>
+            class="w-full p-3.5 border-2 border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none font-mono text-sm leading-relaxed"></textarea>
+          <p class="text-xs text-slate-500 mt-1.5 font-medium">小撇步：可將逗號分隔的規格寫在一起，系統會自動拆解為獨立的規格卡片。</p>
         </div>
       </div>
 
-      <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
-        <button @click="showBatchModal = false" class="touch-btn px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50">取消</button>
-        <button @click="processBatchAdd()" class="touch-btn px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-xs">確認導入</button>
+      <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+        <button @click="showBatchModal = false" class="touch-btn px-5 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50">取消</button>
+        <button @click="processBatchAdd()" class="touch-btn px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold shadow-xs">確認導入</button>
       </div>
     </div>
   </div>
 
   <!-- MODAL 2: SUPPLIER MANAGEMENT -->
   <div x-show="showSupplierModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
-    <div @click.away="showSupplierModal = false" class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-          <i class="fa-solid fa-industry text-sky-600"></i> 管理廠商列表
+    <div @click.away="showSupplierModal = false" class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-industry text-sky-600 text-lg"></i> 管理廠商列表
         </h3>
-        <button @click="showSupplierModal = false" class="touch-btn text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark"></i></button>
+        <button @click="showSupplierModal = false" class="touch-btn text-slate-400 hover:text-slate-600 p-2 text-lg"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <div class="space-y-3 text-xs sm:text-sm">
+      <div class="space-y-4 text-sm sm:text-base">
         <div class="flex gap-2">
           <input 
             type="text" 
             x-model="newSupplierName" 
             placeholder="新增廠商名稱..." 
-            class="flex-1 px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-sky-500">
-          <button @click="addSupplier()" class="touch-btn px-4 py-2 bg-sky-600 text-white rounded-xl font-bold hover:bg-sky-700">新增</button>
+            class="flex-1 px-3.5 py-2.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-sky-500 font-bold text-slate-800">
+          <button @click="addSupplier()" class="touch-btn px-4 py-2.5 bg-sky-600 text-white rounded-xl font-bold hover:bg-sky-700 shadow-xs">新增</button>
         </div>
 
-        <div class="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-48 overflow-y-auto">
+        <div class="border-2 border-slate-200 rounded-2xl divide-y divide-slate-100 max-h-52 overflow-y-auto">
           <template x-for="sup in suppliers" :key="sup">
-            <div class="p-2.5 flex items-center justify-between">
-              <span class="font-medium text-slate-700" x-text="sup"></span>
+            <div class="p-3 flex items-center justify-between">
+              <span class="font-bold text-slate-800 text-base" x-text="sup"></span>
               <button 
                 x-show="sup !== '必堅' && sup !== '利泰' && sup !== '淘寶'" 
                 @click="removeSupplier(sup)" 
-                class="touch-btn text-slate-300 hover:text-rose-500 p-1.5">
+                class="touch-btn text-slate-400 hover:text-rose-600 p-2 text-base">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
@@ -725,8 +727,8 @@
         </div>
       </div>
 
-      <div class="flex justify-end pt-2 border-t border-slate-100">
-        <button @click="showSupplierModal = false" class="touch-btn px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-200">關閉</button>
+      <div class="flex justify-end pt-3 border-t border-slate-100">
+        <button @click="showSupplierModal = false" class="touch-btn px-5 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200">關閉</button>
       </div>
     </div>
   </div>
@@ -735,8 +737,8 @@
   <div 
     x-show="toast.show" 
     x-transition
-    class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 font-medium">
-    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-sm px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-2.5 font-bold">
+    <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
     <span x-text="toast.message"></span>
   </div>
 
