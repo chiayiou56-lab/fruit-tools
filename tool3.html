@@ -41,6 +41,10 @@
   <!-- Alpine.js CDN -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   
+  <!-- Firebase App & Realtime Database SDK (v8 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  
   <!-- html2pdf.js & dependencies for robust PDF Generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -55,23 +59,21 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* 針對 iOS 輸入框避免自動放大的優化 */
     input, select, textarea, button {
       -webkit-appearance: none;
       border-radius: 0.5rem;
     }
 
     input[type="text"], input[type="number"], select, textarea {
-      font-size: 16px !important; /* 防止 iOS Safari 點擊自動放大 */
+      font-size: 16px !important;
     }
 
     @media (min-width: 640px) {
       input[type="text"], input[type="number"], select, textarea {
-        font-size: 14px !important;
+        font-size: 15px !important;
       }
     }
 
-    /* iOS 數字輸入框隱藏上下箭頭 */
     input[type="number"] {
       -moz-appearance: textfield;
     }
@@ -81,9 +83,8 @@
       margin: 0; 
     }
 
-    /* 觸控熱區最佳化 */
     .touch-btn {
-      min-height: 40px;
+      min-height: 44px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -102,7 +103,6 @@
       border-radius: 4px;
     }
 
-    /* Print styling fallback */
     @media print {
       body * {
         visibility: hidden;
@@ -122,7 +122,7 @@
     }
   </style>
 </head>
-<body class="text-slate-700 antialiased pb-12" x-data="fruitApp()" x-init="initData()">
+<body class="text-slate-800 antialiased pb-12" x-data="fruitApp()" x-init="initData()">
 
   <!-- Toast Notification -->
   <div x-show="toast.show" 
@@ -132,7 +132,7 @@
        x-transition:leave="transition ease-in duration-200 transform"
        x-transition:leave-start="opacity-100 translate-y-0"
        x-transition:leave-end="opacity-0 translate-y-2"
-       class="fixed bottom-5 right-5 z-50 flex items-center px-4 py-3 rounded-xl shadow-lg text-sm font-medium"
+       class="fixed bottom-5 right-5 z-50 flex items-center px-4 py-3 rounded-xl shadow-lg text-sm font-bold"
        :class="{
          'bg-sage-600 text-white': toast.type === 'success',
          'bg-amber-500 text-white': toast.type === 'warning',
@@ -153,34 +153,44 @@
   <header class="bg-gradient-to-r from-sage-600 via-sage-500 to-emerald-600 text-white shadow-md no-print">
     <div class="max-w-6xl mx-auto px-4 py-4 sm:px-6 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm text-white shrink-0">
-          <i class="fa-solid fa-lemon text-xl"></i>
+        <div class="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm text-white shrink-0">
+          <i class="fa-solid fa-lemon text-2xl"></i>
         </div>
         <div>
-          <h1 class="text-lg sm:text-2xl font-bold tracking-wide">甜蜜果物鮮果採購系統</h1>
-          <p class="text-xs text-sage-100 opacity-90">進銷存庫存盤點與雙欄採購對照單</p>
+          <h1 class="text-base sm:text-xl font-bold tracking-wide flex items-center gap-2">
+            甜蜜果物鮮果採購系統
+            <!-- 雲端連線狀態指示燈 -->
+            <span id="cloud-status-badge" class="text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 bg-amber-500 text-slate-950 shadow-2xs">
+              <i class="fa-solid fa-cloud-slash text-xs"></i>
+              <span id="cloud-status-text">本機模式</span>
+            </span>
+          </h1>
+          <p class="text-xs text-sage-100 opacity-90">進銷存庫存盤點與雙欄採購對照單 (支援即時同步)</p>
         </div>
       </div>
 
       <!-- Utilities (RWD Wrap) -->
       <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-        <a href="index.html" class="touch-btn bg-white/20 hover:bg-white/30 active:bg-white/40 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-white/20">
+        <button @click="openCloudModal()" class="touch-btn bg-white/25 hover:bg-white/35 active:bg-white/45 text-white px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 border border-white/20">
+          <i class="fa-solid fa-cloud text-teal-200"></i> 雲端設定
+        </button>
+        <a href="index.html" class="touch-btn bg-white/20 hover:bg-white/30 active:bg-white/40 text-white px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1 border border-white/20">
           <i class="fa-solid fa-house"></i> 回首頁
         </a>
-        <button @click="exportBackupData()" class="touch-btn px-3 py-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-lg text-xs font-medium transition flex items-center border border-white/20">
+        <button @click="exportBackupData()" class="touch-btn px-3.5 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-xl text-xs sm:text-sm font-medium transition flex items-center border border-white/20">
           <i class="fa-solid fa-file-export mr-1.5 text-amber-300"></i> 匯出
         </button>
-        <button @click="$refs.fileInput.click()" class="touch-btn px-3 py-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-lg text-xs font-medium transition flex items-center border border-white/20">
+        <button @click="$refs.fileInput.click()" class="touch-btn px-3.5 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-xl text-xs sm:text-sm font-medium transition flex items-center border border-white/20">
           <i class="fa-solid fa-file-import mr-1.5 text-emerald-300"></i> 匯入
         </button>
         <input type="file" x-ref="fileInput" @change="importBackupData($event)" accept=".json" class="hidden">
-        <button @click="openBatchModal()" class="touch-btn px-3 py-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-lg text-xs font-medium transition flex items-center border border-white/20">
+        <button @click="openBatchModal()" class="touch-btn px-3.5 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-xl text-xs sm:text-sm font-medium transition flex items-center border border-white/20">
           <i class="fa-solid fa-list-check mr-1.5 text-amber-300"></i> 批量新增
         </button>
-        <button @click="openOriginModal()" class="touch-btn px-3 py-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-lg text-xs font-medium transition flex items-center border border-white/20">
+        <button @click="openOriginModal()" class="touch-btn px-3.5 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-xl text-xs sm:text-sm font-medium transition flex items-center border border-white/20">
           <i class="fa-solid fa-earth-americas mr-1.5"></i> 產地
         </button>
-        <button @click="showResetConfirm = true" class="touch-btn px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-white rounded-xl text-xs font-medium transition flex items-center border border-red-300/30">
+        <button @click="showResetConfirm = true" class="touch-btn px-3.5 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-white rounded-xl text-xs sm:text-medium transition flex items-center border border-red-300/30">
           <i class="fa-solid fa-trash-can mr-1.5"></i> 清空
         </button>
       </div>
@@ -191,23 +201,33 @@
   <main class="max-w-6xl mx-auto px-3 sm:px-5 pt-4">
 
     <!-- Tab Navigation -->
-    <div class="flex border-b border-slate-200 mb-4 bg-white rounded-xl p-1 shadow-sm no-print">
+    <div class="flex border-b border-slate-200 mb-4 bg-white rounded-2xl p-1.5 shadow-sm no-print gap-1">
       <button @click="activeTab = 'inventory'" 
-              :class="activeTab === 'inventory' ? 'bg-sage-500 text-white shadow-sm font-semibold' : 'text-slate-600 hover:text-sage-600 hover:bg-sage-50'"
-              class="touch-btn flex-1 py-2 px-3 rounded-lg text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+              :class="activeTab === 'inventory' ? 'bg-sage-500 text-white shadow-sm font-bold' : 'text-slate-600 hover:text-sage-600 hover:bg-sage-50'"
+              class="touch-btn flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
         <i class="fa-solid fa-boxes-stacked"></i>
         <span>1. 庫存盤點</span>
-        <span class="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full font-normal" 
+        <span class="bg-slate-100 text-slate-600 text-[11px] px-2 py-0.5 rounded-full font-bold" 
               :class="activeTab === 'inventory' ? 'bg-white/20 text-white' : ''" 
               x-text="inventory.length"></span>
       </button>
 
+      <button @click="activeTab = 'favorites'" 
+              :class="activeTab === 'favorites' ? 'bg-amber-400 text-slate-950 shadow-sm font-bold' : 'text-slate-600 hover:text-amber-600 hover:bg-amber-50'"
+              class="touch-btn flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-1.5 relative">
+        <i class="fa-solid fa-star text-amber-500" :class="activeTab === 'favorites' ? 'text-slate-950' : ''"></i>
+        <span>2. 常叫貨專區</span>
+        <span class="bg-slate-100 text-slate-700 text-[11px] px-2 py-0.5 rounded-full font-bold" 
+              :class="activeTab === 'favorites' ? 'bg-slate-900 text-white' : ''" 
+              x-text="getFavoriteItems().length"></span>
+      </button>
+
       <button @click="activeTab = 'order'" 
-              :class="activeTab === 'order' ? 'bg-sage-500 text-white shadow-sm font-semibold' : 'text-slate-600 hover:text-sage-600 hover:bg-sage-50'"
-              class="touch-btn flex-1 py-2 px-3 rounded-lg text-xs sm:text-sm transition flex items-center justify-center gap-1.5 relative">
+              :class="activeTab === 'order' ? 'bg-sage-500 text-white shadow-sm font-bold' : 'text-slate-600 hover:text-sage-600 hover:bg-sage-50'"
+              class="touch-btn flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-1.5 relative">
         <i class="fa-solid fa-cart-shopping"></i>
-        <span>2. 叫貨清單對照單</span>
-        <span x-show="orderedItemsCount > 0" class="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold" x-text="orderedItemsCount"></span>
+        <span>3. 叫貨對照單</span>
+        <span x-show="orderedItemsCount > 0" class="bg-amber-500 text-white text-[11px] px-2 py-0.5 rounded-full font-bold" x-text="orderedItemsCount"></span>
       </button>
     </div>
 
@@ -215,42 +235,34 @@
     <div x-show="activeTab === 'inventory'" class="space-y-4">
       
       <!-- Filter & Controls Bar -->
-      <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-2.5 justify-between items-stretch md:items-center">
+      <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center">
         <!-- Search Input -->
         <div class="relative flex-1">
-          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
           <input type="text" x-model="searchQuery" placeholder="搜尋品名、規格或產地..." 
-                 class="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-sage-500 text-xs sm:text-sm bg-slate-50/50">
+                 class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500 text-sm sm:text-base bg-slate-50/50">
         </div>
 
         <!-- Filter Controls -->
         <div class="flex flex-wrap items-center gap-2">
-          <!-- Starred / Hot filter -->
-          <button @click="filterStarOnly = !filterStarOnly" 
-                  :class="filterStarOnly ? 'bg-amber-500 text-white shadow-sm' : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'"
-                  class="touch-btn px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
-            <i class="fa-solid fa-star text-[11px]" :class="filterStarOnly ? 'text-white' : 'text-amber-400'"></i>
-            <span>常叫貨</span>
-          </button>
-
           <!-- Low stock warning filter -->
           <button @click="filterLowStockOnly = !filterLowStockOnly" 
-                  :class="filterLowStockOnly ? 'bg-amber-600 text-white' : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'"
-                  class="touch-btn px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
-            <i class="fa-solid fa-triangle-exclamation text-[11px]" :class="filterLowStockOnly ? 'text-white' : 'text-amber-500'"></i>
+                  :class="filterLowStockOnly ? 'bg-amber-600 text-white font-bold' : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 font-medium'"
+                  class="touch-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5">
+            <i class="fa-solid fa-triangle-exclamation text-sm" :class="filterLowStockOnly ? 'text-white' : 'text-amber-500'"></i>
             <span>預警</span>
           </button>
 
           <!-- Main Category Selector -->
-          <select x-model="filterCategory" class="touch-btn px-3 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm text-slate-600 bg-slate-50 focus:outline-none focus:border-sage-500">
+          <select x-model="filterCategory" class="touch-btn px-3.5 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-700 bg-slate-50 focus:outline-none focus:border-sage-500">
             <option value="ALL">全部類別</option>
             <option value="國產">國產水果</option>
             <option value="進口">進口水果</option>
           </select>
 
-          <!-- Batch Add Button (Primary Action) -->
-          <button @click="openBatchModal()" class="touch-btn px-3.5 py-1.5 bg-sage-600 hover:bg-sage-700 active:bg-sage-800 text-white rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm ml-auto">
-            <i class="fa-solid fa-square-plus"></i>
+          <!-- Batch Add Button -->
+          <button @click="openBatchModal()" class="touch-btn px-4 py-2 bg-sage-600 hover:bg-sage-700 active:bg-sage-800 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-sm ml-auto">
+            <i class="fa-solid fa-square-plus text-base"></i>
             <span>批量新增</span>
           </button>
         </div>
@@ -259,68 +271,67 @@
       <!-- INVENTORY DISPLAY SECTION -->
       
       <!-- SECTION A: Domestic Fruits (國產水果) -->
-      <div x-show="filterCategory === 'ALL' || filterCategory === '國產'" class="space-y-2.5">
-        <div class="flex items-center space-x-2 border-b border-emerald-200 pb-1.5">
-          <span class="text-sm font-bold text-emerald-800 flex items-center gap-1.5">
+      <div x-show="filterCategory === 'ALL' || filterCategory === '國產'" class="space-y-3">
+        <div class="flex items-center space-x-2 border-b border-emerald-200 pb-2">
+          <span class="text-sm sm:text-base font-bold text-emerald-900 flex items-center gap-1.5">
             🇹🇼 國產水果
           </span>
-          <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full" x-text="getDomesticItems().length + ' 項'"></span>
+          <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold" x-text="getDomesticItems().length + ' 項'"></span>
         </div>
 
-        <!-- Responsive Card Grid (Mobile: 2 cols / Tablet: 3-4 cols / Desktop: 5 cols) -->
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-3.5">
           <template x-for="item in getDomesticItems()" :key="item.id">
-            <div x-show="matchesFilter(item)" class="bg-white rounded-xl p-3 shadow-sm border transition hover:shadow-md flex flex-col justify-between"
-                 :class="item.stock <= item.safetyStock ? 'border-amber-300 bg-amber-50/20' : 'border-slate-100'">
+            <div x-show="matchesFilter(item)" class="bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border transition hover:shadow-md flex flex-col justify-between"
+                 :class="item.stock <= item.safetyStock ? 'border-amber-400 bg-amber-50/20 ring-1 ring-amber-300' : 'border-slate-200/80'">
               <div>
-                <div class="flex items-center justify-between mb-1.5">
-                  <div class="flex items-center gap-1">
-                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-medium">台灣</span>
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-[11px] px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 font-bold">台灣</span>
                     <template x-if="item.stock <= item.safetyStock">
-                      <span class="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">低庫存</span>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold">低庫存</span>
                     </template>
                   </div>
                   <!-- STARRED BUTTON -->
-                  <button @click="toggleStar(item)" class="touch-btn p-1 text-base transition-transform active:scale-125 focus:outline-none" :title="item.isFavorite ? '取消常叫貨' : '設為常叫貨'">
-                    <i class="fa-solid fa-star transition-colors" :class="item.isFavorite ? 'text-amber-400 drop-shadow-sm' : 'text-slate-200 hover:text-amber-300'"></i>
+                  <button @click="toggleStar(item)" class="touch-btn p-1 text-lg transition-transform active:scale-125 focus:outline-none" :title="item.isFavorite ? '取消常叫貨' : '設為常叫貨'">
+                    <i class="fa-solid fa-star transition-colors" :class="item.isFavorite ? 'text-amber-400 drop-shadow-sm' : 'text-slate-300 hover:text-amber-300'"></i>
                   </button>
                 </div>
 
-                <h3 class="text-xs sm:text-sm font-bold text-slate-800 truncate" x-text="item.name"></h3>
-                <p class="text-[10px] text-slate-400 mb-2 truncate" x-text="item.spec || '標準規格'"></p>
+                <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2" x-text="item.name"></h3>
+                <p class="text-xs text-slate-500 font-medium mb-2.5 mt-0.5 truncate" x-text="item.spec || '標準規格'"></p>
               </div>
 
               <!-- Item Footer Action & Controls -->
-              <div class="pt-2 border-t border-slate-100 space-y-2">
-                <div class="flex items-center justify-between text-xs">
-                  <span class="text-slate-500">庫存: <b class="text-slate-800 font-bold" x-text="item.stock"></b></span>
-                  <div class="flex items-center space-x-1">
-                    <button @click="adjustStock(item, -1)" class="touch-btn w-6 h-6 rounded-md bg-slate-100 active:bg-slate-200 text-slate-700 font-bold text-xs">-</button>
-                    <input type="number" inputmode="numeric" min="0" x-model.number="item.stock" @change="saveData()" class="w-10 text-center text-xs font-bold border rounded-md py-1 bg-white">
-                    <button @click="adjustStock(item, 1)" class="touch-btn w-6 h-6 rounded-md bg-sage-100 active:bg-sage-200 text-sage-700 font-bold text-xs">+</button>
+              <div class="pt-2.5 border-t border-slate-100 space-y-2.5">
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-700">
+                  <span>現有庫存: <b class="text-slate-900 font-black text-sm" x-text="item.stock"></b></span>
+                  <div class="flex items-center space-x-1.5">
+                    <button @click="adjustStock(item, -1)" class="touch-btn w-7 h-7 rounded-lg bg-slate-100 active:bg-slate-200 text-slate-800 font-black text-sm">-</button>
+                    <input type="number" inputmode="numeric" min="0" x-model.number="item.stock" @change="saveData()" class="w-12 text-center text-sm font-black border-2 border-sage-500 rounded-lg py-1 bg-white">
+                    <button @click="adjustStock(item, 1)" class="touch-btn w-7 h-7 rounded-lg bg-sage-100 active:bg-sage-200 text-sage-800 font-black text-sm">+</button>
                   </div>
                 </div>
 
                 <!-- DIRECT ORDER BUTTON -->
-                <div class="flex items-center justify-between gap-1 pt-0.5">
+                <div class="flex items-center justify-between gap-1.5 pt-0.5">
                   <template x-if="!item.inOrder">
-                    <button @click="addToOrder(item)" class="touch-btn w-full py-1.5 bg-sage-600 hover:bg-sage-700 active:bg-sage-800 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm">
-                      <i class="fa-solid fa-cart-plus text-xs"></i>
+                    <button @click="addToOrder(item)" class="touch-btn w-full py-2 bg-sage-700 hover:bg-sage-800 active:bg-sage-900 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 shadow-xs">
+                      <i class="fa-solid fa-cart-plus text-sm"></i>
                       <span>+ 叫貨</span>
                     </button>
                   </template>
                   <template x-if="item.inOrder">
-                    <div class="w-full flex items-center justify-between bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg text-xs">
-                      <span class="text-amber-800 font-bold flex items-center gap-1">
-                        <i class="fa-solid fa-check text-amber-600"></i> 已叫
+                    <div class="w-full flex items-center justify-between bg-amber-100/80 border border-amber-300 px-2.5 py-1.5 rounded-xl text-xs font-bold">
+                      <span class="text-amber-900 flex items-center gap-1">
+                        <i class="fa-solid fa-check text-amber-700"></i> 已加入叫貨
                       </span>
-                      <button @click="removeFromOrder(item)" class="text-slate-400 hover:text-red-500 p-1">
+                      <button @click="removeFromOrder(item)" class="text-slate-500 hover:text-red-600 p-1">
                         <i class="fa-solid fa-xmark"></i>
                       </button>
                     </div>
                   </template>
-                  <button @click="editItem(item)" class="touch-btn text-slate-300 hover:text-sage-600 p-1.5" title="編輯"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
-                  <button @click="deleteItem(item)" class="touch-btn text-slate-300 hover:text-red-500 p-1.5" title="刪除"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                  <button @click="editItem(item)" class="touch-btn text-slate-400 hover:text-sage-700 p-2" title="編輯"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                  <button @click="deleteItem(item)" class="touch-btn text-slate-400 hover:text-red-600 p-2" title="刪除"><i class="fa-solid fa-trash-can text-sm"></i></button>
                 </div>
               </div>
             </div>
@@ -329,76 +340,75 @@
       </div>
 
       <!-- SECTION B: Imported Fruits (進口水果 - Grouped by Country) -->
-      <div x-show="filterCategory === 'ALL' || filterCategory === '進口'" class="space-y-4 pt-2">
-        <div class="flex items-center space-x-2 border-b border-blue-200 pb-1.5">
-          <span class="text-sm font-bold text-blue-900 flex items-center gap-1.5">
+      <div x-show="filterCategory === 'ALL' || filterCategory === '進口'" class="space-y-4 pt-3">
+        <div class="flex items-center space-x-2 border-b border-blue-200 pb-2">
+          <span class="text-sm sm:text-base font-bold text-blue-950 flex items-center gap-1.5">
             ✈️ 進口水果（依國家分類）
           </span>
-          <span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full" x-text="getImportedItems().length + ' 項'"></span>
+          <span class="text-xs bg-blue-100 text-blue-900 px-2.5 py-0.5 rounded-full font-bold" x-text="getImportedItems().length + ' 項'"></span>
         </div>
 
-        <!-- Group by Imported Countries -->
         <template x-for="country in getImportedCountries()" :key="country">
-          <div class="space-y-2 pl-2 sm:pl-3 border-l-2 border-blue-100">
-            <h4 class="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1.5">
+          <div class="space-y-2.5 pl-2 sm:pl-4 border-l-3 border-blue-200">
+            <h4 class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2">
               <span x-text="getCountryFlag(country)"></span>
               <span x-text="country"></span>
-              <span class="text-[11px] text-slate-400 font-normal" x-text="'(' + getItemsByCountry(country).length + ')'"></span>
+              <span class="text-xs text-slate-500 font-bold" x-text="'(' + getItemsByCountry(country).length + ')'"></span>
             </h4>
 
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-3.5">
               <template x-for="item in getItemsByCountry(country)" :key="item.id">
-                <div x-show="matchesFilter(item)" class="bg-white rounded-xl p-3 shadow-sm border transition hover:shadow-md flex flex-col justify-between"
-                     :class="item.stock <= item.safetyStock ? 'border-amber-300 bg-amber-50/20' : 'border-slate-100'">
+                <div x-show="matchesFilter(item)" class="bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border transition hover:shadow-md flex flex-col justify-between"
+                     :class="item.stock <= item.safetyStock ? 'border-amber-400 bg-amber-50/20 ring-1 ring-amber-300' : 'border-slate-200/80'">
                   <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                      <div class="flex items-center gap-1">
-                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-medium truncate" x-text="item.origin"></span>
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-[11px] px-2 py-0.5 rounded-md bg-blue-100 text-blue-900 font-bold truncate" x-text="item.origin"></span>
                         <template x-if="item.stock <= item.safetyStock">
-                          <span class="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">低庫存</span>
+                          <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold">低庫存</span>
                         </template>
                       </div>
                       <!-- STARRED BUTTON -->
-                      <button @click="toggleStar(item)" class="touch-btn p-1 text-base transition-transform active:scale-125 focus:outline-none" :title="item.isFavorite ? '取消常叫貨' : '設為常叫貨'">
-                        <i class="fa-solid fa-star transition-colors" :class="item.isFavorite ? 'text-amber-400 drop-shadow-sm' : 'text-slate-200 hover:text-amber-300'"></i>
+                      <button @click="toggleStar(item)" class="touch-btn p-1 text-lg transition-transform active:scale-125 focus:outline-none" :title="item.isFavorite ? '取消常叫貨' : '設為常叫貨'">
+                        <i class="fa-solid fa-star transition-colors" :class="item.isFavorite ? 'text-amber-400 drop-shadow-sm' : 'text-slate-300 hover:text-amber-300'"></i>
                       </button>
                     </div>
 
-                    <h3 class="text-xs sm:text-sm font-bold text-slate-800 truncate" x-text="item.name"></h3>
-                    <p class="text-[10px] text-slate-400 mb-2 truncate" x-text="item.spec || '標準規格'"></p>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2" x-text="item.name"></h3>
+                    <p class="text-xs text-slate-500 font-medium mb-2.5 mt-0.5 truncate" x-text="item.spec || '標準規格'"></p>
                   </div>
 
                   <!-- Item Controls -->
-                  <div class="pt-2 border-t border-slate-100 space-y-2">
-                    <div class="flex items-center justify-between text-xs">
-                      <span class="text-slate-500">庫存: <b class="text-slate-800 font-bold" x-text="item.stock"></b></span>
-                      <div class="flex items-center space-x-1">
-                        <button @click="adjustStock(item, -1)" class="touch-btn w-6 h-6 rounded-md bg-slate-100 active:bg-slate-200 text-slate-700 font-bold text-xs">-</button>
-                        <input type="number" inputmode="numeric" min="0" x-model.number="item.stock" @change="saveData()" class="w-10 text-center text-xs font-bold border rounded-md py-1 bg-white">
-                        <button @click="adjustStock(item, 1)" class="touch-btn w-6 h-6 rounded-md bg-sage-100 active:bg-sage-200 text-sage-700 font-bold text-xs">+</button>
+                  <div class="pt-2.5 border-t border-slate-100 space-y-2.5">
+                    <div class="flex items-center justify-between text-xs font-semibold text-slate-700">
+                      <span>現有庫存: <b class="text-slate-900 font-black text-sm" x-text="item.stock"></b></span>
+                      <div class="flex items-center space-x-1.5">
+                        <button @click="adjustStock(item, -1)" class="touch-btn w-7 h-7 rounded-lg bg-slate-100 active:bg-slate-200 text-slate-800 font-black text-sm">-</button>
+                        <input type="number" inputmode="numeric" min="0" x-model.number="item.stock" @change="saveData()" class="w-12 text-center text-sm font-black border-2 border-sage-500 rounded-lg py-1 bg-white">
+                        <button @click="adjustStock(item, 1)" class="touch-btn w-7 h-7 rounded-lg bg-sage-100 active:bg-sage-200 text-sage-800 font-black text-sm">+</button>
                       </div>
                     </div>
 
                     <!-- DIRECT ORDER BUTTON -->
-                    <div class="flex items-center justify-between gap-1 pt-0.5">
+                    <div class="flex items-center justify-between gap-1.5 pt-0.5">
                       <template x-if="!item.inOrder">
-                        <button @click="addToOrder(item)" class="touch-btn w-full py-1.5 bg-sage-600 hover:bg-sage-700 active:bg-sage-800 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm">
-                          <i class="fa-solid fa-cart-plus text-xs"></i>
+                        <button @click="addToOrder(item)" class="touch-btn w-full py-2 bg-sage-700 hover:bg-sage-800 active:bg-sage-900 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 shadow-xs">
+                          <i class="fa-solid fa-cart-plus text-sm"></i>
                           <span>+ 叫貨</span>
                         </button>
                       </template>
                       <template x-if="item.inOrder">
-                        <div class="w-full flex items-center justify-between bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg text-xs">
-                          <span class="text-amber-800 font-bold flex items-center gap-1">
-                            <i class="fa-solid fa-check text-amber-600"></i> 已叫
+                        <div class="w-full flex items-center justify-between bg-amber-100/80 border border-amber-300 px-2.5 py-1.5 rounded-xl text-xs font-bold">
+                          <span class="text-amber-900 flex items-center gap-1">
+                            <i class="fa-solid fa-check text-amber-700"></i> 已加入叫貨
                           </span>
-                          <button @click="removeFromOrder(item)" class="text-slate-400 hover:text-red-500 p-1">
+                          <button @click="removeFromOrder(item)" class="text-slate-500 hover:text-red-600 p-1">
                             <i class="fa-solid fa-xmark"></i>
                           </button>
                         </div>
                       </template>
-                      <button @click="editItem(item)" class="touch-btn text-slate-300 hover:text-sage-600 p-1.5" title="編輯"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
-                      <button @click="deleteItem(item)" class="touch-btn text-slate-300 hover:text-red-500 p-1.5" title="刪除"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                      <button @click="editItem(item)" class="touch-btn text-slate-400 hover:text-sage-700 p-2" title="編輯"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                      <button @click="deleteItem(item)" class="touch-btn text-slate-400 hover:text-red-600 p-2" title="刪除"><i class="fa-solid fa-trash-can text-sm"></i></button>
                     </div>
                   </div>
                 </div>
@@ -410,25 +420,113 @@
 
     </div>
 
-    <!-- TAB 2: ORDER LIST & DUAL-COLUMN COMPARISON SHEET -->
+    <!-- TAB 2: FAVORITES / CONSTANT ORDER SECTION (獨立常叫貨分頁) -->
+    <div x-show="activeTab === 'favorites'" class="space-y-4">
+      <div class="bg-amber-50/70 p-4 sm:p-6 rounded-2xl shadow-sm border border-amber-300 space-y-4">
+        
+        <div class="flex items-center justify-between border-b border-amber-300 pb-3">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shadow-xs text-white bg-amber-500">
+              <i class="fa-solid fa-star"></i>
+            </span>
+            <div>
+              <h2 class="text-base sm:text-lg font-bold tracking-tight text-amber-950 flex items-center gap-2">
+                <span>常叫貨鮮果專區</span>
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold" x-text="getFavoriteItems().length + ' 項品項'"></span>
+              </h2>
+              <p class="text-xs sm:text-sm text-amber-900/80 mt-0.5">集中管理所有標記星號的常用鮮果，方便日常快速盤點與叫貨</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Favorites Cards Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-3.5">
+          <template x-for="item in getFavoriteItems()" :key="'fav-' + item.id">
+            <div class="bg-amber-100/60 rounded-2xl p-3.5 sm:p-4 shadow-sm border border-amber-300 transition hover:shadow-md flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[11px] px-2 py-0.5 rounded-md bg-amber-200 text-amber-950 font-bold" x-text="item.origin"></span>
+                  <!-- STARRED BUTTON -->
+                  <button @click="toggleStar(item)" class="touch-btn p-1 text-lg transition-transform active:scale-125 focus:outline-none" title="取消常叫貨">
+                    <i class="fa-solid fa-star text-amber-500 fill-amber-500"></i>
+                  </button>
+                </div>
+
+                <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2" x-text="item.name"></h3>
+                <p class="text-xs text-slate-600 font-medium mb-2.5 mt-0.5 truncate" x-text="item.spec || '標準規格'"></p>
+              </div>
+
+              <!-- Item Footer Action & Controls -->
+              <div class="pt-2.5 border-t border-amber-200/80 space-y-2.5">
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-700">
+                  <span>現有庫存: <b class="text-slate-900 font-black text-sm" x-text="item.stock"></b></span>
+                  <div class="flex items-center space-x-1.5">
+                    <button @click="adjustStock(item, -1)" class="touch-btn w-7 h-7 rounded-lg bg-white active:bg-slate-100 text-slate-800 font-black text-sm border border-amber-300">-</button>
+                    <input type="number" inputmode="numeric" min="0" x-model.number="item.stock" @change="saveData()" class="w-12 text-center text-sm font-black border-2 border-amber-500 rounded-lg py-1 bg-white">
+                    <button @click="adjustStock(item, 1)" class="touch-btn w-7 h-7 rounded-lg bg-white active:bg-slate-100 text-slate-800 font-black text-sm border border-amber-300">+</button>
+                  </div>
+                </div>
+
+                <!-- DIRECT ORDER BUTTON -->
+                <div class="flex items-center justify-between gap-1.5 pt-0.5">
+                  <template x-if="!item.inOrder">
+                    <button @click="addToOrder(item)" class="touch-btn w-full py-2 bg-sage-700 hover:bg-sage-800 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 shadow-xs">
+                      <i class="fa-solid fa-cart-plus text-sm"></i>
+                      <span>+ 叫貨</span>
+                    </button>
+                  </template>
+                  <template x-if="item.inOrder">
+                    <div class="w-full flex items-center justify-between bg-amber-200 border border-amber-400 px-2.5 py-1.5 rounded-xl text-xs font-bold">
+                      <span class="text-amber-950 flex items-center gap-1">
+                        <i class="fa-solid fa-check text-amber-800"></i> 已加入叫貨
+                      </span>
+                      <button @click="removeFromOrder(item)" class="text-slate-600 hover:text-red-600 p-1">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+                  </template>
+                  <button @click="editItem(item)" class="touch-btn text-slate-500 hover:text-sage-800 p-2" title="編輯"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                  <button @click="deleteItem(item)" class="touch-btn text-slate-500 hover:text-red-600 p-2" title="刪除"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Empty State for Favorites -->
+        <div x-show="getFavoriteItems().length === 0" class="text-center py-16 bg-white/70 rounded-2xl border border-dashed border-amber-300 space-y-3">
+          <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-xl">
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <h3 class="text-sm sm:text-base font-bold text-slate-800">尚未設定任何常叫貨品項</h3>
+          <p class="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">請至「庫存盤點」頁面點擊水果卡片上的 **【星號 ⭐】**，即可將其加入常叫貨專區。</p>
+          <button @click="activeTab = 'inventory'" class="touch-btn bg-sage-600 text-white text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl transition hover:bg-sage-700">
+            前往庫存盤點頁面標記星號
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 3: ORDER LIST & DUAL-COLUMN COMPARISON SHEET -->
     <div x-show="activeTab === 'order'" class="space-y-4">
       <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-100 no-print flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
         <div>
-          <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+          <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
             <i class="fa-solid fa-cart-flatbed text-sage-600"></i>
             今日預計叫貨品項
           </h2>
-          <p class="text-xs text-slate-500">預設空白，僅在盤點頁點擊「+ 叫貨」的品項會顯示於下方採購對照單。</p>
+          <p class="text-xs sm:text-sm text-slate-500">已選取 <span class="font-bold text-sage-600 text-sm" x-text="orderedItems.length"></span> 項鮮果叫貨需求。</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-          <button @click="clearAllOrders()" x-show="orderedItems.length > 0" class="touch-btn px-3.5 py-2 text-red-500 bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-xl text-xs font-medium transition">
+          <button @click="clearAllOrders()" x-show="orderedItems.length > 0" class="touch-btn px-3.5 py-2 text-red-600 bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-xl text-xs sm:text-sm font-bold transition">
             <i class="fa-solid fa-trash-can mr-1"></i>清空
           </button>
-          <button @click="copyOrderText()" x-show="orderedItems.length > 0" class="touch-btn px-3.5 py-2 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white rounded-xl text-xs font-medium transition shadow-sm">
+          <button @click="copyOrderText()" x-show="orderedItems.length > 0" class="touch-btn px-4 py-2 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm">
             <i class="fa-regular fa-copy mr-1"></i>複製文字 (LINE)
           </button>
-          <button @click="exportToPDF()" x-show="orderedItems.length > 0" class="touch-btn px-4 py-2 bg-sage-600 hover:bg-sage-700 active:bg-sage-800 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm flex items-center gap-1.5">
+          <button @click="exportToPDF()" x-show="orderedItems.length > 0" class="touch-btn px-4 py-2.5 bg-sage-600 hover:bg-sage-700 active:bg-sage-800 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm flex items-center gap-1.5">
             <i class="fa-solid fa-file-pdf"></i>
             <span>下載 50% 雙欄 A4 PDF</span>
           </button>
@@ -440,56 +538,56 @@
         <div class="w-16 h-16 bg-sage-50 text-sage-500 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
           <i class="fa-solid fa-basket-shopping"></i>
         </div>
-        <h3 class="text-base font-bold text-slate-700">叫貨清單目前為空</h3>
-        <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">請切換至「庫存盤點」頁面，點擊水果卡片上的 <span class="text-sage-600 font-bold">【+ 叫貨】</span> 按鈕即可將水果加入叫貨單。</p>
-        <button @click="activeTab = 'inventory'" class="touch-btn mt-4 px-5 py-2 bg-sage-600 text-white text-xs font-bold rounded-xl shadow-sm hover:bg-sage-700 transition">
-          返回庫存盤點選取品項
+        <h3 class="text-base sm:text-lg font-bold text-slate-800">叫貨清單目前為空</h3>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-sm mx-auto">請至「庫存盤點」或「常叫貨專區」點擊品項卡片上的 <span class="text-sage-600 font-bold">【+ 叫貨】</span> 按鈕。</p>
+        <button @click="activeTab = 'inventory'" class="touch-btn mt-4 px-6 py-2.5 bg-sage-600 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm hover:bg-sage-700 transition">
+          前往庫存選取品項
         </button>
       </div>
 
       <!-- ORDER QUANTITY ADJUSTMENT TABLE -->
       <div x-show="orderedItems.length > 0" class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-100 no-print space-y-3">
-        <h3 class="text-sm font-bold text-slate-700">叫貨數量與規格調整</h3>
+        <h3 class="text-sm sm:text-base font-bold text-slate-900">叫貨數量與規格調整</h3>
         
-        <div class="overflow-x-auto border border-slate-100 rounded-xl">
+        <div class="overflow-x-auto border border-slate-200/80 rounded-xl">
           <table class="w-full text-left text-xs sm:text-sm whitespace-nowrap">
-            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
+            <thead class="bg-slate-100/80 text-slate-700 font-bold border-b border-slate-200">
               <tr>
-                <th class="p-3">品名 / 產地</th>
-                <th class="p-3 text-center">規格</th>
-                <th class="p-3 text-center">叫貨箱數</th>
-                <th class="p-3 text-center">叫貨斤數</th>
-                <th class="p-3 text-center">備註</th>
-                <th class="p-3 text-center">移除</th>
+                <th class="p-3.5">品名 / 產地</th>
+                <th class="p-3.5 text-center">規格</th>
+                <th class="p-3.5 text-center">叫貨箱數</th>
+                <th class="p-3.5 text-center">叫貨斤數</th>
+                <th class="p-3.5 text-center">備註</th>
+                <th class="p-3.5 text-center">移除</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 text-slate-700">
-              <template x-for="item in orderedItems" :key="item.id">
+            <tbody class="divide-y divide-slate-100 text-slate-800">
+              <template x-for="item in orderedItems" :key="'ord-' + item.id">
                 <tr class="hover:bg-sage-50/30">
-                  <td class="p-3">
-                    <div class="font-bold text-slate-800" x-text="item.name"></div>
-                    <div class="text-[10px] text-slate-400" x-text="item.category + ' · ' + item.origin"></div>
+                  <td class="p-3.5">
+                    <div class="font-bold text-slate-900 text-sm sm:text-base" x-text="item.name"></div>
+                    <div class="text-xs text-slate-500 font-medium" x-text="item.category + ' · ' + item.origin"></div>
                   </td>
-                  <td class="p-3 text-center text-slate-500" x-text="item.spec || '-'"></td>
-                  <td class="p-3 text-center">
-                    <div class="flex items-center justify-center space-x-1">
-                      <button @click="adjustOrderBox(item, -1)" class="touch-btn w-7 h-7 bg-slate-100 rounded font-bold text-xs">-</button>
-                      <input type="number" inputmode="numeric" min="0" x-model.number="item.orderBox" @change="saveData()" class="w-12 text-center font-bold border rounded py-1 text-xs bg-white">
-                      <button @click="adjustOrderBox(item, 1)" class="touch-btn w-7 h-7 bg-sage-100 text-sage-700 rounded font-bold text-xs">+</button>
+                  <td class="p-3.5 text-center text-slate-600 font-medium text-xs sm:text-sm" x-text="item.spec || '-'"></td>
+                  <td class="p-3.5 text-center">
+                    <div class="flex items-center justify-center space-x-1.5">
+                      <button @click="adjustOrderBox(item, -1)" class="touch-btn w-8 h-8 bg-slate-100 rounded-lg font-bold text-sm">-</button>
+                      <input type="number" inputmode="numeric" min="0" x-model.number="item.orderBox" @change="saveData()" class="w-14 text-center font-bold border-2 rounded-lg py-1.5 text-sm bg-white">
+                      <button @click="adjustOrderBox(item, 1)" class="touch-btn w-8 h-8 bg-sage-100 text-sage-800 rounded-lg font-bold text-sm">+</button>
                     </div>
                   </td>
-                  <td class="p-3 text-center">
-                    <div class="flex items-center justify-center space-x-1">
-                      <button @click="adjustOrderWeight(item, -1)" class="touch-btn w-7 h-7 bg-slate-100 rounded font-bold text-xs">-</button>
-                      <input type="number" inputmode="decimal" min="0" step="0.5" x-model.number="item.orderWeight" @change="saveData()" class="w-12 text-center font-bold border rounded py-1 text-xs bg-white">
-                      <button @click="adjustOrderWeight(item, 1)" class="touch-btn w-7 h-7 bg-amber-100 text-amber-700 rounded font-bold text-xs">+</button>
+                  <td class="p-3.5 text-center">
+                    <div class="flex items-center justify-center space-x-1.5">
+                      <button @click="adjustOrderWeight(item, -1)" class="touch-btn w-8 h-8 bg-slate-100 rounded-lg font-bold text-sm">-</button>
+                      <input type="number" inputmode="decimal" min="0" step="0.5" x-model.number="item.orderWeight" @change="saveData()" class="w-14 text-center font-bold border-2 rounded-lg py-1.5 text-sm bg-white">
+                      <button @click="adjustOrderWeight(item, 1)" class="touch-btn w-8 h-8 bg-amber-100 text-amber-800 rounded-lg font-bold text-sm">+</button>
                     </div>
                   </td>
-                  <td class="p-3 text-center">
-                    <input type="text" x-model="item.orderRemark" placeholder="備註..." @change="saveData()" class="w-28 px-2.5 py-1.5 text-xs border rounded bg-white">
+                  <td class="p-3.5 text-center">
+                    <input type="text" x-model="item.orderRemark" placeholder="備註..." @change="saveData()" class="w-32 px-3 py-2 text-xs sm:text-sm border-2 rounded-xl bg-white">
                   </td>
-                  <td class="p-3 text-center">
-                    <button @click="removeFromOrder(item)" class="touch-btn text-slate-400 hover:text-red-500 p-2"><i class="fa-solid fa-trash-can"></i></button>
+                  <td class="p-3.5 text-center">
+                    <button @click="removeFromOrder(item)" class="touch-btn text-slate-400 hover:text-red-600 p-2 text-base"><i class="fa-solid fa-trash-can"></i></button>
                   </td>
                 </tr>
               </template>
@@ -501,45 +599,43 @@
       <!-- DUAL-COLUMN 50/50 COMPARISON SHEET (PDF / PRINT TARGET) -->
       <div x-show="orderedItems.length > 0" class="flex justify-center py-2">
         
-        <!-- Target Wrapper for PDF Export -->
-        <div id="printable-purchase-order" class="w-full max-w-[700px] bg-white p-4 sm:p-6 rounded-2xl border border-slate-300 shadow-sm space-y-4 text-xs text-slate-800">
+        <div id="printable-purchase-order" class="w-full max-w-[700px] bg-white p-5 sm:p-6 rounded-2xl border border-slate-300 shadow-sm space-y-4 text-xs sm:text-sm text-slate-800">
           
-          <!-- Clean Printable Header -->
           <div class="text-center border-b border-slate-300 pb-3">
             <h1 class="text-lg sm:text-xl font-bold tracking-wider text-slate-900">甜蜜果物 鮮果採購對照單</h1>
-            <div class="text-xs text-slate-500 mt-1 flex justify-center items-center gap-4">
-              <span>日期：<span x-text="currentDateFormatted" class="font-medium"></span></span>
-              <span>叫貨總品項：<span x-text="orderedItems.length" class="font-bold text-slate-800"></span> 項</span>
+            <div class="text-xs sm:text-sm text-slate-600 mt-1 flex justify-center items-center gap-5">
+              <span>日期：<span x-text="currentDateFormatted" class="font-bold text-slate-800"></span></span>
+              <span>叫貨總品項：<span x-text="orderedItems.length" class="font-bold text-slate-900"></span> 項</span>
             </div>
           </div>
 
-          <!-- 50% DUAL COLUMN TABLE GRID (RWD: Stack on mobile, side-by-side on tablet/desktop) -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-start pt-1">
+          <!-- 50% DUAL COLUMN TABLE GRID -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start pt-1">
             
             <!-- LEFT COLUMN: 國產水果 -->
-            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/30">
-              <div class="font-bold text-emerald-800 border-b border-emerald-200 pb-1.5 mb-2 flex justify-between items-center text-xs">
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/30">
+              <div class="font-bold text-emerald-900 border-b border-emerald-200 pb-2 mb-2 flex justify-between items-center text-xs sm:text-sm">
                 <span>🇹🇼 國產水果 (左欄)</span>
-                <span class="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded" x-text="domesticOrderedItems.length + '項'"></span>
+                <span class="text-xs text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full font-bold" x-text="domesticOrderedItems.length + '項'"></span>
               </div>
 
-              <table class="w-full text-left text-[11px]">
+              <table class="w-full text-left text-xs sm:text-sm">
                 <thead>
-                  <tr class="text-slate-400 border-b border-slate-200">
-                    <th class="py-1.5 font-medium">品名</th>
-                    <th class="py-1.5 text-center font-medium">規格</th>
-                    <th class="py-1.5 text-right font-medium">叫貨數量</th>
+                  <tr class="text-slate-500 border-b border-slate-200 font-bold">
+                    <th class="py-2">品名</th>
+                    <th class="py-2 text-center">規格</th>
+                    <th class="py-2 text-right">叫貨數量</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                  <template x-for="item in domesticOrderedItems" :key="item.id">
+                  <template x-for="item in domesticOrderedItems" :key="'dom-' + item.id">
                     <tr>
-                      <td class="py-2 font-medium text-slate-800">
+                      <td class="py-2.5 font-bold text-slate-900">
                         <span x-text="item.name"></span>
-                        <div x-show="item.orderRemark" class="text-[9px] text-amber-600 font-normal" x-text="'* ' + item.orderRemark"></div>
+                        <div x-show="item.orderRemark" class="text-[10px] text-amber-700 font-semibold" x-text="'* ' + item.orderRemark"></div>
                       </td>
-                      <td class="py-2 text-center text-slate-500 text-[10px]" x-text="item.spec || '-'"></td>
-                      <td class="py-2 text-right font-bold text-slate-900">
+                      <td class="py-2.5 text-center text-slate-600 text-xs" x-text="item.spec || '-'"></td>
+                      <td class="py-2.5 text-right font-black text-slate-900">
                         <span x-show="item.orderBox > 0" x-text="item.orderBox + '箱 '"></span>
                         <span x-show="item.orderWeight > 0" x-text="item.orderWeight + '斤'"></span>
                         <span x-show="item.orderBox === 0 && item.orderWeight === 0">1箱</span>
@@ -548,7 +644,7 @@
                   </template>
                   <template x-if="domesticOrderedItems.length === 0">
                     <tr>
-                      <td colspan="3" class="py-4 text-center text-slate-400 text-[10px]">無國產貨叫貨項目</td>
+                      <td colspan="3" class="py-6 text-center text-slate-400 text-xs">無國產貨叫貨項目</td>
                     </tr>
                   </template>
                 </tbody>
@@ -556,30 +652,30 @@
             </div>
 
             <!-- RIGHT COLUMN: 進口水果 -->
-            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/30">
-              <div class="font-bold text-blue-900 border-b border-blue-200 pb-1.5 mb-2 flex justify-between items-center text-xs">
+            <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/30">
+              <div class="font-bold text-blue-950 border-b border-blue-200 pb-2 mb-2 flex justify-between items-center text-xs sm:text-sm">
                 <span>✈️ 進口水果 (右欄)</span>
-                <span class="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded" x-text="importedOrderedItems.length + '項'"></span>
+                <span class="text-xs text-blue-900 bg-blue-100 px-2.5 py-0.5 rounded-full font-bold" x-text="importedOrderedItems.length + '項'"></span>
               </div>
 
-              <table class="w-full text-left text-[11px]">
+              <table class="w-full text-left text-xs sm:text-sm">
                 <thead>
-                  <tr class="text-slate-400 border-b border-slate-200">
-                    <th class="py-1.5 font-medium">品名 (產地)</th>
-                    <th class="py-1.5 text-center font-medium">規格</th>
-                    <th class="py-1.5 text-right font-medium">叫貨數量</th>
+                  <tr class="text-slate-500 border-b border-slate-200 font-bold">
+                    <th class="py-2">品名 (產地)</th>
+                    <th class="py-2 text-center">規格</th>
+                    <th class="py-2 text-right">叫貨數量</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                  <template x-for="item in importedOrderedItems" :key="item.id">
+                  <template x-for="item in importedOrderedItems" :key="'imp-' + item.id">
                     <tr>
-                      <td class="py-2 font-medium text-slate-800">
+                      <td class="py-2.5 font-bold text-slate-900">
                         <span x-text="item.name"></span>
-                        <span class="text-[9px] text-blue-600 font-normal" x-text="'(' + item.origin + ')'"></span>
-                        <div x-show="item.orderRemark" class="text-[9px] text-amber-600 font-normal" x-text="'* ' + item.orderRemark"></div>
+                        <span class="text-xs text-blue-700 font-bold" x-text="'(' + item.origin + ')'"></span>
+                        <div x-show="item.orderRemark" class="text-[10px] text-amber-700 font-semibold" x-text="'* ' + item.orderRemark"></div>
                       </td>
-                      <td class="py-2 text-center text-slate-500 text-[10px]" x-text="item.spec || '-'"></td>
-                      <td class="py-2 text-right font-bold text-slate-900">
+                      <td class="py-2.5 text-center text-slate-600 text-xs" x-text="item.spec || '-'"></td>
+                      <td class="py-2.5 text-right font-black text-slate-900">
                         <span x-show="item.orderBox > 0" x-text="item.orderBox + '箱 '"></span>
                         <span x-show="item.orderWeight > 0" x-text="item.orderWeight + '斤'"></span>
                         <span x-show="item.orderBox === 0 && item.orderWeight === 0">1箱</span>
@@ -588,7 +684,7 @@
                   </template>
                   <template x-if="importedOrderedItems.length === 0">
                     <tr>
-                      <td colspan="3" class="py-4 text-center text-slate-400 text-[10px]">無進口貨叫貨項目</td>
+                      <td colspan="3" class="py-6 text-center text-slate-400 text-xs">無進口貨叫貨項目</td>
                     </tr>
                   </template>
                 </tbody>
@@ -597,10 +693,9 @@
 
           </div>
 
-          <!-- Printable Footer -->
-          <div class="pt-3 border-t border-slate-300 text-[10px] text-slate-400 flex justify-between items-center">
+          <div class="pt-3 border-t border-slate-300 text-xs text-slate-500 flex justify-between items-center font-bold">
             <span>採購簽核：____________________</span>
-            <span>甜蜜果物採購系統 · A4 直式</span>
+            <span>甜蜜果物鮮果採購系統 · A4 直式</span>
           </div>
 
         </div>
@@ -611,29 +706,54 @@
 
   </main>
 
-  <!-- MODALS SECTION -->
+  <!-- ==================== MODALS SECTION ==================== -->
+
+  <!-- CLOUD SETTINGS MODAL -->
+  <div x-show="showCloudModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display: none;">
+    <div @click.outside="showCloudModal = false" class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-cloud text-teal-600 text-lg"></i> Firebase 即時雲端同步設定
+        </h3>
+        <button @click="showCloudModal = false" class="touch-btn text-slate-400 p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <p class="text-xs sm:text-sm text-slate-600">請貼上從 Firebase 專案設定中複製的 JSON 設定碼。設定完成後，PC 與 iPad 只要開著網頁即可自動雙向同步。</p>
+      <div>
+        <label class="block font-bold text-slate-700 mb-1.5 text-xs">Firebase Config (JSON 格式)</label>
+        <textarea x-model="cloudConfigText" rows="6" placeholder='{
+  "apiKey": "...",
+  "databaseURL": "https://...",
+  "projectId": "..."
+}' class="w-full p-3 border-2 rounded-xl font-mono text-xs bg-slate-50 focus:outline-none focus:border-sage-500"></textarea>
+      </div>
+      <div class="flex justify-end gap-2.5 pt-3 border-t">
+        <button @click="showCloudModal = false" class="touch-btn px-4 py-2 border-2 rounded-xl font-bold text-xs text-slate-600">取消</button>
+        <button @click="saveCloudConfig()" class="touch-btn px-5 py-2 bg-sage-600 text-white rounded-xl font-bold text-xs shadow-xs hover:bg-sage-700">儲存並連線</button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL 1: ADD / EDIT ITEM MODAL -->
   <div x-show="showItemModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display: none;">
-    <div @click.outside="showItemModal = false" class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-        <h3 class="text-base sm:text-lg font-bold text-slate-800" x-text="isEditing ? '編輯鮮果品項' : '新增鮮果品項'"></h3>
+    <div @click.outside="showItemModal = false" class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="text-base sm:text-lg font-bold text-slate-900" x-text="isEditing ? '編輯鮮果品項' : '新增鮮果品項'"></h3>
         <button @click="showItemModal = false" class="touch-btn text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
 
-      <div class="space-y-4 text-xs sm:text-sm">
+      <div class="space-y-4 text-sm">
         <div>
-          <label class="block text-slate-600 font-medium mb-1">水果品名 *</label>
-          <input type="text" x-model="itemForm.name" placeholder="例如：日本貓眼葡萄, 愛文芒果" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500 bg-white">
+          <label class="block text-slate-700 font-bold mb-1.5">水果品名 *</label>
+          <input type="text" x-model="itemForm.name" placeholder="例如：日本貓眼葡萄" class="w-full px-3.5 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-sage-500 bg-white font-bold text-slate-900">
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-3.5">
           <div>
-            <div class="flex justify-between items-center mb-1">
-              <label class="block text-slate-600 font-medium">國家 / 產地 *</label>
-              <button @click="openOriginModal()" type="button" class="text-[11px] text-sage-600 font-bold hover:underline">+ 新增國家</button>
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="block text-slate-700 font-bold">國家 / 產地 *</label>
+              <button @click="openOriginModal()" type="button" class="text-xs text-sage-700 font-bold hover:underline">+ 新增國家</button>
             </div>
-            <select x-model="itemForm.origin" @change="onOriginChange()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500 bg-white">
+            <select x-model="itemForm.origin" @change="onOriginChange()" class="w-full px-3 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-sage-500 bg-white font-bold text-slate-900">
               <template x-for="orig in origins" :key="orig">
                 <option :value="orig" x-text="orig"></option>
               </template>
@@ -641,36 +761,36 @@
           </div>
 
           <div>
-            <label class="block text-slate-600 font-medium mb-1">歸類類別</label>
-            <input type="text" x-model="itemForm.category" readonly class="w-full px-3.5 py-2.5 rounded-xl border border-slate-100 bg-slate-100 text-slate-500 font-medium cursor-not-allowed">
+            <label class="block text-slate-700 font-bold mb-1.5">歸類類別</label>
+            <input type="text" x-model="itemForm.category" readonly class="w-full px-3.5 py-3 rounded-xl border-2 border-slate-200 bg-slate-100 text-slate-600 font-bold cursor-not-allowed">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-3.5">
           <div>
-            <label class="block text-slate-600 font-medium mb-1">規格 (包裝)</label>
-            <input type="text" x-model="itemForm.spec" placeholder="例如：2kg/原箱" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500 bg-white">
+            <label class="block text-slate-700 font-bold mb-1.5">規格 (包裝)</label>
+            <input type="text" x-model="itemForm.spec" placeholder="例如：2kg/原箱" class="w-full px-3.5 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-sage-500 bg-white font-medium text-slate-800">
           </div>
 
           <div>
-            <label class="block text-slate-600 font-medium mb-1">現有庫存 (箱)</label>
-            <input type="number" inputmode="numeric" min="0" x-model.number="itemForm.stock" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500 bg-white">
+            <label class="block text-slate-700 font-bold mb-1.5">現有庫存 (箱)</label>
+            <input type="number" inputmode="numeric" min="0" x-model.number="itemForm.stock" class="w-full px-3.5 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-sage-500 bg-white font-black text-slate-900 text-center">
           </div>
         </div>
 
         <div>
-          <label class="block text-slate-600 font-medium mb-1">安全預警閥值 (箱)</label>
-          <input type="number" inputmode="numeric" min="0" x-model.number="itemForm.safetyStock" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500 bg-white">
+          <label class="block text-slate-700 font-bold mb-1.5">安全預警閥值 (箱)</label>
+          <input type="number" inputmode="numeric" min="0" x-model.number="itemForm.safetyStock" class="w-full px-3.5 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-sage-500 bg-white font-bold text-slate-900 text-center">
         </div>
 
-        <div class="flex items-center space-x-2 pt-1">
-          <input type="checkbox" id="starCheck" x-model="itemForm.isFavorite" class="rounded text-sage-600 focus:ring-sage-500 w-4 h-4">
-          <label for="starCheck" class="text-xs sm:text-sm font-bold text-slate-700 cursor-pointer">標記為常叫貨品項</label>
+        <div class="flex items-center space-x-2.5 pt-1">
+          <input type="checkbox" id="starCheck" x-model="itemForm.isFavorite" class="rounded text-sage-600 focus:ring-sage-500 w-5 h-5">
+          <label for="starCheck" class="text-sm font-bold text-slate-800 cursor-pointer">標記為常叫貨品項 (顯示於常叫貨專區)</label>
         </div>
 
-        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
-          <button @click="showItemModal = false" type="button" class="touch-btn px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-medium">取消</button>
-          <button @click="saveItemForm()" type="button" class="touch-btn px-5 py-2 bg-sage-600 hover:bg-sage-700 active:bg-sage-800 text-white rounded-xl text-xs font-medium shadow-sm">儲存</button>
+        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <button @click="showItemModal = false" type="button" class="touch-btn px-4.5 py-2.5 border-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50">取消</button>
+          <button @click="saveItemForm()" type="button" class="touch-btn px-5 py-2.5 bg-sage-600 hover:bg-sage-700 text-white rounded-xl text-xs font-bold shadow-xs">儲存</button>
         </div>
       </div>
     </div>
@@ -678,31 +798,31 @@
 
   <!-- MODAL 2: BATCH ADD ITEMS MODAL -->
   <div x-show="showBatchModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display: none;">
-    <div @click.outside="showBatchModal = false" class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-100">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
-        <h3 class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2">
-          <i class="fa-solid fa-list-check text-sage-600"></i>
+    <div @click.outside="showBatchModal = false" class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-sage-600 text-lg"></i>
           批量新增品項與多規格
         </h3>
-        <button @click="showBatchModal = false" class="touch-btn text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <button @click="showBatchModal = false" class="touch-btn text-slate-400 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
 
-      <div class="space-y-3">
-        <div class="p-3 bg-sage-50 border border-sage-200 rounded-xl text-[11px] sm:text-xs text-sage-800 leading-relaxed space-y-1">
+      <div class="space-y-3.5 text-sm">
+        <div class="p-3.5 bg-sage-50 border border-sage-200 rounded-2xl text-xs text-sage-900 leading-relaxed space-y-1">
           <p class="font-bold flex items-center gap-1">
-            <i class="fa-solid fa-circle-info"></i> 智慧多規格拆解格式範例：
+            <i class="fa-solid fa-circle-info text-sage-600"></i> 智慧多規格拆解格式範例：
           </p>
-          <ul class="list-disc pl-4 space-y-0.5 text-slate-600">
-            <li><b class="text-slate-800">多尺寸逗號拆分：</b><code class="bg-white px-1 rounded border">台中椪柑 23, 27, 30尺寸</code></li>
-            <li><b class="text-slate-800">品牌與多規格：</b><code class="bg-white px-1 rounded border">紐西蘭櫻桃 品牌:藍白 30, 32, 34 紐西蘭</code></li>
+          <ul class="list-disc pl-4 space-y-0.5 text-slate-700">
+            <li><b>多尺寸逗號拆分：</b><code class="bg-white px-1.5 py-0.5 rounded border">台中椪柑 23, 27, 30尺寸</code></li>
+            <li><b>產地與規格：</b><code class="bg-white px-1.5 py-0.5 rounded border">紐西蘭櫻桃 30, 32, 34 紐西蘭</code></li>
           </ul>
         </div>
 
-        <textarea x-model="batchInputText" rows="6" placeholder="請直接貼上或輸入品項..." class="w-full p-3 text-xs sm:text-sm border border-slate-200 rounded-xl focus:outline-none focus:border-sage-500 font-mono leading-relaxed bg-white"></textarea>
+        <textarea x-model="batchInputText" rows="6" placeholder="請直接貼上或輸入品項..." class="w-full p-3.5 text-sm border-2 rounded-xl focus:outline-none focus:border-sage-500 font-mono leading-relaxed bg-white"></textarea>
 
-        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-          <button @click="showBatchModal = false" class="touch-btn px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-medium">取消</button>
-          <button @click="processBatchAdd()" class="touch-btn px-5 py-2 bg-sage-600 hover:bg-sage-700 active:bg-sage-800 text-white rounded-xl text-xs font-medium shadow-sm flex items-center gap-1">
+        <div class="flex justify-end gap-2.5 pt-3 border-t">
+          <button @click="showBatchModal = false" class="touch-btn px-4 py-2 border-2 rounded-xl text-xs font-bold text-slate-600">取消</button>
+          <button @click="processBatchAdd()" class="touch-btn px-5 py-2 bg-sage-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-sage-700 flex items-center gap-1.5">
             <i class="fa-solid fa-check"></i>
             <span>確認自動拆分並匯入</span>
           </button>
@@ -713,29 +833,29 @@
 
   <!-- MODAL 3: ORIGIN MANAGER MODAL -->
   <div x-show="showOriginModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display: none;">
-    <div @click.outside="showOriginModal = false" class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-100">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
-        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-          <i class="fa-solid fa-earth-americas text-sage-600"></i>
-          管理 / 新增國家產地
+    <div @click.outside="showOriginModal = false" class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-earth-americas text-sage-600 text-lg"></i>
+          管理國家產地
         </h3>
-        <button @click="showOriginModal = false" class="touch-btn text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark"></i></button>
+        <button @click="showOriginModal = false" class="touch-btn text-slate-400 p-1"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <div class="space-y-3">
+      <div class="space-y-3.5 text-sm">
         <div class="flex gap-2">
-          <input type="text" x-model="newOriginInput" @keydown.enter.prevent="addNewOrigin()" placeholder="例如：韓國, 泰國..." class="flex-1 px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-sage-500 bg-white">
-          <button @click="addNewOrigin()" class="touch-btn px-4 py-2 bg-sage-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-sage-700">新增</button>
+          <input type="text" x-model="newOriginInput" @keydown.enter.prevent="addNewOrigin()" placeholder="例如：韓國, 泰國..." class="flex-1 px-3.5 py-2.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-sage-500 font-bold text-slate-800">
+          <button @click="addNewOrigin()" class="touch-btn px-4 py-2.5 bg-sage-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-sage-700">新增</button>
         </div>
 
-        <div class="pt-2">
-          <label class="text-[11px] font-bold text-slate-500 block mb-1.5">現有國家清單：</label>
+        <div>
+          <label class="text-xs font-bold text-slate-500 block mb-2">現有國家清單：</label>
           <div class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1">
             <template x-for="orig in origins" :key="orig">
-              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 text-slate-800 text-xs font-bold">
                 <span x-text="orig"></span>
                 <template x-if="orig !== '台灣'">
-                  <button @click="removeOrigin(orig)" class="touch-btn text-slate-400 hover:text-red-500 ml-0.5 p-1"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                  <button @click="removeOrigin(orig)" class="touch-btn text-slate-400 hover:text-red-600 p-0.5"><i class="fa-solid fa-xmark text-xs"></i></button>
                 </template>
               </span>
             </template>
@@ -747,28 +867,31 @@
 
   <!-- MODAL 4: RESET CONFIRM MODAL -->
   <div x-show="showResetConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display: none;">
-    <div class="bg-white rounded-2xl max-w-xs w-full p-5 text-center shadow-2xl border border-slate-100">
-      <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+    <div class="bg-white rounded-3xl max-w-xs w-full p-6 text-center shadow-2xl border border-slate-100 space-y-3">
+      <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl">
         <i class="fa-solid fa-trash-can"></i>
       </div>
-      <h3 class="text-sm font-bold text-slate-800 mb-1">確定要完全清空資料嗎？</h3>
-      <p class="text-xs text-slate-500 mb-4">這將會清空所有庫存品項與叫貨紀錄。</p>
-      <div class="flex gap-2 justify-center">
-        <button @click="showResetConfirm = false" class="touch-btn px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-medium">取消</button>
-        <button @click="resetDataToDefault()" class="touch-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-sm">確定清空</button>
+      <h3 class="text-base font-bold text-slate-900">確定要完全清空資料嗎？</h3>
+      <p class="text-xs text-slate-500">這將會清空所有庫存品項與叫貨紀錄。</p>
+      <div class="flex gap-2.5 justify-center pt-2">
+        <button @click="showResetConfirm = false" class="touch-btn px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold">取消</button>
+        <button @click="resetDataToDefault()" class="touch-btn px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold shadow-sm">確定清空</button>
       </div>
     </div>
   </div>
 
-  <!-- Alpine.js Application Script -->
+  <!-- Alpine.js Application Script with Firebase Sync -->
   <script>
     function fruitApp() {
       return {
         activeTab: 'inventory',
         searchQuery: '',
         filterCategory: 'ALL',
-        filterStarOnly: false,
         filterLowStockOnly: false,
+
+        showCloudModal: false,
+        isCloudConnected: false,
+        cloudConfigText: localStorage.getItem('fruit_cloud_config') || '',
 
         toast: {
           show: false,
@@ -829,15 +952,80 @@
           }
 
           if (localOrigins) {
-            try {
-              this.origins = JSON.parse(localOrigins);
-            } catch(e) {}
+            try { this.origins = JSON.parse(localOrigins); } catch(e) {}
           }
+
+          this.initFirebase();
+        },
+
+        initFirebase() {
+          if (!this.cloudConfigText.trim()) return;
+          try {
+            let config = JSON.parse(this.cloudConfigText);
+            if (!firebase.apps.length) {
+              firebase.initializeApp(config);
+            }
+            const dbRef = firebase.database().ref('fruitInventoryData');
+            
+            dbRef.on('value', (snapshot) => {
+              const cloudData = snapshot.val();
+              if (cloudData) {
+                if (cloudData.inventory) {
+                  this.inventory = cloudData.inventory.map(item => ({
+                    ...item,
+                    isFavorite: item.isFavorite !== undefined ? item.isFavorite : (item.starred || false)
+                  }));
+                }
+                if (cloudData.origins) this.origins = cloudData.origins;
+                localStorage.setItem('sweet_fruit_inventory', JSON.stringify(this.inventory));
+                localStorage.setItem('sweet_fruit_origins', JSON.stringify(this.origins));
+                this.isCloudConnected = true;
+                this.updateCloudStatusUI(true);
+              }
+            });
+            this.isCloudConnected = true;
+            this.updateCloudStatusUI(true);
+          } catch (e) {
+            console.error('Firebase 連線失敗:', e);
+            this.isCloudConnected = false;
+            this.updateCloudStatusUI(false);
+          }
+        },
+
+        updateCloudStatusUI(connected) {
+          const badge = document.getElementById('cloud-status-badge');
+          const text = document.getElementById('cloud-status-text');
+          if (!badge || !text) return;
+          if (connected) {
+            badge.className = "text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 bg-emerald-500 text-slate-950 shadow-2xs";
+            text.innerText = "雲端即時連線中";
+          } else {
+            badge.className = "text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 bg-amber-500 text-slate-950 shadow-2xs";
+            text.innerText = "本機模式";
+          }
+        },
+
+        openCloudModal() {
+          this.showCloudModal = true;
+        },
+
+        saveCloudConfig() {
+          localStorage.setItem('fruit_cloud_config', this.cloudConfigText);
+          this.showCloudModal = false;
+          this.initFirebase();
+          this.showNotification('雲端設定已儲存並重新連線！');
         },
 
         saveData() {
           localStorage.setItem('sweet_fruit_inventory', JSON.stringify(this.inventory));
           localStorage.setItem('sweet_fruit_origins', JSON.stringify(this.origins));
+
+          if (this.isCloudConnected && firebase.apps.length) {
+            firebase.database().ref('fruitInventoryData').set({
+              inventory: this.inventory,
+              origins: this.origins
+            });
+          }
         },
 
         showNotification(message, type = 'success') {
@@ -858,10 +1046,9 @@
           const matchesSearch = item.name.toLowerCase().includes(q) ||
                                 item.origin.toLowerCase().includes(q) ||
                                 (item.spec && item.spec.toLowerCase().includes(q));
-          const matchesStar = this.filterStarOnly ? item.isFavorite : true;
           const matchesLowStock = this.filterLowStockOnly ? (item.stock <= item.safetyStock) : true;
 
-          return matchesSearch && matchesStar && matchesLowStock;
+          return matchesSearch && matchesLowStock;
         },
 
         getDomesticItems() {
@@ -870,6 +1057,14 @@
 
         getImportedItems() {
           return this.inventory.filter(i => i.category === '進口');
+        },
+
+        getFavoriteItems() {
+          return this.inventory.filter(item => {
+            const q = this.searchQuery.toLowerCase();
+            const matchesSearch = !q || item.name.toLowerCase().includes(q) || item.origin.toLowerCase().includes(q) || (item.spec && item.spec.toLowerCase().includes(q));
+            return item.isFavorite && matchesSearch;
+          });
         },
 
         getImportedCountries() {
@@ -1134,7 +1329,7 @@
           const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObject, null, 2));
           const downloadAnchor = document.createElement('a');
           downloadAnchor.setAttribute("href", dataStr);
-          downloadAnchor.setAttribute("download", `甜蜜果物庫存盤點備份_${new Date().toISOString().slice(0,10)}.json`);
+          downloadAnchor.setAttribute("download", `甜蜜果物鮮果庫存備份_${new Date().toISOString().slice(0,10)}.json`);
           document.body.appendChild(downloadAnchor);
           downloadAnchor.click();
           downloadAnchor.remove();
