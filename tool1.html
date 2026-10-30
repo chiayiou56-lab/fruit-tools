@@ -20,7 +20,7 @@
       -webkit-overflow-scrolling: touch;
     }
     
-            @media print {
+    @media print {
       html, body {
         width: 100% !important;
         height: auto !important;
@@ -45,19 +45,26 @@
         height: auto !important;
         background: #ffffff !important;
         color: #000000 !important;
-        padding: 4mm !important;
+        padding: 6mm !important;
         box-sizing: border-box !important;
         overflow: visible !important;
-        page-break-inside: avoid !important;
-        page-break-after: avoid !important;
-        page-break-before: avoid !important;
+      }
+      #print-area table {
+        width: 100% !important;
+        table-layout: fixed !important;
+        border-collapse: collapse !important;
+      }
+      #print-area th, #print-area td {
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        padding: 4px 6px !important;
       }
       .no-print {
         display: none !important;
       }
       @page {
         size: A4 portrait;
-        margin: 8mm;
+        margin: 10mm;
       }
     }
   </style>
@@ -140,7 +147,6 @@
         <span>進貨明細清單</span>
       </div>
       <div class="flex items-center gap-1.5">
-        
         <button onclick="copyLineSummary()" class="bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50/50 text-xs px-2.5 py-1.5 rounded-lg font-medium shadow-sm flex items-center gap-1 active:scale-95 transition">
           <i data-lucide="copy" class="w-3.5 h-3.5 text-slate-500"></i>
           <span>複製簡報</span>
@@ -315,7 +321,6 @@
         <div class="border-b-2 border-emerald-600 pb-1.5 mb-2 flex justify-between items-end">
           <div>
             <h1 class="text-sm font-black text-slate-800 tracking-wide">當日水果進貨精簡摘要表</h1>
-            
           </div>
           <div class="text-right">
             <span class="inline-block bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded-full">甜蜜果物 報表</span>
@@ -741,22 +746,7 @@
       window.open(`https://line.me/R/msg/text/?${encodeURIComponent(txt)}`, '_blank');
     }
 
-    function downloadHtmlFile() {
-      const htmlContent = document.documentElement.outerHTML;
-      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'fruit_inventory_manager.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
     function openPdfModal() {
-      
-
       let totalAmount = 0, totalBoxes = 0, loadedBoxes = 0, unpaidAmount = 0;
 
       const pdfSummaryTbody = document.getElementById('pdf-summary-table-body');
