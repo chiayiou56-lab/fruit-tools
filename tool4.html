@@ -373,12 +373,12 @@
                           <td class="py-3 px-2 font-bold" x-text="item.name"></td>
                           <td class="py-3 px-2">
                             <div class="inline-flex items-center border-2 rounded-xl p-1 gap-1">
-                              <button @click="item.orderWeight = Math.max(0, item.orderWeight - 1)" class="w-8 h-8 font-black">-</button>
-                              <input type="number" x-model.number="item.orderWeight" class="w-12 text-center font-black bg-transparent">
-                              <button @click="item.orderWeight = Math.max(0, item.orderWeight + 1)" class="w-8 h-8 font-black">+</button>
+                              <button @click="item.orderWeight = Math.max(0, item.orderWeight - 1); saveInventory()" class="w-8 h-8 font-black">-</button>
+                              <input type="number" x-model.number="item.orderWeight" @input="saveInventory()" class="w-12 text-center font-black bg-transparent">
+                              <button @click="item.orderWeight = Math.max(0, item.orderWeight + 1); saveInventory()" class="w-8 h-8 font-black">+</button>
                             </div>
                           </td>
-                          <td class="py-3 px-2"><input type="text" x-model="item.orderRemark" placeholder="備註..." class="w-32 px-2 py-1 border rounded-lg"></td>
+                          <td class="py-3 px-2"><input type="text" x-model="item.orderRemark" @input="saveInventory()" placeholder="備註..." class="w-32 px-2 py-1 border rounded-lg"></td>
                           <td class="py-3 px-2 text-right"><button @click="removeFromOrder(item.id)" class="text-rose-600"><i class="fa-solid fa-trash-can"></i></button></td>
                         </tr>
                       </template>
@@ -519,7 +519,7 @@
           { id: 5, name: '客製化提袋', spec: '大號藍色', origin: '淘寶', unit: '個', currentStock: 2, safetyStock: 20, isFavorite: true },
           { id: 6, name: '網狀水果護套', spec: '12cm白色', origin: '淘寶', unit: '包', currentStock: 15, safetyStock: 5, isFavorite: false }
         ],
-        orderedItems: [],
+        orderedItems: JSON.parse(localStorage.getItem('pkg_ordered_items')) || [],
 
         init() {
           this.initFirebase();
@@ -539,8 +539,10 @@
               if (cloudData) {
                 if (cloudData.inventory) this.inventory = cloudData.inventory;
                 if (cloudData.suppliers) this.suppliers = cloudData.suppliers;
+                if (cloudData.orderedItems) this.orderedItems = cloudData.orderedItems;
                 localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
                 localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
+                localStorage.setItem('pkg_ordered_items', JSON.stringify(this.orderedItems));
                 this.isCloudConnected = true;
               }
             });
@@ -561,11 +563,13 @@
         saveInventory() {
           localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
           localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
+          localStorage.setItem('pkg_ordered_items', JSON.stringify(this.orderedItems));
           
           if (this.isCloudConnected && firebase.apps.length) {
             firebase.database().ref('packagingData').set({
               inventory: this.inventory,
-              suppliers: this.suppliers
+              suppliers: this.suppliers,
+              orderedItems: this.orderedItems
             });
           }
         },
@@ -662,6 +666,7 @@
             this.orderedItems.push({ ...item, orderBox: 1, orderWeight: 0, orderRemark: '' });
             this.showToast(`已加入叫貨單：「${item.name}」`);
           }
+          this.saveInventory();
         },
 
         isItemOrdered(itemId) {
@@ -670,11 +675,13 @@
 
         removeFromOrder(itemId) {
           this.orderedItems = this.orderedItems.filter(o => o.id !== itemId);
+          this.saveInventory();
         },
 
         clearOrderList() {
           if (confirm('確定要清空今日叫貨清單嗎？')) {
             this.orderedItems = [];
+            this.saveInventory();
             this.showToast('已清空叫貨清單');
           }
         },
@@ -757,7 +764,7 @@
         exportData() {
           const now = new Date();
           const fileName = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}包材資料.json`;
-          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ inventory: this.inventory, suppliers: this.suppliers }, null, 2));
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ inventory: this.inventory, suppliers: this.suppliers, orderedItems: this.orderedItems }, null, 2));
           const dlAnchorElem = document.createElement('a');
           dlAnchorElem.setAttribute("href", dataStr);
           dlAnchorElem.setAttribute("download", fileName);
@@ -774,6 +781,7 @@
               const data = JSON.parse(e.target.result);
               if (data.inventory) this.inventory = data.inventory;
               if (data.suppliers) this.suppliers = data.suppliers;
+              if (data.orderedItems) this.orderedItems = data.orderedItems;
               this.saveInventory();
               this.showToast('備份還原成功');
             } catch (err) { alert('格式錯誤'); }
