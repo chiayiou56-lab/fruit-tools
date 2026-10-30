@@ -500,11 +500,11 @@
                 dbRef.on('value', (snapshot) => {
                     const cloudData = snapshot.val();
                     if (cloudData) {
-                        if (cloudData.players) players = cloudData.players;
-                        if (cloudData.tournamentSize !== undefined) tournamentSize = cloudData.tournamentSize;
-                        if (cloudData.assignedSeeds) assignedSeeds = cloudData.assignedSeeds;
-                        if (cloudData.bracketData) bracketData = cloudData.bracketData;
-                        if (cloudData.top3Data) top3Data = cloudData.top3Data;
+                        players = cloudData.players || [];
+                        tournamentSize = cloudData.tournamentSize !== undefined ? cloudData.tournamentSize : 16;
+                        assignedSeeds = cloudData.assignedSeeds || [];
+                        bracketData = cloudData.bracketData || { rounds: [] };
+                        top3Data = cloudData.top3Data || { players: [], matches: [] };
 
                         saveAllToStorage(false); // Update local storage without looping cloud push
                         renderPlayerTable();
@@ -665,7 +665,7 @@
             assignedSeeds = [];
             bracketData = { rounds: [] };
             top3Data = { players: [], matches: [] };
-            saveAllToStorage();
+            saveAllToStorage(); // 確保同時將空陣列推送到雲端
             renderPlayerTable();
             renderAssignedSeeds();
             renderBracketTree();
