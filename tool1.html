@@ -734,7 +734,14 @@
     // 使用 html2pdf.js 在 iPad 上完美生成 PDF 檔案下載，徹底解決表格被裁切的問題
     function downloadPdfDirect() {
       renderPdfSummary();
-      // 在 iPad / 行動裝置上使用原生列印儲存為 PDF，最穩定且絕不全白
+      // 自動設定當日日期作為 PDF 檔名 (例如: 2026-10-30進貨單)
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      document.title = `${y}-${m}-${d}進貨單`;
+      
+      // 呼叫原生列印/儲存 PDF
       window.print();
     }
   </script>
