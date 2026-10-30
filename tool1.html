@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>水果進貨計算與上車管理工具</title>
+  <title>水果進貨與上車管理工具</title>
   
   <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -16,6 +16,12 @@
     }
     
     @media print {
+      html, body {
+        height: 100% !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
       body * {
         visibility: hidden !important;
       }
@@ -23,40 +29,46 @@
         visibility: visible !important;
       }
       #print-area {
-        position: absolute !important;
+        position: fixed !important;
         left: 0 !important;
         top: 0 !important;
         width: 100% !important;
+        height: 100% !important;
+        max-height: 100vh !important;
         background: #ffffff !important;
         color: #000000 !important;
-        padding: 15px !important;
+        padding: 2mm !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        page-break-after: avoid !important;
+        page-break-before: avoid !important;
+        page-break-inside: avoid !important;
       }
       .no-print {
         display: none !important;
       }
       @page {
         size: A4 portrait;
-        margin: 10mm;
+        margin: 5mm;
       }
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 pb-12">
+<body class="bg-[#F8FAF7] text-slate-800 pb-12">
 
-  <!-- 頂部 Header -->
-  <header class="sticky top-0 z-30 bg-emerald-700 text-white shadow-md backdrop-blur-md bg-opacity-95 pt-safe">
+  <!-- 頂部 Header (小清新薄荷綠) -->
+  <header class="sticky top-0 z-30 bg-[#059669] text-white shadow-sm backdrop-blur-md bg-opacity-95 pt-safe">
     <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-2">
-        <i data-lucide="shopping-bag" class="w-6 h-6"></i>
-        <h1 class="text-lg font-bold tracking-wide">水果進貨與上車管理</h1>
+        <i data-lucide="sprout" class="w-6 h-6 text-emerald-100"></i>
+        <h1 class="text-lg font-bold tracking-wide">甜蜜果物 - 進貨與上車管理</h1>
       </div>
       <div class="flex items-center space-x-2">
-        <!-- 🏠 回首頁按鈕 -->
-        <a href="index.html" class="bg-emerald-800 hover:bg-emerald-900 text-white text-xs px-3 py-1.5 rounded-full font-medium shadow flex items-center space-x-1 transition">
+        <a href="index.html" class="bg-emerald-700/80 hover:bg-emerald-800 text-white text-xs px-3 py-1.5 rounded-full font-medium shadow-sm flex items-center space-x-1 transition">
           <i data-lucide="home" class="w-3.5 h-3.5"></i>
           <span>回首頁</span>
         </a>
-        <button onclick="openModal()" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-sm px-3.5 py-1.5 rounded-full font-medium shadow flex items-center space-x-1 transition">
+        <button onclick="openModal()" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-sm px-3.5 py-1.5 rounded-full font-medium shadow-sm flex items-center space-x-1 transition">
           <i data-lucide="plus" class="w-4 h-4"></i>
           <span>新增進貨</span>
         </button>
@@ -67,35 +79,35 @@
   <main class="max-w-4xl mx-auto px-3 sm:px-4 pt-4 space-y-4">
 
     <!-- 1. 當日進貨統計總覽 -->
-    <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
-      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1">
+    <section class="bg-white rounded-2xl p-4 shadow-sm border border-emerald-100/60">
+      <h2 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
         <i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-600"></i>
         當日進貨統計總覽
       </h2>
       <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
         
         <!-- 總金額 -->
-        <div class="bg-emerald-50/80 border border-emerald-100 rounded-xl p-3">
+        <div class="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3">
           <div class="text-xs text-emerald-700 font-medium">總金額</div>
           <div class="text-lg sm:text-xl font-extrabold text-emerald-900 mt-0.5" id="stat-total-amount">$0</div>
         </div>
 
         <!-- 總箱數 -->
-        <div class="bg-blue-50/80 border border-blue-100 rounded-xl p-3">
-          <div class="text-xs text-blue-700 font-medium">總箱數</div>
-          <div class="text-lg sm:text-xl font-extrabold text-blue-900 mt-0.5"><span id="stat-total-boxes">0</span> <span class="text-xs font-normal">箱</span></div>
+        <div class="bg-sky-50/60 border border-sky-100 rounded-xl p-3">
+          <div class="text-xs text-sky-700 font-medium">總箱數</div>
+          <div class="text-lg sm:text-xl font-extrabold text-sky-900 mt-0.5"><span id="stat-total-boxes">0</span> <span class="text-xs font-normal">箱</span></div>
         </div>
 
         <!-- 已上車箱數 -->
-        <div class="bg-emerald-100/60 border border-emerald-200 rounded-xl p-3">
-          <div class="text-xs text-emerald-800 font-medium flex items-center gap-1">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>已上車箱數
+        <div class="bg-teal-50/80 border border-teal-100 rounded-xl p-3">
+          <div class="text-xs text-teal-800 font-medium flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-teal-500"></span>已上車箱數
           </div>
-          <div class="text-lg sm:text-xl font-extrabold text-emerald-900 mt-0.5"><span id="stat-loaded-boxes">0</span> <span class="text-xs font-normal">箱</span></div>
+          <div class="text-lg sm:text-xl font-extrabold text-teal-900 mt-0.5"><span id="stat-loaded-boxes">0</span> <span class="text-xs font-normal">箱</span></div>
         </div>
 
         <!-- 未上車箱數 -->
-        <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-3">
+        <div class="bg-amber-50/70 border border-amber-100 rounded-xl p-3">
           <div class="text-xs text-amber-800 font-medium flex items-center gap-1">
             <span class="w-2 h-2 rounded-full bg-amber-500"></span>未上車箱數
           </div>
@@ -103,7 +115,7 @@
         </div>
 
         <!-- 未付款金額 -->
-        <div class="col-span-2 sm:col-span-1 bg-rose-50/80 border border-rose-200 rounded-xl p-3">
+        <div class="col-span-2 sm:col-span-1 bg-rose-50/70 border border-rose-100 rounded-xl p-3">
           <div class="text-xs text-rose-700 font-medium flex items-center gap-1">
             <span class="w-2 h-2 rounded-full bg-rose-500"></span>未付款金額
           </div>
@@ -116,39 +128,39 @@
     <!-- 快捷功能按鈕區 -->
     <div class="flex items-center justify-between gap-2">
       <div class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
-        <i data-lucide="list" class="w-4 h-4 text-emerald-600"></i>
-        <span>進貨清單明細</span>
+        <i data-lucide="list-checks" class="w-4 h-4 text-emerald-600"></i>
+        <span>進貨明細清單</span>
       </div>
       <div class="flex items-center gap-1.5">
-        <button onclick="copyLineSummary()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs px-2.5 py-1.5 rounded-lg font-medium shadow-sm flex items-center gap-1 active:scale-95 transition">
+        
+        <button onclick="copyLineSummary()" class="bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50/50 text-xs px-2.5 py-1.5 rounded-lg font-medium shadow-sm flex items-center gap-1 active:scale-95 transition">
           <i data-lucide="copy" class="w-3.5 h-3.5 text-slate-500"></i>
           <span>複製簡報</span>
         </button>
         <button onclick="shareToLine()" class="bg-[#06C755] hover:bg-[#05b34c] text-white text-xs px-2.5 py-1.5 rounded-lg font-medium shadow-sm flex items-center gap-1 active:scale-95 transition">
           <i data-lucide="send" class="w-3.5 h-3.5"></i>
-          <span>分享LINE好友</span>
+          <span>分享LINE</span>
         </button>
         <button onclick="openPdfModal()" class="bg-emerald-600 text-white hover:bg-emerald-700 text-xs px-2.5 py-1.5 rounded-lg font-medium shadow-sm flex items-center gap-1 active:scale-95 transition">
           <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-          <span>輸出 PDF</span>
+          <span>輸出 A4 PDF</span>
         </button>
       </div>
     </div>
 
-    <!-- 2. 進貨明細表格 -->
-    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <!-- 2. 進貨明細表格 (嚴格對齊：品名, 規格, 數量, 價錢, 付款狀態) -->
+    <section class="bg-white rounded-2xl shadow-sm border border-emerald-100/60 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-semibold">
-              <th class="py-3 px-3 text-center min-w-[90px]">上車狀態</th>
-              <th class="py-3 px-3 min-w-[130px]">品名</th>
-              <th class="py-3 px-3 min-w-[110px]">進貨商</th>
-              <th class="py-3 px-3 text-center min-w-[70px]">總箱數</th>
-              <th class="py-3 px-3 min-w-[190px]">規格與內容</th>
-              <th class="py-3 px-3 text-center min-w-[95px]">付款狀態</th>
-              <th class="py-3 px-3 text-right min-w-[90px]">總金額</th>
-              <th class="py-3 px-3 text-center min-w-[80px]">操作</th>
+            <tr class="bg-emerald-50/50 border-b border-slate-100 text-emerald-800 text-xs font-semibold">
+              <th class="py-3 px-3 text-center min-w-[85px]">上車狀態</th>
+              <th class="py-3 px-3 min-w-[110px]">品名 / 進貨商</th>
+              <th class="py-3 px-3 min-w-[190px]">規格</th>
+              <th class="py-3 px-3 text-center min-w-[85px]">數量</th>
+              <th class="py-3 px-3 text-right min-w-[90px]">價錢</th>
+              <th class="py-3 px-3 text-center min-w-[90px]">付款狀態</th>
+              <th class="py-3 px-3 text-center min-w-[70px]">操作</th>
             </tr>
           </thead>
           <tbody id="inventory-table-body" class="divide-y divide-slate-100 text-sm">
@@ -158,10 +170,46 @@
       </div>
     </section>
 
-    <!-- 底部操作列：清除紀錄 -->
-    <div class="pt-2 flex justify-between items-center text-xs text-slate-400">
-      <span>已自動儲存至手機記憶體</span>
-      <button onclick="clearAllData()" class="text-rose-600 hover:text-rose-700 font-medium underline flex items-center gap-1">
+    <!-- 3. 最下方新增：精簡摘要表格區塊 (寬度縮減約25%) -->
+    <section class="bg-white rounded-2xl p-4 shadow-sm border border-emerald-100/65 space-y-3 flex flex-col items-center">
+      <div class="w-full max-w-[75%] flex items-center justify-between">
+        <h2 class="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="table" class="w-4 h-4 text-emerald-600"></i>
+          進貨精簡摘要表格（A4直式格式）
+        </h2>
+        <div class="flex items-center gap-1.5">
+          <button onclick="openPdfModal()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow-sm flex items-center gap-1 transition active:scale-95">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>下載 PDF / 分享報表</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- 精簡摘要表格預覽 (最大寬度設定為 75%) -->
+      <div class="w-full max-w-[75%] border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50 shadow-2xs">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-emerald-100/70 border-b border-slate-200 text-emerald-900 font-bold">
+                <th class="py-2 px-3">品名</th>
+                <th class="py-2 px-3">規格</th>
+                <th class="py-2 px-3 text-center">數量</th>
+                <th class="py-2 px-3 text-right">價格</th>
+                <th class="py-2 px-3 text-center">付款狀態</th>
+              </tr>
+            </thead>
+            <tbody id="summary-table-body" class="divide-y divide-slate-200 bg-white">
+              <!-- 動態填入精簡摘要 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 底部操作列 -->
+    <div class="pt-2 flex justify-between items-center text-xs text-slate-400 px-1">
+      <span>已自動儲存至手機記憶體 (小清新模式)</span>
+      <button onclick="clearAllData()" class="text-rose-500 hover:text-rose-600 font-medium underline flex items-center gap-1">
         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
         <span>清除紀錄</span>
       </button>
@@ -170,10 +218,13 @@
   </main>
 
   <!-- ==================== 新增/編輯 彈窗 (Modal) ==================== -->
-  <div id="item-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
-    <div class="bg-white w-full sm:max-w-xl rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
-      <div class="px-5 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-        <h3 id="modal-title" class="font-bold text-slate-800 text-base">新增進貨紀錄</h3>
+  <div id="item-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-end sm:items-center justify-center hidden p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-xl rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden max-h-[92vh] flex flex-col">
+      <div class="px-5 py-3.5 bg-emerald-50 border-b border-emerald-100 flex justify-between items-center">
+        <h3 id="modal-title" class="font-bold text-emerald-900 text-base flex items-center gap-1.5">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i>
+          <span>新增進貨紀錄</span>
+        </h3>
         <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
@@ -182,196 +233,135 @@
       <form id="item-form" onsubmit="handleFormSubmit(event)" class="p-5 space-y-4 overflow-y-auto flex-1 text-sm">
         <input type="hidden" id="edit-id">
 
-        <!-- 品名與進貨商 -->
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">水果名稱 <span class="text-rose-500">*</span></label>
-            <input type="text" id="input-name" required placeholder="如：芒果、蘋果" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <input type="text" id="input-name" required placeholder="如：芒果、蘋果" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50/50">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">進貨商</label>
-            <input type="text" id="input-supplier" placeholder="如：阿龍農商" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <input type="text" id="input-supplier" placeholder="如：阿龍農商" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50/50">
           </div>
         </div>
 
-        <!-- 狀態設定 -->
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">上車狀態</label>
-            <select id="input-status" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
+            <select id="input-status" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
               <option value="unloaded">🟠 未上車</option>
               <option value="loaded">🟢 已上車</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">付款狀態</label>
-            <select id="input-payment" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
+            <select id="input-payment" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
               <option value="paid" selected>🟢 已付款</option>
               <option value="unpaid">🔴 未付款</option>
             </select>
           </div>
         </div>
 
-        <!-- 規格模式切換 -->
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">進貨規格模式</label>
-          <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-lg">
-            <button type="button" id="type-btn-single" onclick="switchSpecType('single')" class="py-1.5 text-xs font-bold rounded-md bg-white text-emerald-700 shadow-sm">單一規格</button>
-            <button type="button" id="type-btn-multi" onclick="switchSpecType('multi')" class="py-1.5 text-xs font-bold rounded-md text-slate-600">多重規格 (多規格/斤數)</button>
-          </div>
-        </div>
-
-        <!-- 單一規格區塊 -->
-        <div id="single-spec-container" class="space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
-          <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1">總箱數 (箱)</label>
-            <input type="number" id="single-boxes" min="1" placeholder="如：5" oninput="calculateSinglePrice()" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-          </div>
-
-          <div class="space-y-2 pt-1 border-t border-slate-200">
-            <label class="block text-xs font-semibold text-slate-700">金額輸入方式</label>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <label class="flex items-center gap-1.5 bg-white p-2 border border-slate-300 rounded-lg cursor-pointer">
-                <input type="radio" name="price-calc-mode" value="total" checked onchange="toggleCalcMode('total')" class="text-emerald-600 focus:ring-emerald-500">
-                <span>輸入「總金額」</span>
-              </label>
-              <label class="flex items-center gap-1.5 bg-white p-2 border border-slate-300 rounded-lg cursor-pointer">
-                <input type="radio" name="price-calc-mode" value="unit" onchange="toggleCalcMode('unit')" class="text-emerald-600 focus:ring-emerald-500">
-                <span>輸入「單箱金額」</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">總金額 ($)</label>
-              <input type="number" id="single-total-price" min="0" placeholder="如：5000" oninput="calculateSinglePrice('total')" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">每箱金額 ($)</label>
-              <input type="number" id="single-box-price" min="0" placeholder="如：1000" oninput="calculateSinglePrice('unit')" class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none" readonly>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">內部數量 (每箱)</label>
-              <input type="number" id="single-unit-val" min="1" placeholder="如: 64 或 10" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">單位 (斤/箱等)</label>
-              <select id="single-unit-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white">
-                <option value="斤/箱">斤 / 箱</option>
-                <option value="顆/箱">顆 / 粒 / 箱</option>
-                <option value="串/箱">串 / 箱</option>
-                <option value="台斤">台斤</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- 多重規格區塊 -->
-        <div id="multi-spec-container" class="hidden space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+        <div class="space-y-3 p-3.5 bg-emerald-50/30 rounded-2xl border border-emerald-100">
           <div class="flex justify-between items-center">
-            <span class="text-xs font-bold text-slate-700">多重規格明細設定</span>
-            <button type="button" onclick="addMultiSpecRow()" class="text-xs text-emerald-600 font-bold flex items-center gap-1">
-              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> 新增規格列
+            <span class="text-xs font-bold text-emerald-900 flex items-center gap-1">
+              <i data-lucide="layers" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>多重規格與數量明細</span>
+            </span>
+            <button type="button" onclick="addMultiSpecRow()" class="text-xs text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i> 新增規格列
             </button>
           </div>
-          <div class="text-[11px] text-slate-400 grid grid-cols-12 gap-1 px-1">
+          <div class="text-[11px] text-slate-400 grid grid-cols-12 gap-1.5 px-1 font-medium">
             <div class="col-span-3">規格名稱</div>
             <div class="col-span-2">箱數</div>
-            <div class="col-span-3">斤/箱(或數量)</div>
-            <div class="col-span-3">單箱金額</div>
+            <div class="col-span-3">斤數/內部數量</div>
+            <div class="col-span-3">單箱金額 ($)</div>
             <div class="col-span-1"></div>
           </div>
-          <div id="multi-spec-rows" class="space-y-2">
-            <!-- 動態插入多規格列 -->
-          </div>
+          <div id="multi-spec-rows" class="space-y-2"></div>
         </div>
 
-        <!-- 提交按鈕 -->
         <div class="pt-2 flex gap-2">
-          <button type="button" onclick="closeModal()" class="w-1/3 py-2.5 border border-slate-300 text-slate-600 font-bold rounded-xl">取消</button>
-          <button type="submit" class="w-2/3 py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow hover:bg-emerald-700">儲存資料</button>
+          <button type="button" onclick="closeModal()" class="w-1/3 py-2.5 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50">取消</button>
+          <button type="submit" class="w-2/3 py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow-sm hover:bg-emerald-700">儲存資料</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- ==================== PDF 預覽 Modal ==================== -->
-  <div id="pdf-modal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-3 hidden">
-    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-      <div class="px-5 py-3.5 bg-slate-800 text-white flex justify-between items-center">
+  <!-- ==================== PDF 預覽 Modal (完美單頁A4直式版面) ==================== -->
+  <div id="pdf-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 hidden">
+    <div class="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      <div class="px-5 py-3.5 bg-slate-800 text-white flex justify-between items-center no-print">
         <div class="flex items-center gap-2">
           <i data-lucide="file-check" class="w-5 h-5 text-emerald-400"></i>
-          <h3 class="font-bold text-base">進貨對帳報表預覽</h3>
+          <h3 class="font-bold text-base">A4 直式進貨精簡摘要報表預覽</h3>
         </div>
         <button onclick="closePdfModal()" class="text-slate-400 hover:text-white">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <!-- PDF 內容區 -->
-      <div class="p-6 overflow-y-auto flex-1 bg-white" id="print-area">
-        <div class="border-b-2 border-emerald-700 pb-3 mb-4 flex justify-between items-end">
+      <!-- PDF 內容區 (高度收緊至單頁內) -->
+      <div class="p-3 overflow-y-auto flex-1 bg-white text-xs space-y-2" id="print-area">
+        <div class="border-b-2 border-emerald-600 pb-1.5 mb-2 flex justify-between items-end">
           <div>
-            <h1 class="text-xl font-black text-slate-800 tracking-wide">當日水果進貨與上車對帳單</h1>
-            <p class="text-xs text-slate-500 mt-1">列印日期：<span id="pdf-date"></span></p>
+            <h1 class="text-sm font-black text-slate-800 tracking-wide">當日水果進貨精簡摘要表</h1>
+            <p class="text-[9px] text-slate-500 mt-0.5">列印日期：<span id="pdf-date"></span></p>
           </div>
           <div class="text-right">
-            <span class="inline-block bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded">甜蜜果物 報表</span>
+            <span class="inline-block bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded-full">甜蜜果物 報表</span>
           </div>
         </div>
 
-        <!-- PDF 統計區 -->
-        <div class="grid grid-cols-5 gap-2 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
-          <div>
-            <div class="text-[10px] text-slate-500 font-medium">總進貨金額</div>
-            <div class="text-sm font-bold text-slate-800" id="pdf-total-amount">$0</div>
-          </div>
-          <div>
-            <div class="text-[10px] text-slate-500 font-medium">總箱數</div>
-            <div class="text-sm font-bold text-slate-800" id="pdf-total-boxes">0 箱</div>
-          </div>
-          <div>
-            <div class="text-[10px] text-slate-500 font-medium">已上車箱數</div>
-            <div class="text-sm font-bold text-emerald-700" id="pdf-loaded-boxes">0 箱</div>
-          </div>
-          <div>
-            <div class="text-[10px] text-slate-500 font-medium">未上車箱數</div>
-            <div class="text-sm font-bold text-amber-700" id="pdf-unloaded-boxes">0 箱</div>
-          </div>
-          <div>
-            <div class="text-[10px] text-slate-500 font-medium">未付款金額</div>
-            <div class="text-sm font-bold text-rose-600" id="pdf-unpaid-amount">$0</div>
-          </div>
+        <div class="mx-auto max-w-[90%] border border-slate-200 rounded-lg overflow-hidden mb-2">
+          <table class="w-full text-left border-collapse text-[11px]">
+            <thead>
+              <tr class="bg-emerald-100/70 border-b border-slate-200 text-emerald-900 font-bold">
+                <th class="py-1.5 px-2.5">品名</th>
+                <th class="py-1.5 px-2.5">規格</th>
+                <th class="py-1.5 px-2.5 text-center">數量</th>
+                <th class="py-1.5 px-2.5 text-right">價格</th>
+                <th class="py-1.5 px-2.5 text-center">付款狀態</th>
+              </tr>
+            </thead>
+            <tbody id="pdf-summary-table-body" class="divide-y divide-slate-100">
+              <!-- 填入動態內容 -->
+            </tbody>
+          </table>
         </div>
 
-        <!-- PDF 明細表格 -->
-        <table class="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr class="bg-slate-100 border-y border-slate-300 font-bold text-slate-700">
-              <th class="py-2 px-2 text-center">狀態</th>
-              <th class="py-2 px-2">品名</th>
-              <th class="py-2 px-2">進貨商</th>
-              <th class="py-2 px-2 text-center">總箱數</th>
-              <th class="py-2 px-2">規格與內容</th>
-              <th class="py-2 px-2 text-center">付款</th>
-              <th class="py-2 px-2 text-right">總金額</th>
-            </tr>
-          </thead>
-          <tbody id="pdf-table-body" class="divide-y divide-slate-200">
-            <!-- 填入動態內容 -->
-          </tbody>
-        </table>
+        <div class="mx-auto max-w-[90%] bg-slate-50 border border-slate-200 rounded-lg p-2 space-y-1">
+          <div class="font-bold text-slate-700 text-[11px] border-b border-slate-200 pb-1 flex items-center gap-1">
+            <i data-lucide="clipboard-list" class="w-3 h-3 text-emerald-600"></i>
+            <span>摘要數據統計</span>
+          </div>
+          <div class="grid grid-cols-4 gap-1.5 text-center pt-0.5">
+            <div class="bg-white p-1 rounded border border-slate-200">
+              <div class="text-[8px] text-slate-500">總箱數</div>
+              <div class="text-[11px] font-extrabold text-slate-800" id="pdf-total-boxes">0 箱</div>
+            </div>
+            <div class="bg-white p-1 rounded border border-slate-200">
+              <div class="text-[8px] text-slate-500">已上車箱數</div>
+              <div class="text-[11px] font-extrabold text-teal-700" id="pdf-loaded-boxes">0 箱</div>
+            </div>
+            <div class="bg-white p-1 rounded border border-slate-200">
+              <div class="text-[8px] text-slate-500">未付款金額</div>
+              <div class="text-[11px] font-extrabold text-rose-600" id="pdf-unpaid-amount">$0</div>
+            </div>
+            <div class="bg-white p-1 rounded border border-slate-200">
+              <div class="text-[8px] text-slate-500">總進貨金額</div>
+              <div class="text-[11px] font-extrabold text-emerald-800" id="pdf-total-amount">$0</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-2 justify-end">
-        <button onclick="closePdfModal()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-xl text-xs font-bold">關閉</button>
-        <button onclick="triggerPrint()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow flex items-center justify-center gap-1.5">
+      <div class="p-3.5 bg-slate-50 border-t border-slate-200 flex justify-end gap-2 no-print">
+        <button onclick="closePdfModal()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100">關閉</button>
+        <button onclick="triggerPrint()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5">
           <i data-lucide="printer" class="w-4 h-4"></i>
-          <span>iPhone Safari 產生 PDF / 列印</span>
+          <span>列印 / 存為 A4 PDF</span>
         </button>
       </div>
     </div>
@@ -381,39 +371,32 @@
     const defaultData = [
       {
         id: '1',
-        name: '蘋果',
+        name: '日本青森蘋果',
         supplier: '阿龍農產',
         status: 'loaded',
         payment: 'paid',
-        specType: 'single',
-        totalBoxes: 5,
-        totalPrice: 5000,
-        singleUnitVal: 64,
-        singleUnitType: '顆/箱'
+        multiSpecs: [
+          { specName: '特大果 64顆', boxes: 3, unitVal: '64顆/箱', pricePerBox: 1200 },
+          { specName: '大果 72顆', boxes: 2, unitVal: '72顆/箱', pricePerBox: 1100 }
+        ]
       },
       {
         id: '2',
-        name: '芒果',
+        name: '愛文芒果',
         supplier: '大發果商',
         status: 'unloaded',
-        payment: 'paid',
-        specType: 'multi',
-        totalBoxes: 10,
-        totalPrice: 8300,
+        payment: 'unpaid',
         multiSpecs: [
-          { specName: '特大果', boxes: 5, unitVal: '10', pricePerBox: 900 },
-          { specName: '大果', boxes: 3, unitVal: '12', pricePerBox: 800 },
-          { specName: '中果', boxes: 2, unitVal: '15', pricePerBox: 700 }
+          { specName: '10斤裝', boxes: 5, unitVal: '10斤/箱', pricePerBox: 900 },
+          { specName: '12斤裝', boxes: 3, unitVal: '12斤/箱', pricePerBox: 850 }
         ]
       }
     ];
 
     let items = [];
-    let currentSpecType = 'single';
-    let currentCalcMode = 'total';
 
     window.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem('fruit_inventory_items_v8');
+      const saved = localStorage.getItem('fruit_inventory_items_v9_fresh');
       if (saved) {
         try { items = JSON.parse(saved); } catch (e) { items = [...defaultData]; }
       } else {
@@ -424,12 +407,13 @@
     });
 
     function saveData() {
-      localStorage.setItem('fruit_inventory_items_v8', JSON.stringify(items));
+      localStorage.setItem('fruit_inventory_items_v9_fresh', JSON.stringify(items));
     }
 
     function render() {
       renderStats();
       renderTable();
+      renderSummaryTable();
       saveData();
       lucide.createIcons();
     }
@@ -438,16 +422,25 @@
       let totalAmount = 0, totalBoxes = 0, loadedBoxes = 0, unloadedBoxes = 0, unpaidAmount = 0;
 
       items.forEach(item => {
-        const boxes = Number(item.totalBoxes) || 0;
-        const price = Number(item.totalPrice) || 0;
+        let itemBoxes = 0;
+        let itemPrice = 0;
 
-        totalAmount += price;
-        totalBoxes += boxes;
+        if (item.multiSpecs && item.multiSpecs.length > 0) {
+          item.multiSpecs.forEach(s => {
+            const b = Number(s.boxes) || 0;
+            const p = Number(s.pricePerBox) || 0;
+            itemBoxes += b;
+            itemPrice += (b * p);
+          });
+        }
 
-        if (item.status === 'loaded') loadedBoxes += boxes;
-        else unloadedBoxes += boxes;
+        totalAmount += itemPrice;
+        totalBoxes += itemBoxes;
 
-        if (item.payment === 'unpaid') unpaidAmount += price;
+        if (item.status === 'loaded') loadedBoxes += itemBoxes;
+        else unloadedBoxes += itemBoxes;
+
+        if (item.payment === 'unpaid') unpaidAmount += itemPrice;
       });
 
       document.getElementById('stat-total-amount').innerText = `$${totalAmount.toLocaleString()}`;
@@ -464,7 +457,7 @@
       if (items.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="8" class="py-8 text-center text-slate-400 text-xs">
+            <td colspan="7" class="py-10 text-center text-slate-400 text-xs">
               目前沒有進貨紀錄，點擊右上角「+ 新增進貨」開始建立
             </td>
           </tr>`;
@@ -473,18 +466,22 @@
 
       items.forEach(item => {
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-50/80 transition-colors";
+        tr.className = "hover:bg-emerald-50/30 transition-colors";
 
         let specHTML = '';
-        if (item.specType === 'single') {
-          const unitStr = item.singleUnitVal ? `每箱 ${item.singleUnitVal} ${item.singleUnitType || '斤/箱'}` : '標準規格';
-          specHTML = `<span class="text-slate-700">${unitStr}</span>`;
-        } else if (item.multiSpecs && item.multiSpecs.length > 0) {
-          specHTML = item.multiSpecs.map(s => `
-            <div class="text-xs text-slate-600">
-              <span class="font-bold text-slate-800">[${s.specName || '一般'}]</span> ${s.boxes}箱 (${s.unitVal}) @$${s.pricePerBox}
-            </div>
-          `).join('');
+        let totalBoxes = 0;
+        let totalPrice = 0;
+
+        if (item.multiSpecs && item.multiSpecs.length > 0) {
+          specHTML = item.multiSpecs.map(s => {
+            const b = Number(s.boxes) || 0;
+            const p = Number(s.pricePerBox) || 0;
+            totalBoxes += b;
+            totalPrice += (b * p);
+            return `<div class="text-xs text-slate-600 py-0.5">
+              <span class="font-bold text-slate-800">[${s.specName || '標準'}]</span> ${b}箱 (${s.unitVal || '-'}) @$${p}
+            </div>`;
+          }).join('');
         }
 
         const isLoaded = item.status === 'loaded';
@@ -492,26 +489,28 @@
 
         tr.innerHTML = `
           <td class="py-3 px-3 text-center">
-            <button onclick="toggleStatus('${item.id}')" class="px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center justify-center mx-auto gap-1 ${
-              isLoaded ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
+            <button onclick="toggleStatus('${item.id}')" class="px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center justify-center mx-auto gap-1 shadow-2xs ${
+              isLoaded ? 'bg-teal-100 text-teal-800 border border-teal-200' : 'bg-amber-100 text-amber-800 border border-amber-200'
             }">
               <span>${isLoaded ? '🟢 已上車' : '🟠 未上車'}</span>
             </button>
           </td>
-          <td class="py-3 px-3 font-bold text-slate-800">${item.name}</td>
-          <td class="py-3 px-3 text-slate-600">${item.supplier || '-'}</td>
-          <td class="py-3 px-3 text-center font-bold text-slate-800">${item.totalBoxes} 箱</td>
+          <td class="py-3 px-3">
+            <div class="font-bold text-slate-800">${item.name}</div>
+            <div class="text-[11px] text-slate-500">${item.supplier || '-'}</div>
+          </td>
           <td class="py-3 px-3">${specHTML}</td>
+          <td class="py-3 px-3 text-center font-bold text-slate-800">${totalBoxes} 箱</td>
+          <td class="py-3 px-3 text-right font-black text-slate-900">$${totalPrice.toLocaleString()}</td>
           <td class="py-3 px-3 text-center">
-            <button onclick="togglePayment('${item.id}')" class="px-2 py-0.5 rounded text-xs font-semibold transition ${
-              isPaid ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-600 border border-rose-200'
+            <button onclick="togglePayment('${item.id}')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${
+              isPaid ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'
             }">
               ${isPaid ? '🟢 已付款' : '🔴 未付款'}
             </button>
           </td>
-          <td class="py-3 px-3 text-right font-black text-slate-900">$${Number(item.totalPrice).toLocaleString()}</td>
           <td class="py-3 px-3 text-center">
-            <div class="flex items-center justify-center gap-1">
+            <div class="flex items-center justify-center gap-1.5">
               <button onclick="editItem('${item.id}')" class="p-1 text-slate-400 hover:text-emerald-600">
                 <i data-lucide="edit-3" class="w-4 h-4"></i>
               </button>
@@ -522,6 +521,49 @@
           </td>
         `;
         tbody.appendChild(tr);
+      });
+    }
+
+    function renderSummaryTable() {
+      const summaryTbody = document.getElementById('summary-table-body');
+      summaryTbody.innerHTML = '';
+
+      if (items.length === 0) {
+        summaryTbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-6 text-center text-slate-400 text-xs">
+              尚無摘要資料
+            </td>
+          </tr>`;
+        return;
+      }
+
+      items.forEach(item => {
+        if (item.multiSpecs && item.multiSpecs.length > 0) {
+          item.multiSpecs.forEach(s => {
+            const b = Number(s.boxes) || 0;
+            const p = Number(s.pricePerBox) || 0;
+            const subTotal = b * p;
+            const isPaid = item.payment === 'paid';
+
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-50";
+            tr.innerHTML = `
+              <td class="py-2 px-3 font-bold text-slate-800">${item.name}</td>
+              <td class="py-2 px-3 text-slate-600">${s.specName || '標準'} (${s.unitVal || '-'})</td>
+              <td class="py-2 px-3 text-center font-bold text-slate-800">${b}</td>
+              <td class="py-2 px-3 text-right font-bold text-slate-900">$${subTotal.toLocaleString()}</td>
+              <td class="py-2 px-3 text-center">
+                <span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                  isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-700'
+                }">
+                  ${isPaid ? '已付款' : '未付款'}
+                </span>
+              </td>
+            `;
+            summaryTbody.appendChild(tr);
+          });
+        }
       });
     }
 
@@ -541,51 +583,8 @@
       }
     }
 
-    function toggleCalcMode(mode) {
-      currentCalcMode = mode;
-      const totalPriceInput = document.getElementById('single-total-price');
-      const boxPriceInput = document.getElementById('single-box-price');
-
-      if (mode === 'total') {
-        totalPriceInput.removeAttribute('readonly');
-        totalPriceInput.classList.remove('bg-slate-100');
-        boxPriceInput.setAttribute('readonly', 'readonly');
-        boxPriceInput.classList.add('bg-slate-100');
-      } else {
-        boxPriceInput.removeAttribute('readonly');
-        boxPriceInput.classList.remove('bg-slate-100');
-        totalPriceInput.setAttribute('readonly', 'readonly');
-        totalPriceInput.classList.add('bg-slate-100');
-      }
-      calculateSinglePrice(mode);
-    }
-
-    function calculateSinglePrice(changedSource = currentCalcMode) {
-      const boxes = Number(document.getElementById('single-boxes').value) || 0;
-      const totalPriceInput = document.getElementById('single-total-price');
-      const boxPriceInput = document.getElementById('single-box-price');
-
-      if (boxes <= 0) return;
-
-      if (changedSource === 'total') {
-        const total = Number(totalPriceInput.value) || 0;
-        if (total > 0) {
-          boxPriceInput.value = (total / boxes).toFixed(1).replace(/\.0$/, '');
-        } else {
-          boxPriceInput.value = '';
-        }
-      } else if (changedSource === 'unit') {
-        const unitPrice = Number(boxPriceInput.value) || 0;
-        if (unitPrice > 0) {
-          totalPriceInput.value = Math.round(unitPrice * boxes);
-        } else {
-          totalPriceInput.value = '';
-        }
-      }
-    }
-
     function clearAllData() {
-      if (confirm('確定要清空所有進貨紀錄嗎？這無法復原。')) {
+      if (confirm('確定要清空所有進貨紀錄嗎？')) {
         items = [];
         render();
       }
@@ -598,39 +597,16 @@
       }
     }
 
-    function switchSpecType(type) {
-      currentSpecType = type;
-      const singleContainer = document.getElementById('single-spec-container');
-      const multiContainer = document.getElementById('multi-spec-container');
-      const btnSingle = document.getElementById('type-btn-single');
-      const btnMulti = document.getElementById('type-btn-multi');
-
-      if (type === 'single') {
-        singleContainer.classList.remove('hidden');
-        multiContainer.classList.add('hidden');
-        btnSingle.className = "py-1.5 text-xs font-bold rounded-md bg-white text-emerald-700 shadow-sm";
-        btnMulti.className = "py-1.5 text-xs font-bold rounded-md text-slate-600";
-      } else {
-        singleContainer.classList.add('hidden');
-        multiContainer.classList.remove('hidden');
-        btnSingle.className = "py-1.5 text-xs font-bold rounded-md text-slate-600";
-        btnMulti.className = "py-1.5 text-xs font-bold rounded-md bg-white text-emerald-700 shadow-sm";
-        if (document.getElementById('multi-spec-rows').children.length === 0) {
-          addMultiSpecRow();
-        }
-      }
-    }
-
     function addMultiSpecRow(name = '', boxes = '', val = '', price = '') {
       const container = document.getElementById('multi-spec-rows');
       const div = document.createElement('div');
-      div.className = "grid grid-cols-12 gap-1 items-center multi-row";
+      div.className = "grid grid-cols-12 gap-1.5 items-center multi-row";
       div.innerHTML = `
-        <div class="col-span-3"><input type="text" placeholder="名稱(如大果)" value="${name}" class="w-full px-2 py-1.5 border border-slate-300 rounded text-xs row-name"></div>
-        <div class="col-span-2"><input type="number" placeholder="箱" value="${boxes}" class="w-full px-2 py-1.5 border border-slate-300 rounded text-xs row-boxes"></div>
-        <div class="col-span-3"><input type="text" placeholder="斤/箱或數量" value="${val}" class="w-full px-2 py-1.5 border border-slate-300 rounded text-xs row-val"></div>
-        <div class="col-span-3"><input type="number" placeholder="單箱$" value="${price}" class="w-full px-2 py-1.5 border border-slate-300 rounded text-xs row-price"></div>
-        <div class="col-span-1 text-center"><button type="button" onclick="this.closest('.multi-row').remove();" class="text-rose-500 p-1"><i data-lucide="minus-circle" class="w-4 h-4"></i></button></div>
+        <div class="col-span-3"><input type="text" placeholder="如:大果" value="${name}" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs row-name bg-white"></div>
+        <div class="col-span-2"><input type="number" placeholder="箱" value="${boxes}" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs row-boxes bg-white"></div>
+        <div class="col-span-3"><input type="text" placeholder="如:10斤/箱" value="${val}" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs row-val bg-white"></div>
+        <div class="col-span-3"><input type="number" placeholder="單箱$" value="${price}" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs row-price bg-white"></div>
+        <div class="col-span-1 text-center"><button type="button" onclick="this.closest('.multi-row').remove();" class="text-rose-400 hover:text-rose-600 p-1"><i data-lucide="minus-circle" class="w-4 h-4"></i></button></div>
       `;
       container.appendChild(div);
       lucide.createIcons();
@@ -639,12 +615,12 @@
     function openModal() {
       document.getElementById('item-form').reset();
       document.getElementById('edit-id').value = '';
-      document.getElementById('modal-title').innerText = '新增進貨紀錄';
+      document.getElementById('modal-title').innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i><span>新增進貨紀錄</span>';
       document.getElementById('input-payment').value = 'paid';
       document.getElementById('multi-spec-rows').innerHTML = '';
-      toggleCalcMode('total');
-      switchSpecType('single');
+      addMultiSpecRow();
       document.getElementById('item-modal').classList.remove('hidden');
+      lucide.createIcons();
     }
 
     function closeModal() {
@@ -661,24 +637,16 @@
       document.getElementById('input-status').value = item.status;
       document.getElementById('input-payment').value = item.payment || 'paid';
 
-      if (item.specType === 'single') {
-        switchSpecType('single');
-        document.getElementById('single-boxes').value = item.totalBoxes;
-        document.getElementById('single-total-price').value = item.totalPrice;
-        document.getElementById('single-unit-val').value = item.singleUnitVal || '';
-        document.getElementById('single-unit-type').value = item.singleUnitType || '斤/箱';
-        toggleCalcMode('total');
-        calculateSinglePrice('total');
+      document.getElementById('multi-spec-rows').innerHTML = '';
+      if (item.multiSpecs && item.multiSpecs.length > 0) {
+        item.multiSpecs.forEach(s => addMultiSpecRow(s.specName, s.boxes, s.unitVal, s.pricePerBox));
       } else {
-        switchSpecType('multi');
-        document.getElementById('multi-spec-rows').innerHTML = '';
-        if (item.multiSpecs) {
-          item.multiSpecs.forEach(s => addMultiSpecRow(s.specName, s.boxes, s.unitVal, s.pricePerBox));
-        }
+        addMultiSpecRow();
       }
 
-      document.getElementById('modal-title').innerText = '編輯進貨紀錄';
+      document.getElementById('modal-title').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-emerald-600"></i><span>編輯進貨紀錄</span>';
       document.getElementById('item-modal').classList.remove('hidden');
+      lucide.createIcons();
     }
 
     function handleFormSubmit(e) {
@@ -689,46 +657,25 @@
       const status = document.getElementById('input-status').value;
       const payment = document.getElementById('input-payment').value;
 
-      let newItem = { id, name, supplier, status, payment, specType: currentSpecType };
+      const rows = document.querySelectorAll('.multi-row');
+      let specs = [];
 
-      if (currentSpecType === 'single') {
-        const boxes = Number(document.getElementById('single-boxes').value) || 0;
-        const price = Number(document.getElementById('single-total-price').value) || 0;
-        if (boxes <= 0) {
-          alert('請輸入有效的總箱數');
-          return;
+      rows.forEach(r => {
+        const specName = r.querySelector('.row-name').value.trim() || '標準';
+        const b = Number(r.querySelector('.row-boxes').value) || 0;
+        const v = r.querySelector('.row-val').value.trim();
+        const p = Number(r.querySelector('.row-price').value) || 0;
+        if (b > 0) {
+          specs.push({ specName, boxes: b, unitVal: v, pricePerBox: p });
         }
-        newItem.totalBoxes = boxes;
-        newItem.totalPrice = price;
-        newItem.singleUnitVal = document.getElementById('single-unit-val').value;
-        newItem.singleUnitType = document.getElementById('single-unit-type').value;
-      } else {
-        const rows = document.querySelectorAll('.multi-row');
-        let totalB = 0;
-        let totalP = 0;
-        let specs = [];
+      });
 
-        rows.forEach(r => {
-          const specName = r.querySelector('.row-name').value.trim() || '一般';
-          const b = Number(r.querySelector('.row-boxes').value) || 0;
-          const v = r.querySelector('.row-val').value.trim();
-          const p = Number(r.querySelector('.row-price').value) || 0;
-          if (b > 0) {
-            totalB += b;
-            totalP += (b * p);
-            specs.push({ specName, boxes: b, unitVal: v, pricePerBox: p });
-          }
-        });
-
-        if (specs.length === 0) {
-          alert('請至少填寫一組完整的多重規格資料（含箱數）');
-          return;
-        }
-
-        newItem.totalBoxes = totalB;
-        newItem.totalPrice = totalP;
-        newItem.multiSpecs = specs;
+      if (specs.length === 0) {
+        alert('請至少填寫一組有效的規格與箱數');
+        return;
       }
+
+      let newItem = { id, name, supplier, status, payment, multiSpecs: specs };
 
       const existingIdx = items.findIndex(i => i.id === id);
       if (existingIdx > -1) {
@@ -741,11 +688,10 @@
       render();
     }
 
-    // 產生簡報文字
     function generateSummaryText() {
       if (items.length === 0) return '';
 
-      let txt = `📦 【當日進貨與上車明細】\n`;
+      let txt = `📦 【甜蜜果物 - 當日進貨與上車明細】\n`;
       let totalB = 0;
       let totalP = 0;
 
@@ -755,24 +701,21 @@
         const supp = item.supplier ? ` (${item.supplier})` : '';
 
         txt += `\n${index + 1}. ${item.name}${supp} [${statusStr} / ${payStr}]\n`;
-        txt += `   └ 總箱數: ${item.totalBoxes}箱 | 總額: $${item.totalPrice}\n`;
-
-        if (item.specType === 'single' && item.singleUnitVal) {
-          txt += `   └ 內部數量: 每箱 ${item.singleUnitVal}${item.singleUnitType}\n`;
-        } else if (item.multiSpecs) {
+        
+        if (item.multiSpecs) {
           item.multiSpecs.forEach(s => {
-            txt += `   └ [${s.specName}] ${s.boxes}箱 (${s.unitVal}) @$${s.pricePerBox}\n`;
+            const subTotal = s.boxes * s.pricePerBox;
+            totalB += Number(s.boxes);
+            totalP += subTotal;
+            txt += `   └ [${s.specName}] ${s.boxes}箱 (${s.unitVal}) @$${s.pricePerBox} = $${subTotal}\n`;
           });
         }
-        totalB += Number(item.totalBoxes);
-        totalP += Number(item.totalPrice);
       });
 
-      txt += `\n------------------\n📊 總計: ${totalB}箱 / $${totalP.toLocaleString()}`;
+      txt += `\n------------------\n📊 總計: ${totalB}箱 / 總金額 $${totalP.toLocaleString()}`;
       return txt;
     }
 
-    // 複製簡報
     function copyLineSummary() {
       const txt = generateSummaryText();
       if (!txt) return alert('目前沒有資料可複製');
@@ -780,65 +723,72 @@
       navigator.clipboard.writeText(txt).then(() => {
         alert('已成功複製 LINE 簡報文字！');
       }).catch(() => {
-        alert('複製失敗，請手動選取');
+        alert('複製失敗');
       });
     }
 
-    // 一鍵分享給 LINE 好友 (跳轉至 LINE App 選擇好友)
     function shareToLine() {
       const txt = generateSummaryText();
       if (!txt) return alert('目前沒有資料可分享');
+      window.open(`https://line.me/R/msg/text/?${encodeURIComponent(txt)}`, '_blank');
+    }
 
-      const encodedText = encodeURIComponent(txt);
-      const lineUrl = `https://line.me/R/msg/text/?${encodedText}`;
-      
-      window.open(lineUrl, '_blank');
+    function downloadHtmlFile() {
+      const htmlContent = document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'fruit_inventory_manager.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
 
     function openPdfModal() {
       document.getElementById('pdf-date').innerText = new Date().toLocaleDateString('zh-TW');
 
-      let totalAmount = 0, totalBoxes = 0, loadedBoxes = 0, unloadedBoxes = 0, unpaidAmount = 0;
+      let totalAmount = 0, totalBoxes = 0, loadedBoxes = 0, unpaidAmount = 0;
 
-      const pdfTbody = document.getElementById('pdf-table-body');
-      pdfTbody.innerHTML = '';
+      const pdfSummaryTbody = document.getElementById('pdf-summary-table-body');
+      pdfSummaryTbody.innerHTML = '';
 
       items.forEach(item => {
-        const boxes = Number(item.totalBoxes) || 0;
-        const price = Number(item.totalPrice) || 0;
-        totalAmount += price;
-        totalBoxes += boxes;
+        let itemBoxes = 0;
+        let itemPrice = 0;
 
-        if (item.status === 'loaded') loadedBoxes += boxes;
-        else unloadedBoxes += boxes;
+        if (item.multiSpecs) {
+          item.multiSpecs.forEach(s => {
+            const b = Number(s.boxes) || 0;
+            const p = Number(s.pricePerBox) || 0;
+            itemBoxes += b;
+            itemPrice += (b * p);
+            const subTotal = b * p;
+            const isPaid = item.payment === 'paid';
 
-        if (item.payment === 'unpaid') unpaidAmount += price;
-
-        let specStr = '';
-        if (item.specType === 'single') {
-          specStr = item.singleUnitVal ? `每箱 ${item.singleUnitVal}${item.singleUnitType}` : '標準規格';
-        } else if (item.multiSpecs) {
-          specStr = item.multiSpecs.map(s => `[${s.specName}]${s.boxes}箱(${s.unitVal})@$${s.pricePerBox}`).join('; ');
+            const tr = document.createElement('tr');
+            tr.className = "border-b border-slate-100";
+            tr.innerHTML = `
+              <td class="py-1.5 px-2.5 font-bold text-slate-800">${item.name}</td>
+              <td class="py-1.5 px-2.5 text-slate-600">${s.specName || '標準'} (${s.unitVal || '-'})</td>
+              <td class="py-1.5 px-2.5 text-center font-bold">${b}箱</td>
+              <td class="py-1.5 px-2.5 text-right font-bold">$${subTotal.toLocaleString()}</td>
+              <td class="py-1.5 px-2.5 text-center">${isPaid ? '🟢已付' : '🔴未付'}</td>
+            `;
+            pdfSummaryTbody.appendChild(tr);
+          });
         }
 
-        const tr = document.createElement('tr');
-        tr.className = "border-b border-slate-200";
-        tr.innerHTML = `
-          <td class="py-2 px-2 text-center">${item.status === 'loaded' ? '🟢已上車' : '🟠未上車'}</td>
-          <td class="py-2 px-2 font-bold">${item.name}</td>
-          <td class="py-2 px-2">${item.supplier || '-'}</td>
-          <td class="py-2 px-2 text-center font-bold">${item.totalBoxes}箱</td>
-          <td class="py-2 px-2 text-slate-600">${specStr}</td>
-          <td class="py-2 px-2 text-center">${item.payment === 'paid' ? '已付' : '未付'}</td>
-          <td class="py-2 px-2 text-right font-bold">$${price.toLocaleString()}</td>
-        `;
-        pdfTbody.appendChild(tr);
+        totalAmount += itemPrice;
+        totalBoxes += itemBoxes;
+        if (item.status === 'loaded') loadedBoxes += itemBoxes;
+        if (item.payment === 'unpaid') unpaidAmount += itemPrice;
       });
 
       document.getElementById('pdf-total-amount').innerText = `$${totalAmount.toLocaleString()}`;
       document.getElementById('pdf-total-boxes').innerText = `${totalBoxes} 箱`;
       document.getElementById('pdf-loaded-boxes').innerText = `${loadedBoxes} 箱`;
-      document.getElementById('pdf-unloaded-boxes').innerText = `${unloadedBoxes} 箱`;
       document.getElementById('pdf-unpaid-amount').innerText = `$${unpaidAmount.toLocaleString()}`;
 
       document.getElementById('pdf-modal').classList.remove('hidden');
