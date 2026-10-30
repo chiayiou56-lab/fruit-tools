@@ -19,6 +19,10 @@
   <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+  <!-- Firebase App & Realtime Database SDK (v8 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
   <!-- html2canvas & jsPDF for clean A4 PDF Export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -30,14 +34,13 @@
     }
     [x-cloak] { display: none !important; }
 
-    /* 針對 iOS 輸入框避免自動放大的優化 */
     input, select, textarea, button {
       -webkit-appearance: none;
       border-radius: 0.5rem;
     }
 
     input[type="text"], input[type="number"], select, textarea {
-      font-size: 16px !important; /* 防止 iOS Safari 點擊自動放大 */
+      font-size: 16px !important;
     }
 
     @media (min-width: 640px) {
@@ -46,7 +49,6 @@
       }
     }
 
-    /* iOS 數字輸入框隱藏上下箭頭 */
     input[type="number"] {
       -moz-appearance: textfield;
     }
@@ -56,7 +58,6 @@
       margin: 0; 
     }
 
-    /* 觸控熱區最佳化 */
     .touch-btn {
       min-height: 44px;
       display: inline-flex;
@@ -64,7 +65,6 @@
       justify-content: center;
     }
     
-    /* Custom Scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -89,19 +89,32 @@
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-18 gap-2">
         
-        <!-- App Title / Logo -->
+        <!-- App Title / Logo & Cloud Status -->
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-teal-500 via-cyan-400 to-blue-500 text-slate-950 flex items-center justify-center shadow-md shadow-teal-900/50 shrink-0">
             <i class="fa-solid fa-boxes-packing text-xl sm:text-2xl"></i>
           </div>
           <div>
-            <h1 class="text-sm sm:text-lg font-bold text-white tracking-tight">甜蜜果物-包材點貨/叫貨系統</h1>
+            <h1 class="text-sm sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+              甜蜜果物-包材即時同步系統
+              <!-- 雲端連線狀態指示燈 -->
+              <span class="text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-2xs"
+                    :class="isCloudConnected ? 'bg-emerald-500 text-slate-950' : 'bg-amber-500 text-slate-950'">
+                <i class="fa-solid" :class="isCloudConnected ? 'fa-cloud' : 'fa-cloud-slash'"></i>
+                <span x-text="isCloudConnected ? '雲端即時連線中' : '本機模式'"></span>
+              </span>
+            </h1>
           </div>
         </div>
 
         <!-- Navigation Tabs & Actions -->
         <div class="flex items-center gap-2 sm:gap-3">
           
+          <!-- Cloud Settings Button -->
+          <button @click="showCloudModal = true" class="touch-btn bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-teal-400 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 border border-slate-700" title="設定雲端同步">
+            <i class="fa-solid fa-cloud-arrow-up text-base"></i> 雲端設定
+          </button>
+
           <!-- Home Link Button -->
           <a href="index.html" class="touch-btn bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 px-3.5 sm:px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 border border-slate-700">
             <i class="fa-solid fa-house text-slate-400 text-base"></i> 回首頁
@@ -147,7 +160,7 @@
   <!-- MAIN CONTENT CONTAINER -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-5 sm:py-7">
 
-    <!-- TOOLBAR & GLOBAL CONTROLS (僅在庫存與常叫貨分頁顯示) -->
+    <!-- TOOLBAR & GLOBAL CONTROLS -->
     <div x-show="currentTab === 'inventory' || currentTab === 'favorites'" class="mb-6 bg-white p-4 sm:p-4.5 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
       
       <!-- Search & Quick Filters -->
@@ -162,772 +175,321 @@
         </div>
       </div>
 
-      <!-- Action Buttons Group (RWD Wrap) -->
+      <!-- Action Buttons Group -->
       <div class="flex items-center flex-wrap gap-2 text-sm">
-        
-        <!-- Batch Add -->
-        <button 
-          @click="showBatchModal = true" 
-          class="touch-btn bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-2">
+        <button @click="showBatchModal = true" class="touch-btn bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-2">
           <i class="fa-solid fa-layer-group text-base"></i> 批量新增
         </button>
-
-        <!-- Manage Suppliers Modal -->
-        <button 
-          @click="showSupplierModal = true" 
-          class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100 font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-2">
+        <button @click="showSupplierModal = true" class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-2">
           <i class="fa-solid fa-industry text-teal-600 text-base"></i> 管理廠商
         </button>
-
-        <!-- Export JSON -->
-        <button 
-          @click="exportData()" 
-          class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5"
-          title="匯出JSON備份檔">
+        <button @click="exportData()" class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5" title="匯出JSON備份檔">
           <i class="fa-solid fa-file-export text-slate-500 text-base"></i> 匯出
         </button>
-
-        <!-- Import JSON -->
         <label class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5">
           <i class="fa-solid fa-file-import text-slate-500 text-base"></i> 匯入
           <input type="file" accept=".json" class="hidden" @change="importData($event)">
         </label>
-
-        <!-- Zero Stock Button -->
-        <button 
-          @click="confirmZeroStock()" 
-          class="touch-btn bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5"
-          title="將現有庫存批次清零">
+        <button @click="confirmZeroStock()" class="touch-btn bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5" title="庫存歸零">
           <i class="fa-solid fa-arrow-rotate-left text-amber-600 text-base"></i> 歸零
         </button>
-
-        <!-- Clear All Data Button -->
-        <button 
-          @click="confirmClearAll()" 
-          class="touch-btn bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5"
-          title="清空所有品項與叫貨資料">
+        <button @click="confirmClearAll()" class="touch-btn bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5" title="清空系統資料">
           <i class="fa-solid fa-trash-can text-rose-600 text-base"></i> 清空
         </button>
-
       </div>
     </div>
 
     <!-- TAB 1: INVENTORY MANAGEMENT -->
     <div x-show="currentTab === 'inventory'" class="space-y-6">
-      
-      <!-- SUPPLIER SECTIONS WITH DISTINCT COLOR THEMING -->
       <template x-for="supplier in suppliers" :key="supplier">
         <div x-show="getFilteredItemsBySupplier(supplier).length > 0 || !searchQuery" 
              class="rounded-2xl border p-4 sm:p-5 transition-all space-y-4"
              :class="getSupplierBlockStyle(supplier)">
           
-          <!-- Supplier Section Distinct Header -->
           <div class="flex items-center justify-between border-b pb-3" :class="getSupplierHeaderBorderStyle(supplier)">
             <div class="flex items-center gap-3">
-              <span class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-bold shadow-xs text-white"
-                    :class="getSupplierBadgeStyle(supplier)">
-                <i class="fa-solid" :class="{
-                  'fa-building': supplier === '必堅',
-                  'fa-warehouse': supplier === '利泰',
-                  'fa-cart-shopping': supplier === '淘寶',
-                  'fa-industry': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
-                }"></i>
+              <span class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-bold shadow-xs text-white" :class="getSupplierBadgeStyle(supplier)">
+                <i class="fa-solid fa-building"></i>
               </span>
               <div>
                 <h2 class="text-sm sm:text-base font-bold tracking-tight flex items-center gap-2.5" :class="getSupplierTitleTextStyle(supplier)">
                   <span x-text="supplier"></span>
                   <span class="text-xs font-semibold opacity-75" x-text="'(' + getFilteredItemsBySupplier(supplier).length + ' 品項)'"></span>
                 </h2>
-                <p class="text-xs opacity-70 mt-0.5" x-text="supplier === '淘寶' ? '外購/跨境進口專區' : '國內合作廠商'"></p>
               </div>
             </div>
-
             <span class="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider" :class="getSupplierTagStyle(supplier)" x-text="supplier"></span>
           </div>
 
-          <!-- Inventory Cards Grid -->
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             <template x-for="item in getFilteredItemsBySupplier(supplier)" :key="item.id">
-              <div 
-                class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group"
-                :class="[
-                  getItemCardBgStyle(supplier),
-                  item.currentStock <= item.safetyStock ? 'border-amber-400 ring-2 ring-amber-300' : ''
-                ]">
-                
+              <div class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group"
+                   :class="[getItemCardBgStyle(supplier), item.currentStock <= item.safetyStock ? 'border-amber-400 ring-2 ring-amber-300' : '']">
                 <div>
-                  <!-- Top Row: Favorite Star & Name & Edit / Delete Buttons -->
                   <div class="flex items-start justify-between gap-1 mb-1.5">
-                    <button 
-                      @click="toggleFavorite(item)" 
-                      class="touch-btn p-1 text-lg focus:outline-none transition transform active:scale-125"
-                      title="標記為常叫包材">
+                    <button @click="toggleFavorite(item)" class="touch-btn p-1 text-lg focus:outline-none transition transform active:scale-125">
                       <i class="fa-solid fa-star" :class="item.isFavorite ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-300'"></i>
                     </button>
-
                     <div class="flex-1 px-1">
                       <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2" x-text="item.name"></h3>
                       <p class="text-xs text-slate-600 font-semibold mt-1" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></p>
                     </div>
-
-                    <!-- Edit & Delete Action Group -->
                     <div class="flex items-center gap-0.5">
-                      <button 
-                        @click="openEditModal(item)" 
-                        class="touch-btn text-slate-400 hover:text-teal-600 text-xs p-1.5 transition"
-                        title="編輯此品項">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                      </button>
-                      <button 
-                        @click="deleteItem(item.id)" 
-                        class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5 transition"
-                        title="刪除此品項">
-                        <i class="fa-solid fa-trash"></i>
-                      </button>
+                      <button @click="openEditModal(item)" class="touch-btn text-slate-400 hover:text-teal-600 text-xs p-1.5 transition"><i class="fa-solid fa-pen-to-square"></i></button>
+                      <button @click="deleteItem(item.id)" class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5 transition"><i class="fa-solid fa-trash"></i></button>
                     </div>
                   </div>
 
-                  <!-- Low Stock Warning Badge -->
                   <div x-show="item.currentStock <= item.safetyStock" class="mb-2">
                     <span class="bg-amber-100 text-amber-800 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 w-max">
                       <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> 低於安全庫存
                     </span>
                   </div>
 
-                  <!-- Stock Counter & Unit Selector -->
                   <div class="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-slate-200/80 flex flex-col gap-2 my-2.5">
                     <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
                       <span>現有庫存</span>
-                      <!-- Flexible Unit Selector -->
-                      <select 
-                        x-model="item.unit" 
-                        @change="saveInventory()" 
-                        class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-teal-500 font-bold shadow-2xs">
-                        <option value="個">個</option>
-                        <option value="包">包</option>
-                        <option value="瓶">瓶</option>
-                        <option value="箱">箱</option>
+                      <select x-model="item.unit" @change="saveInventory()" class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg px-2.5 py-1 focus:outline-none font-bold shadow-2xs">
+                        <option value="個">個</option><option value="包">包</option><option value="瓶">瓶</option><option value="箱">箱</option>
                       </select>
                     </div>
-
                     <div class="flex items-center justify-between gap-2 mt-0.5">
-                      <button @click="updateStock(item, -1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">-</button>
-                      
-                      <!-- 庫存數字輸入框 -->
-                      <input 
-                        type="number" 
-                        inputmode="numeric"
-                        :value="item.currentStock ?? 0"
-                        @input="item.currentStock = $event.target.value === '' ? 0 : Math.max(0, parseInt($event.target.value) || 0); saveInventory()"
-                        @blur="if (item.currentStock === '' || isNaN(item.currentStock)) item.currentStock = 0; saveInventory()"
-                        class="w-16 h-11 text-center text-base sm:text-lg font-black bg-white border-2 border-teal-500 rounded-xl shadow-inner text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-600 transition">
-                        
-                      <button @click="updateStock(item, 1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">+</button>
+                      <button @click="updateStock(item, -1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 text-lg font-extrabold flex items-center justify-center shadow-xs">-</button>
+                      <input type="number" inputmode="numeric" :value="item.currentStock ?? 0"
+                             @input="item.currentStock = $event.target.value === '' ? 0 : Math.max(0, parseInt($event.target.value) || 0); saveInventory()"
+                             @blur="if (item.currentStock === '' || isNaN(item.currentStock)) item.currentStock = 0; saveInventory()"
+                             class="w-16 h-11 text-center text-base sm:text-lg font-black bg-white border-2 border-teal-500 rounded-xl shadow-inner text-slate-900 focus:outline-none">
+                      <button @click="updateStock(item, 1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 text-lg font-extrabold flex items-center justify-center shadow-xs">+</button>
                     </div>
                   </div>
                 </div>
 
-                <!-- Bottom Action: Add to Order List -->
                 <div class="pt-2 mt-1 border-t border-slate-200/60 flex items-center justify-between gap-1">
-                  <div class="text-xs text-slate-500 font-medium">
-                    預警: <span class="font-bold" x-text="item.safetyStock"></span> <span x-text="item.unit || '個'"></span>
-                  </div>
-
-                  <button 
-                    @click="addToOrder(item)" 
-                    :class="isItemOrdered(item.id) ? 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white' : 'bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white border border-teal-800'"
-                    class="touch-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs">
-                    <i class="fa-solid text-sm" :class="isItemOrdered(item.id) ? 'fa-check' : 'fa-plus'"></i>
+                  <div class="text-xs text-slate-500 font-medium">預警: <span class="font-bold" x-text="item.safetyStock"></span></div>
+                  <button @click="addToOrder(item)" :class="isItemOrdered(item.id) ? 'bg-amber-500 text-white' : 'bg-teal-700 text-white'"
+                          class="touch-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs">
+                    <i class="fa-solid" :class="isItemOrdered(item.id) ? 'fa-check' : 'fa-plus'"></i>
                     <span x-text="isItemOrdered(item.id) ? '已叫貨' : '+ 叫貨'"></span>
                   </button>
                 </div>
-
               </div>
             </template>
           </div>
-
-          <!-- Empty State for Supplier -->
-          <div x-show="getFilteredItemsBySupplier(supplier).length === 0 && searchQuery" class="text-center py-6 bg-white/70 rounded-2xl border border-dashed border-slate-300 text-slate-500 text-sm font-medium">
-            查無符合「<span x-text="searchQuery" class="font-bold"></span>」的包材品項
-          </div>
-
         </div>
       </template>
-
-      <!-- Global Empty Inventory State -->
-      <div x-show="inventory.length === 0" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 space-y-4">
-        <div class="w-16 h-16 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto text-2xl">
-          <i class="fa-solid fa-box-open"></i>
-        </div>
-        <h3 class="text-base sm:text-lg font-bold text-slate-800">尚未建立任何包材庫存品項</h3>
-        <p class="text-sm text-slate-500 max-w-sm mx-auto">請點選右上角的 **【批量新增】** 建立品項資料。</p>
-      </div>
-
     </div>
 
-    <!-- TAB 2: FAVORITES / CONSTANT ORDER SECTION (獨立常叫貨分頁) -->
+    <!-- TAB 2: FAVORITES -->
     <div x-show="currentTab === 'favorites'" class="space-y-6">
-      
       <div class="rounded-2xl border p-4 sm:p-6 transition-all space-y-4 bg-amber-50/70 border-amber-300 shadow-xs">
-        
-        <!-- Header -->
         <div class="flex items-center justify-between border-b border-amber-300 pb-3.5">
           <div class="flex items-center gap-3">
-            <span class="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shadow-xs text-white bg-amber-500">
-              <i class="fa-solid fa-star"></i>
-            </span>
+            <span class="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shadow-xs text-white bg-amber-500"><i class="fa-solid fa-star"></i></span>
             <div>
-              <h2 class="text-base sm:text-lg font-bold tracking-tight flex items-center gap-2.5 text-amber-950">
-                <span>常叫貨包材專區</span>
-                <span class="text-xs sm:text-sm font-semibold px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900" x-text="getFavoriteItems().length + ' 項品項'"></span>
-              </h2>
-              <p class="text-xs sm:text-sm opacity-80 mt-0.5 text-amber-900">集中管理所有標記星號的常用包材，方便日常快速盤點與叫貨</p>
+              <h2 class="text-base sm:text-lg font-bold tracking-tight text-amber-950">常叫貨包材專區</h2>
+              <p class="text-xs sm:text-sm text-amber-900">集中管理所有標記星號的常用包材</p>
             </div>
           </div>
         </div>
-
-        <!-- Cards Grid -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-          <template x-for="item in getFavoriteItems()" :key="'fav-tab-' + item.id">
-            <div 
-              class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group bg-amber-100/70 border-amber-300 hover:border-amber-500"
-              :class="item.currentStock <= item.safetyStock ? 'border-amber-500 ring-2 ring-amber-400' : ''">
-              
+          <template x-for="item in getFavoriteItems()" :key="'fav-' + item.id">
+            <div class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group bg-amber-100/70 border-amber-300">
               <div>
-                <!-- Top Row -->
                 <div class="flex items-start justify-between gap-1 mb-1.5">
-                  <button 
-                    @click="toggleFavorite(item)" 
-                    class="touch-btn p-1 text-lg focus:outline-none transition transform active:scale-125"
-                    title="取消常叫標記">
-                    <i class="fa-solid fa-star text-amber-500 fill-amber-500"></i>
-                  </button>
-
+                  <button @click="toggleFavorite(item)" class="touch-btn p-1 text-lg"><i class="fa-solid fa-star text-amber-500 fill-amber-500"></i></button>
                   <div class="flex-1 px-1">
-                    <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2" x-text="item.name"></h3>
-                    <p class="text-xs text-slate-600 font-semibold mt-1" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></p>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 line-clamp-2" x-text="item.name"></h3>
+                    <p class="text-xs text-slate-600 font-semibold mt-1" x-text="item.spec || '標準規格'"></p>
                   </div>
-
-                  <!-- Edit & Delete Action Group -->
                   <div class="flex items-center gap-0.5">
-                    <button 
-                      @click="openEditModal(item)" 
-                      class="touch-btn text-slate-400 hover:text-teal-600 text-xs p-1.5 transition"
-                      title="編輯此品項">
-                      <i class="fa-solid fa-pen-to-square"></i>
-                    </button>
-                    <button 
-                      @click="deleteItem(item.id)" 
-                      class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5 transition"
-                      title="刪除此品項">
-                      <i class="fa-solid fa-trash"></i>
-                    </button>
+                    <button @click="openEditModal(item)" class="touch-btn text-slate-400 hover:text-teal-600 text-xs p-1.5"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button @click="deleteItem(item.id)" class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5"><i class="fa-solid fa-trash"></i></button>
                   </div>
                 </div>
-
-                <!-- Low Stock Warning Badge -->
-                <div x-show="item.currentStock <= item.safetyStock" class="mb-2">
-                  <span class="bg-amber-200 text-amber-900 text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 w-max">
-                    <i class="fa-solid fa-triangle-exclamation text-amber-700"></i> 低於安全庫存
-                  </span>
-                </div>
-
-                <!-- Stock Counter & Unit Selector -->
-                <div class="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-amber-200/80 flex flex-col gap-2 my-2.5">
+                <div class="bg-white/90 p-2.5 rounded-xl border border-amber-200/80 flex flex-col gap-2 my-2.5">
                   <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
                     <span>現有庫存</span>
-                    <select 
-                      x-model="item.unit" 
-                      @change="saveInventory()" 
-                      class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-teal-500 font-bold shadow-2xs">
-                      <option value="個">個</option>
-                      <option value="包">包</option>
-                      <option value="瓶">瓶</option>
-                      <option value="箱">箱</option>
+                    <select x-model="item.unit" @change="saveInventory()" class="bg-white border rounded-lg px-2.5 py-1 text-sm font-bold">
+                      <option value="個">個</option><option value="包">包</option><option value="瓶">瓶</option><option value="箱">箱</option>
                     </select>
                   </div>
-
                   <div class="flex items-center justify-between gap-2 mt-0.5">
-                    <button @click="updateStock(item, -1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">-</button>
-                    
-                    <input 
-                      type="number" 
-                      inputmode="numeric"
-                      :value="item.currentStock ?? 0"
-                      @input="item.currentStock = $event.target.value === '' ? 0 : Math.max(0, parseInt($event.target.value) || 0); saveInventory()"
-                      @blur="if (item.currentStock === '' || isNaN(item.currentStock)) item.currentStock = 0; saveInventory()"
-                      class="w-16 h-11 text-center text-base sm:text-lg font-black bg-white border-2 border-amber-500 rounded-xl shadow-inner text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-600 transition">
-                      
-                    <button @click="updateStock(item, 1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200 text-lg font-extrabold flex items-center justify-center shadow-xs transition">+</button>
+                    <button @click="updateStock(item, -1)" class="touch-btn w-11 h-11 bg-white border-2 rounded-xl text-lg font-extrabold">-</button>
+                    <input type="number" :value="item.currentStock ?? 0" @input="item.currentStock = Math.max(0, parseInt($event.target.value) || 0); saveInventory()" class="w-16 h-11 text-center font-black border-2 border-amber-500 rounded-xl">
+                    <button @click="updateStock(item, 1)" class="touch-btn w-11 h-11 bg-white border-2 rounded-xl text-lg font-extrabold">+</button>
                   </div>
                 </div>
               </div>
-
-              <!-- Bottom Action: Add to Order List -->
-              <div class="pt-2 mt-1 border-t border-amber-200/60 flex items-center justify-between gap-1">
-                <div class="text-xs text-slate-600 font-medium">
-                  廠商: <span class="font-bold text-amber-950" x-text="item.origin"></span>
-                </div>
-
-                <button 
-                  @click="addToOrder(item)" 
-                  :class="isItemOrdered(item.id) ? 'bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white' : 'bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white border border-teal-800'"
-                  class="touch-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs">
-                  <i class="fa-solid text-sm" :class="isItemOrdered(item.id) ? 'fa-check' : 'fa-plus'"></i>
+              <div class="pt-2 mt-1 border-t border-amber-200/60 flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-950" x-text="item.origin"></span>
+                <button @click="addToOrder(item)" class="touch-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-700 text-white">
                   <span x-text="isItemOrdered(item.id) ? '已叫貨' : '+ 叫貨'"></span>
                 </button>
               </div>
-
             </div>
           </template>
         </div>
-
-        <!-- Empty State for Favorites -->
-        <div x-show="getFavoriteItems().length === 0" class="text-center py-16 bg-white/70 rounded-2xl border border-dashed border-amber-300 space-y-3">
-          <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-xl">
-            <i class="fa-solid fa-star"></i>
-          </div>
-          <h3 class="text-sm font-bold text-slate-800">尚未設定任何常叫貨品項</h3>
-          <p class="text-xs text-slate-500 max-w-sm mx-auto">請至「庫存」頁面點擊品項卡片左上角的 **【星號】**，即可將其加入常叫貨專區。</p>
-          <button @click="currentTab = 'inventory'" class="touch-btn bg-teal-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition hover:bg-teal-700">
-            前往庫存頁面標記星號
-          </button>
-        </div>
-
       </div>
-
     </div>
 
-    <!-- TAB 3: ORDER PURCHASE SHEET -->
+    <!-- TAB 3: ORDER SHEET -->
     <div x-show="currentTab === 'order'" class="space-y-6">
-      
-      <!-- Top Actions Bar for Order Sheet -->
-      <div class="bg-white p-4.5 sm:p-5 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      <div class="bg-white p-4.5 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 class="text-base sm:text-lg font-bold text-slate-900">今日採購叫貨清單</h2>
-          <p class="text-xs sm:text-sm text-slate-600 mt-0.5">已選取 <span x-text="orderedItems.length" class="font-bold text-teal-600 text-base"></span> 項包材叫貨需求</p>
+          <p class="text-xs sm:text-sm text-slate-600">已選取 <span x-text="orderedItems.length" class="font-bold text-teal-600"></span> 項包材</p>
         </div>
-
         <div class="flex items-center gap-2.5">
-          <!-- Clear Order List Button -->
-          <button 
-            @click="clearOrderList()" 
-            x-show="orderedItems.length > 0"
-            class="touch-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
-            <i class="fa-solid fa-broom text-slate-500 text-base"></i> 清空
-          </button>
-
-          <!-- Export PDF Button -->
-          <button 
-            @click="exportToPDF()" 
-            x-show="orderedItems.length > 0"
-            class="touch-btn bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs sm:text-sm font-bold px-4.5 py-2.5 rounded-xl transition shadow-xs flex items-center gap-2">
-            <i class="fa-solid fa-file-pdf text-base"></i> 匯出 A4 PDF 叫貨單
-          </button>
+          <button @click="clearOrderList()" x-show="orderedItems.length > 0" class="touch-btn bg-slate-100 text-slate-700 text-sm font-bold px-3.5 py-2 rounded-xl">清空</button>
+          <button @click="exportToPDF()" x-show="orderedItems.length > 0" class="touch-btn bg-teal-600 text-white text-sm font-bold px-4.5 py-2.5 rounded-xl shadow-xs"><i class="fa-solid fa-file-pdf mr-1.5"></i> 匯出 PDF</button>
         </div>
       </div>
 
-      <!-- Empty State for Order List -->
-      <div x-show="orderedItems.length === 0" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 space-y-4">
-        <div class="w-16 h-16 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto text-2xl">
-          <i class="fa-solid fa-clipboard-list"></i>
-        </div>
-        <h3 class="text-base sm:text-lg font-bold text-slate-800">叫貨清單預設為空</h3>
-        <p class="text-sm text-slate-500 max-w-sm mx-auto">請先回到「庫存」或「常叫貨」頁面，點擊品項卡片上的 **【+ 叫貨】** 按鈕，即可將品項轉移至此處。</p>
-        <button @click="currentTab = 'inventory'" class="touch-btn bg-teal-600 text-white text-sm font-bold px-6 py-3 rounded-xl transition hover:bg-teal-700 shadow-sm">
-          前往庫存盤點選取品項
-        </button>
-      </div>
-
-      <!-- INDEPENDENT SUPPLIER PURCHASE TABLES -->
       <div x-show="orderedItems.length > 0" class="flex justify-center py-2">
-        
-        <!-- Target Wrapper for PDF Export -->
-        <div id="printable-purchase-order" class="w-full max-w-[760px] bg-white p-5 sm:p-7 rounded-2xl border border-slate-200 shadow-sm space-y-6 text-sm text-slate-800">
-          
-          <!-- Printable Header -->
-          <div class="text-center border-b border-slate-200 pb-4">
-            <h1 class="text-lg sm:text-xl font-bold tracking-wider text-slate-900">甜蜜果物 - 包裝材料採購對照單</h1>
-            <div class="text-xs sm:text-sm text-slate-600 mt-1.5 flex justify-center items-center gap-5">
-              <span>日期：<span x-text="currentDateFormatted" class="font-bold text-slate-800"></span></span>
-              <span>叫貨總品項：<span x-text="orderedItems.length" class="font-bold text-teal-700 text-base"></span> 項</span>
-            </div>
+        <div id="printable-purchase-order" class="w-full max-w-[760px] bg-white p-5 rounded-2xl border shadow-sm space-y-6 text-sm">
+          <div class="text-center border-b pb-4">
+            <h1 class="text-lg font-bold text-slate-900">甜蜜果物 - 包裝材料採購對照單</h1>
+            <div class="text-xs text-slate-600 mt-1">日期：<span x-text="currentDateFormatted"></span></div>
           </div>
-
-          <!-- INDEPENDENT SUPPLIER TABLES WITH DISTINCT BACKGROUND -->
           <div class="space-y-6">
             <template x-for="supplier in activeOrderSuppliers" :key="supplier">
-              <div class="rounded-2xl border shadow-xs overflow-hidden transition-all"
-                   :class="{
-                     'bg-blue-50/70 border-blue-300': supplier === '必堅',
-                     'bg-emerald-50/70 border-emerald-300': supplier === '利泰',
-                     'bg-amber-50/70 border-amber-300': supplier === '淘寶',
-                     'bg-slate-50 border-slate-200': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
-                   }">
-                
-                <!-- Table Header Title -->
-                <div class="px-4.5 py-3 font-bold flex justify-between items-center text-sm border-b"
-                     :class="{
-                       'bg-blue-100/90 text-blue-950 border-blue-300': supplier === '必堅',
-                       'bg-emerald-100/90 text-emerald-950 border-emerald-300': supplier === '利泰',
-                       'bg-amber-100/90 text-amber-950 border-amber-300': supplier === '淘寶',
-                       'bg-slate-200 text-slate-900 border-slate-300': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
-                     }">
-                  <span class="flex items-center gap-2.5">
-                    <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm text-white shadow-2xs"
-                          :class="{
-                            'bg-blue-600': supplier === '必堅',
-                            'bg-emerald-600': supplier === '利泰',
-                            'bg-amber-600': supplier === '淘寶',
-                            'bg-slate-600': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
-                          }">
-                      <i class="fa-solid" :class="{
-                        'fa-building': supplier === '必堅',
-                        'fa-warehouse': supplier === '利泰',
-                        'fa-cart-shopping': supplier === '淘寶',
-                        'fa-truck-field': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
-                      }"></i>
-                    </span>
-                    <span class="font-bold text-base" x-text="supplier + ' 採購單'"></span>
-                  </span>
-                  
-                  <span class="text-xs px-2.5 py-1 rounded-full font-bold shadow-2xs" 
-                        :class="{
-                          'bg-blue-200 text-blue-900': supplier === '必堅',
-                          'bg-emerald-200 text-emerald-900': supplier === '利泰',
-                          'bg-amber-200 text-amber-900': supplier === '淘寶',
-                          'bg-slate-300 text-slate-800': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
-                        }"
-                        x-text="getOrderedItemsBySupplier(supplier).length + ' 項品項'"></span>
+              <div class="rounded-2xl border shadow-xs overflow-hidden bg-slate-50">
+                <div class="px-4.5 py-3 font-bold bg-slate-200 text-slate-900 flex justify-between items-center text-sm">
+                  <span x-text="supplier + ' 採購單'"></span>
                 </div>
-
-                <!-- Supplier Form Table -->
                 <div class="p-3.5 overflow-x-auto">
-                  <table class="w-full text-left text-sm border-collapse whitespace-nowrap">
+                  <table class="w-full text-left text-sm">
                     <thead>
-                      <tr class="text-slate-600 border-b border-slate-200/80 text-xs sm:text-sm font-bold">
+                      <tr class="text-slate-600 border-b text-xs font-bold">
                         <th class="pb-2.5 px-2">品名</th>
-                        <th class="pb-2.5 px-2">叫貨數量</th>
+                        <th class="pb-2.5 px-2">數量</th>
                         <th class="pb-2.5 px-2">備註</th>
                         <th class="pb-2.5 text-right px-2">操作</th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-200/60">
+                    <tbody class="divide-y">
                       <template x-for="item in getOrderedItemsBySupplier(supplier)" :key="item.id">
-                        <tr class="hover:bg-white/60 transition-colors">
-                          
-                          <!-- Item Name & Spec -->
-                          <td class="py-3 px-2 align-middle">
-                            <div class="font-bold text-slate-900 text-base" x-text="item.name"></div>
-                            <div class="text-xs text-slate-600 font-semibold mt-0.5" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></div>
-                          </td>
-                          
-                          <!-- Order Quantity Input & Unit Selector -->
-                          <td class="py-3 px-2 align-middle">
-                            <div class="flex items-center gap-2 flex-wrap">
-                              <div class="inline-flex items-center bg-white border-2 border-slate-300 rounded-xl shadow-xs p-1 gap-1">
-                                <button 
-                                  @click="item.orderWeight = Math.max(0, item.orderWeight - 1)" 
-                                  class="touch-btn w-9 h-9 text-slate-800 hover:bg-slate-100 rounded-lg font-black text-base flex items-center justify-center transition">-</button>
-                                <input 
-                                  type="number" 
-                                  inputmode="decimal"
-                                  min="0"
-                                  x-model.number="item.orderWeight" 
-                                  class="w-14 text-center text-sm sm:text-base font-black text-slate-900 bg-transparent focus:outline-none">
-                                <button 
-                                  @click="item.orderWeight = Math.max(0, item.orderWeight + 1)" 
-                                  class="touch-btn w-9 h-9 text-slate-800 hover:bg-slate-100 rounded-lg font-black text-base flex items-center justify-center transition">+</button>
-                              </div>
-
-                              <!-- Unit Dropdown Selector -->
-                              <select 
-                                x-model="item.unit" 
-                                class="bg-white border-2 border-slate-300 text-slate-900 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-500 font-bold">
-                                <option value="個">個</option>
-                                <option value="包">包</option>
-                                <option value="瓶">瓶</option>
-                                <option value="箱">箱</option>
-                              </select>
+                        <tr>
+                          <td class="py-3 px-2 font-bold" x-text="item.name"></td>
+                          <td class="py-3 px-2">
+                            <div class="inline-flex items-center border-2 rounded-xl p-1 gap-1">
+                              <button @click="item.orderWeight = Math.max(0, item.orderWeight - 1)" class="w-8 h-8 font-black">-</button>
+                              <input type="number" x-model.number="item.orderWeight" class="w-12 text-center font-black bg-transparent">
+                              <button @click="item.orderWeight = Math.max(0, item.orderWeight + 1)" class="w-8 h-8 font-black">+</button>
                             </div>
                           </td>
-
-                          <!-- Order Remark Input -->
-                          <td class="py-3 px-2 align-middle">
-                            <input 
-                              type="text" 
-                              x-model="item.orderRemark" 
-                              placeholder="填寫備註..." 
-                              class="w-36 text-sm px-3 py-2 bg-white border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500 font-medium">
-                          </td>
-
-                          <!-- Remove Button -->
-                          <td class="py-3 px-2 align-middle text-right">
-                            <button 
-                              @click="removeFromOrder(item.id)" 
-                              class="touch-btn text-slate-400 hover:text-rose-600 p-2 text-base transition"
-                              title="從叫貨單移除">
-                              <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                          </td>
-
+                          <td class="py-3 px-2"><input type="text" x-model="item.orderRemark" placeholder="備註..." class="w-32 px-2 py-1 border rounded-lg"></td>
+                          <td class="py-3 px-2 text-right"><button @click="removeFromOrder(item.id)" class="text-rose-600"><i class="fa-solid fa-trash-can"></i></button></td>
                         </tr>
                       </template>
                     </tbody>
                   </table>
                 </div>
-
               </div>
             </template>
           </div>
-
-          <!-- COMPACT SUMMARY SECTION -->
-          <div id="compact-summary-export-target" class="pt-5 border-t-2 border-dashed border-slate-300 space-y-4 p-4.5 sm:p-5 bg-white rounded-2xl">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
-                <i class="fa-solid fa-list-check text-teal-600 text-base"></i> 精簡採購摘要單
-              </h3>
-              <span class="text-xs text-slate-500 font-medium">供快速對照 / 單一廠商截圖叫貨使用</span>
-            </div>
-
-            <!-- Grid for Independent Compact Supplier Tables -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-              <template x-for="supplier in activeOrderSuppliers" :key="'summary-' + supplier">
-                <div 
-                  :id="'summary-card-' + supplier"
-                  class="bg-slate-50 rounded-2xl border p-3.5 text-sm space-y-2.5 shadow-2xs relative"
-                  :class="{
-                    'border-blue-200 bg-blue-50/40': supplier === '必堅',
-                    'border-emerald-200 bg-emerald-50/40': supplier === '利泰',
-                    'border-amber-200 bg-amber-50/40': supplier === '淘寶',
-                    'border-slate-200': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
-                  }">
-                  
-                  <!-- Compact Table Supplier Title with Download Image Button -->
-                  <div class="font-bold flex items-center justify-between border-b pb-2 text-slate-900"
-                       :class="{
-                         'border-blue-200 text-blue-950': supplier === '必堅',
-                         'border-emerald-200 text-emerald-950': supplier === '利泰',
-                         'border-amber-200 text-amber-950': supplier === '淘寶',
-                         'border-slate-200': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
-                       }">
-                    <span class="flex items-center gap-2 text-base">
-                      <span class="w-3 h-3 rounded-full"
-                            :class="{
-                              'bg-blue-600': supplier === '必堅',
-                              'bg-emerald-600': supplier === '利泰',
-                              'bg-amber-600': supplier === '淘寶',
-                              'bg-slate-600': supplier !== '必堅' && supplier !== '利泰' && supplier !== '淘寶'
-                            }"></span>
-                      <span x-text="supplier"></span>
-                    </span>
-
-                    <div class="flex items-center gap-2">
-                      <span class="text-xs font-bold text-slate-600" x-text="getOrderedItemsBySupplier(supplier).length + ' 項'"></span>
-                      
-                      <!-- Individual Supplier Image Download Button -->
-                      <button 
-                        @click="downloadSupplierSummaryImage(supplier)" 
-                        data-html2canvas-ignore="true"
-                        class="touch-btn px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold shadow-2xs flex items-center gap-1.5 transition"
-                        title="下載此廠商對照單圖片">
-                        <i class="fa-solid fa-camera text-teal-600 text-sm"></i>
-                        <span>截圖</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Compact Table -->
-                  <table class="w-full text-left border-collapse">
-                    <thead>
-                      <tr class="text-xs text-slate-500 font-bold border-b border-slate-200/80">
-                        <th class="pb-1.5 font-bold">品名</th>
-                        <th class="pb-1.5 font-bold text-center w-20">數量</th>
-                        <th class="pb-1.5 font-bold text-right">備註</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-200/50">
-                      <template x-for="item in getOrderedItemsBySupplier(supplier)" :key="'sum-item-' + item.id">
-                        <tr class="text-slate-800">
-                          <td class="py-2 pr-1 font-bold leading-snug text-sm">
-                            <span x-text="item.name"></span>
-                            <span x-show="item.spec" x-text="'(' + item.spec + ')'" class="text-xs text-slate-500 block font-normal"></span>
-                          </td>
-                          <td class="py-2 text-center font-black text-teal-700 text-base whitespace-nowrap">
-                            <span x-text="item.orderWeight"></span>
-                            <span x-text="item.unit || '個'" class="text-xs font-semibold text-slate-600"></span>
-                          </td>
-                          <td class="py-2 text-right text-xs text-slate-600 font-medium truncate max-w-[100px]" x-text="item.orderRemark || '-'"></td>
-                        </tr>
-                      </template>
-                    </tbody>
-                  </table>
-                </div>
-              </template>
-            </div>
-          </div>
-
-          <!-- Printable Footer -->
-          <div class="pt-4 border-t border-slate-300 text-xs text-slate-500 flex justify-between items-center font-semibold">
-            <span>採購簽核：____________________</span>
-            <span>甜蜜果物 · 包裝材料採購系統 A4 對照表</span>
-          </div>
-
         </div>
-
       </div>
-
     </div>
 
   </main>
 
-  <!-- MODAL 1: BATCH ADD ITEMS -->
-  <div x-show="showBatchModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
-    <div @click.away="showBatchModal = false" class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-5">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-        <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2.5">
-          <i class="fa-solid fa-layer-group text-sky-600 text-lg"></i> 批量新增包材品項
+  <!-- CLOUD SETTINGS MODAL -->
+  <div x-show="showCloudModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
+    <div @click.away="showCloudModal = false" class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-cloud text-teal-600 text-lg"></i> Firebase 即時雲端同步設定
         </h3>
-        <button @click="showBatchModal = false" class="touch-btn text-slate-400 hover:text-slate-600 p-2 text-lg"><i class="fa-solid fa-xmark"></i></button>
+        <button @click="showCloudModal = false" class="touch-btn text-slate-400 p-2"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
-      <div class="space-y-4 text-sm sm:text-base">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1.5">預設廠商</label>
-            <select x-model="batchSupplier" class="w-full p-3 border-2 border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none font-bold text-slate-800">
-              <template x-for="sup in suppliers" :key="sup">
-                <option :value="sup" x-text="sup"></option>
-              </template>
-            </select>
-          </div>
-
-          <div>
-            <label class="block font-bold text-slate-700 mb-1.5">預設單位</label>
-            <select x-model="batchUnit" class="w-full p-3 border-2 border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none font-bold text-slate-800">
-              <option value="個">個</option>
-              <option value="包">包</option>
-              <option value="瓶">瓶</option>
-              <option value="箱">箱</option>
-            </select>
-          </div>
-        </div>
-
+      <div class="space-y-3 text-sm">
+        <p class="text-xs text-slate-500">請貼上從 Firebase 專案設定中複製的資料庫設定。設定完成後，PC 與 iPad 只要開著網頁即可自動雙向同步。</p>
         <div>
-          <label class="block font-bold text-slate-700 mb-1.5">輸入品項與規格 (每行一項)</label>
-          <textarea 
-            x-model="batchInputText" 
-            rows="6" 
-            placeholder="例如：
-瓦楞紙箱 3號,5號,8號 必堅
-透明封箱膠帶 48mm 利泰"
-            class="w-full p-3.5 border-2 border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none font-mono text-sm leading-relaxed"></textarea>
-          <p class="text-xs text-slate-500 mt-1.5 font-medium">小撇步：可將逗號分隔的規格寫在一起，系統會自動拆解為獨立的規格卡片。</p>
+          <label class="block font-bold text-slate-700 mb-1">Firebase Config (JSON 格式)</label>
+          <textarea x-model="cloudConfigText" rows="6" placeholder='{
+  "apiKey": "你的API",
+  "databaseURL": "https://your-app-default-rtdb.firebaseio.com",
+  "projectId": "your-app"
+}' class="w-full p-3 border-2 rounded-xl font-mono text-xs bg-slate-50"></textarea>
         </div>
       </div>
-
-      <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-        <button @click="showBatchModal = false" class="touch-btn px-5 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50">取消</button>
-        <button @click="processBatchAdd()" class="touch-btn px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold shadow-xs">確認導入</button>
+      <div class="flex justify-end gap-2 pt-3 border-t">
+        <button @click="showCloudModal = false" class="touch-btn px-4 py-2 border-2 rounded-xl font-bold">取消</button>
+        <button @click="saveCloudConfig()" class="touch-btn px-5 py-2 bg-teal-600 text-white rounded-xl font-bold">儲存並連線</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL 2: EDIT SINGLE ITEM -->
+  <!-- MODALS: Batch Add, Edit, Supplier Management -->
+  <div x-show="showBatchModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
+    <div @click.away="showBatchModal = false" class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b pb-4">
+        <h3 class="text-base font-bold text-slate-900">批量新增包材品項</h3>
+        <button @click="showBatchModal = false" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="space-y-4">
+        <textarea x-model="batchInputText" rows="6" placeholder="例如：瓦楞紙箱 3號,5號 必堅" class="w-full p-3.5 border-2 rounded-xl font-mono text-sm"></textarea>
+      </div>
+      <div class="flex justify-end gap-3 pt-4 border-t">
+        <button @click="showBatchModal = false" class="px-5 py-2.5 border-2 rounded-xl font-bold">取消</button>
+        <button @click="processBatchAdd()" class="px-6 py-2.5 bg-sky-600 text-white rounded-xl font-bold">確認導入</button>
+      </div>
+    </div>
+  </div>
+
   <div x-show="showEditModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
     <div @click.away="showEditModal = false" class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-          <i class="fa-solid fa-pen-to-square text-teal-600 text-lg"></i> 編輯包材品項
-        </h3>
-        <button @click="showEditModal = false" class="touch-btn text-slate-400 hover:text-slate-600 p-2 text-lg"><i class="fa-solid fa-xmark"></i></button>
+      <div class="flex items-center justify-between border-b pb-3">
+        <h3 class="text-base font-bold text-slate-900">編輯包材品項</h3>
+        <button @click="showEditModal = false" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
-      <div class="space-y-3.5 text-sm" x-data>
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">品名</label>
-          <input type="text" x-model="editingItem.name" class="w-full p-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500 font-bold text-slate-900">
-        </div>
-
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">規格描述</label>
-          <input type="text" x-model="editingItem.spec" placeholder="例如: 水果6入裝 / 48mm" class="w-full p-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500 font-medium text-slate-800">
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">所屬廠商</label>
-            <select x-model="editingItem.origin" class="w-full p-3 border-2 border-slate-200 rounded-xl bg-white focus:outline-none font-bold text-slate-800">
-              <template x-for="sup in suppliers" :key="sup">
-                <option :value="sup" x-text="sup"></option>
-              </template>
-            </select>
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">安全庫存預警</label>
-            <input type="number" min="0" x-model.number="editingItem.safetyStock" class="w-full p-3 border-2 border-slate-200 rounded-xl focus:outline-none font-bold text-slate-900 text-center">
-          </div>
-        </div>
+      <div class="space-y-3.5 text-sm">
+        <input type="text" x-model="editingItem.name" placeholder="品名" class="w-full p-3 border-2 rounded-xl font-bold">
+        <input type="text" x-model="editingItem.spec" placeholder="規格" class="w-full p-3 border-2 rounded-xl">
+        <select x-model="editingItem.origin" class="w-full p-3 border-2 rounded-xl font-bold">
+          <template x-for="sup in suppliers" :key="sup"><option :value="sup" x-text="sup"></option></template>
+        </select>
+        <input type="number" x-model.number="editingItem.safetyStock" placeholder="安全庫存" class="w-full p-3 border-2 rounded-xl text-center font-bold">
       </div>
-
-      <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
-        <button @click="showEditModal = false" class="touch-btn px-4.5 py-2 rounded-xl border-2 border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50">取消</button>
-        <button @click="saveEditedItem()" class="touch-btn px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold shadow-xs">儲存變更</button>
+      <div class="flex justify-end gap-2.5 pt-3 border-t">
+        <button @click="showEditModal = false" class="px-4 py-2 border-2 rounded-xl font-bold">取消</button>
+        <button @click="saveEditedItem()" class="px-5 py-2 bg-teal-600 text-white rounded-xl font-bold">儲存變更</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL 3: SUPPLIER MANAGEMENT -->
   <div x-show="showSupplierModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
     <div @click.away="showSupplierModal = false" class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-          <i class="fa-solid fa-industry text-sky-600 text-lg"></i> 管理廠商列表
-        </h3>
-        <button @click="showSupplierModal = false" class="touch-btn text-slate-400 hover:text-slate-600 p-2 text-lg"><i class="fa-solid fa-xmark"></i></button>
+      <div class="flex items-center justify-between border-b pb-4">
+        <h3 class="text-base font-bold">管理廠商列表</h3>
+        <button @click="showSupplierModal = false" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
-      <div class="space-y-4 text-sm sm:text-base">
+      <div class="space-y-4">
         <div class="flex gap-2">
-          <input 
-            type="text" 
-            x-model="newSupplierName" 
-            placeholder="新增廠商名稱..." 
-            class="flex-1 px-3.5 py-2.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-sky-500 font-bold text-slate-800">
-          <button @click="addSupplier()" class="touch-btn px-4 py-2.5 bg-sky-600 text-white rounded-xl font-bold hover:bg-sky-700 shadow-xs">新增</button>
+          <input type="text" x-model="newSupplierName" placeholder="新廠商名稱" class="flex-1 px-3.5 py-2.5 border-2 rounded-xl font-bold">
+          <button @click="addSupplier()" class="px-4 py-2.5 bg-sky-600 text-white rounded-xl font-bold">新增</button>
         </div>
-
-        <div class="border-2 border-slate-200 rounded-2xl divide-y divide-slate-100 max-h-52 overflow-y-auto">
+        <div class="border-2 rounded-2xl divide-y max-h-52 overflow-y-auto">
           <template x-for="sup in suppliers" :key="sup">
             <div class="p-3 flex items-center justify-between">
-              <span class="font-bold text-slate-800 text-base" x-text="sup"></span>
-              <button 
-                x-show="sup !== '必堅' && sup !== '利泰' && sup !== '淘寶'" 
-                @click="removeSupplier(sup)" 
-                class="touch-btn text-slate-400 hover:text-rose-600 p-2 text-base">
-                <i class="fa-solid fa-trash"></i>
-              </button>
+              <span class="font-bold" x-text="sup"></span>
+              <button x-show="sup !== '必堅' && sup !== '利泰' && sup !== '淘寶'" @click="removeSupplier(sup)" class="text-rose-600"><i class="fa-solid fa-trash"></i></button>
             </div>
           </template>
         </div>
       </div>
-
-      <div class="flex justify-end pt-3 border-t border-slate-100">
-        <button @click="showSupplierModal = false" class="touch-btn px-5 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200">關閉</button>
-      </div>
+      <div class="flex justify-end pt-3 border-t"><button @click="showSupplierModal = false" class="px-5 py-2.5 bg-slate-100 rounded-xl font-bold">關閉</button></div>
     </div>
   </div>
 
-  <!-- TOAST NOTIFICATION -->
-  <div 
-    x-show="toast.show" 
-    x-transition
-    class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-sm px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-2.5 font-bold">
-    <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+  <!-- TOAST -->
+  <div x-show="toast.show" x-transition class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-sm px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-2.5 font-bold">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
     <span x-text="toast.message"></span>
   </div>
 
-  <!-- ALPINE APP LOGIC -->
+  <!-- APP SCRIPT WITH FIREBASE SYNC -->
   <script>
     function packagingApp() {
       return {
@@ -936,27 +498,19 @@
         showBatchModal: false,
         showSupplierModal: false,
         showEditModal: false,
+        showCloudModal: false,
+        isCloudConnected: false,
 
         batchSupplier: '必堅',
         batchUnit: '個',
         batchInputText: '',
         newSupplierName: '',
+        cloudConfigText: localStorage.getItem('pkg_cloud_config') || '',
 
-        editingItem: {
-          id: null,
-          name: '',
-          spec: '',
-          origin: '',
-          safetyStock: 5
-        },
-
-        toast: {
-          show: false,
-          message: ''
-        },
+        editingItem: { id: null, name: '', spec: '', origin: '', safetyStock: 5 },
+        toast: { show: false, message: '' },
 
         suppliers: JSON.parse(localStorage.getItem('pkg_suppliers')) || ['必堅', '利泰', '淘寶'],
-
         inventory: JSON.parse(localStorage.getItem('pkg_inventory')) || [
           { id: 1, name: '瓦楞外箱 5號', spec: '標準規格', origin: '必堅', unit: '箱', currentStock: 12, safetyStock: 5, isFavorite: true },
           { id: 2, name: '彩色印刷禮盒', spec: '水果6入裝', origin: '必堅', unit: '個', currentStock: 30, safetyStock: 10, isFavorite: false },
@@ -965,12 +519,55 @@
           { id: 5, name: '客製化提袋', spec: '大號藍色', origin: '淘寶', unit: '個', currentStock: 2, safetyStock: 20, isFavorite: true },
           { id: 6, name: '網狀水果護套', spec: '12cm白色', origin: '淘寶', unit: '包', currentStock: 15, safetyStock: 5, isFavorite: false }
         ],
-
         orderedItems: [],
+
+        init() {
+          this.initFirebase();
+        },
+
+        initFirebase() {
+          if (!this.cloudConfigText.trim()) return;
+          try {
+            let config = JSON.parse(this.cloudConfigText);
+            if (!firebase.apps.length) {
+              firebase.initializeApp(config);
+            }
+            const dbRef = firebase.database().ref('packagingData');
+            
+            dbRef.on('value', (snapshot) => {
+              const cloudData = snapshot.val();
+              if (cloudData) {
+                if (cloudData.inventory) this.inventory = cloudData.inventory;
+                if (cloudData.suppliers) this.suppliers = cloudData.suppliers;
+                localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
+                localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
+                this.isCloudConnected = true;
+              }
+            });
+            this.isCloudConnected = true;
+          } catch (e) {
+            console.error('Firebase 連結失敗:', e);
+            this.isCloudConnected = false;
+          }
+        },
+
+        saveCloudConfig() {
+          localStorage.setItem('pkg_cloud_config', this.cloudConfigText);
+          this.showCloudModal = false;
+          this.initFirebase();
+          this.showToast('雲端設定已儲存並重新連線！');
+        },
 
         saveInventory() {
           localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
           localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
+          
+          if (this.isCloudConnected && firebase.apps.length) {
+            firebase.database().ref('packagingData').set({
+              inventory: this.inventory,
+              suppliers: this.suppliers
+            });
+          }
         },
 
         showToast(msg) {
@@ -987,57 +584,25 @@
             default: return 'bg-slate-50/50 border-slate-200 shadow-xs';
           }
         },
-
         getSupplierHeaderBorderStyle(supplier) {
-          switch (supplier) {
-            case '必堅': return 'border-blue-300';
-            case '利泰': return 'border-emerald-300';
-            case '淘寶': return 'border-amber-300';
-            default: return 'border-slate-200';
-          }
+          return supplier === '必堅' ? 'border-blue-300' : (supplier === '利泰' ? 'border-emerald-300' : (supplier === '淘寶' ? 'border-amber-300' : 'border-slate-200'));
         },
-
         getSupplierBadgeStyle(supplier) {
-          switch (supplier) {
-            case '必堅': return 'bg-blue-600';
-            case '利泰': return 'bg-emerald-600';
-            case '淘寶': return 'bg-amber-600';
-            default: return 'bg-slate-600';
-          }
+          return supplier === '必堅' ? 'bg-blue-600' : (supplier === '利泰' ? 'bg-emerald-600' : (supplier === '淘寶' ? 'bg-amber-600' : 'bg-slate-600'));
         },
-
         getSupplierTitleTextStyle(supplier) {
-          switch (supplier) {
-            case '必堅': return 'text-blue-950';
-            case '利泰': return 'text-emerald-950';
-            case '淘寶': return 'text-amber-950';
-            default: return 'text-slate-900';
-          }
+          return supplier === '必堅' ? 'text-blue-950' : (supplier === '利泰' ? 'text-emerald-950' : (supplier === '淘寶' ? 'text-amber-950' : 'text-slate-900'));
         },
-
         getSupplierTagStyle(supplier) {
-          switch (supplier) {
-            case '必堅': return 'bg-blue-200 text-blue-900 font-bold';
-            case '利泰': return 'bg-emerald-200 text-emerald-900 font-bold';
-            case '淘寶': return 'bg-amber-200 text-amber-900 font-bold';
-            default: return 'bg-slate-200 text-slate-800';
-          }
+          return supplier === '必堅' ? 'bg-blue-200 text-blue-900 font-bold' : (supplier === '利泰' ? 'bg-emerald-200 text-emerald-900 font-bold' : (supplier === '淘寶' ? 'bg-amber-200 text-amber-900 font-bold' : 'bg-slate-200 text-slate-800'));
         },
-
         getItemCardBgStyle(supplier) {
-          switch (supplier) {
-            case '必堅': return 'bg-blue-100/80 border-blue-300 hover:border-blue-500';
-            case '利泰': return 'bg-emerald-100/80 border-emerald-300 hover:border-emerald-500';
-            case '淘寶': return 'bg-amber-100/80 border-amber-300 hover:border-amber-500';
-            default: return 'bg-white border-slate-200 hover:border-slate-400';
-          }
+          return supplier === '必堅' ? 'bg-blue-100/80 border-blue-300' : (supplier === '利泰' ? 'bg-emerald-100/80 border-emerald-300' : (supplier === '淘寶' ? 'bg-amber-100/80 border-amber-300' : 'bg-white border-slate-200'));
         },
 
         getFavoriteItems() {
           return this.inventory.filter(item => {
-            const matchesSearch = !this.searchQuery || 
-              item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-              (item.spec && item.spec.toLowerCase().includes(this.searchQuery.toLowerCase()));
+            const matchesSearch = !this.searchQuery || item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || (item.spec && item.spec.toLowerCase().includes(this.searchQuery.toLowerCase()));
             return item.isFavorite && matchesSearch;
           });
         },
@@ -1045,10 +610,7 @@
         getFilteredItemsBySupplier(supplier) {
           return this.inventory.filter(item => {
             const matchesSupplier = item.origin === supplier;
-            const matchesSearch = !this.searchQuery || 
-              item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-              (item.spec && item.spec.toLowerCase().includes(this.searchQuery.toLowerCase()));
-
+            const matchesSearch = !this.searchQuery || item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || (item.spec && item.spec.toLowerCase().includes(this.searchQuery.toLowerCase()));
             return matchesSupplier && matchesSearch;
           });
         },
@@ -1059,13 +621,7 @@
         },
 
         openEditModal(item) {
-          this.editingItem = {
-            id: item.id,
-            name: item.name,
-            spec: item.spec || '',
-            origin: item.origin,
-            safetyStock: item.safetyStock ?? 5
-          };
+          this.editingItem = { id: item.id, name: item.name, spec: item.spec || '', origin: item.origin, safetyStock: item.safetyStock ?? 5 };
           this.showEditModal = true;
         },
 
@@ -1085,7 +641,7 @@
         toggleFavorite(item) {
           item.isFavorite = !item.isFavorite;
           this.saveInventory();
-          this.showToast(item.isFavorite ? `已設為常叫包材` : `已取消常叫標記`);
+          this.showToast(item.isFavorite ? '已設為常叫包材' : '已取消常叫標記');
         },
 
         deleteItem(itemId) {
@@ -1103,12 +659,7 @@
             this.orderedItems = this.orderedItems.filter(o => o.id !== item.id);
             this.showToast(`已從叫貨單移除「${item.name}」`);
           } else {
-            this.orderedItems.push({
-              ...item,
-              orderBox: 1,
-              orderWeight: 0,
-              orderRemark: ''
-            });
+            this.orderedItems.push({ ...item, orderBox: 1, orderWeight: 0, orderRemark: '' });
             this.showToast(`已加入叫貨單：「${item.name}」`);
           }
         },
@@ -1129,8 +680,7 @@
         },
 
         get activeOrderSuppliers() {
-          const active = this.orderedItems.map(i => i.origin);
-          return [...new Set(active)];
+          return [...new Set(this.orderedItems.map(i => i.origin))];
         },
 
         getOrderedItemsBySupplier(supplier) {
@@ -1161,63 +711,34 @@
 
         processBatchAdd() {
           if (!this.batchInputText.trim()) return;
-
           const lines = this.batchInputText.split('\n').filter(l => l.trim().length > 0);
           let addedCount = 0;
-
           lines.forEach(line => {
             let itemSupplier = this.batchSupplier;
             let text = line.trim();
-
             this.suppliers.forEach(sup => {
-              if (text.includes(sup)) {
-                itemSupplier = sup;
-                text = text.replace(sup, '').trim();
-              }
+              if (text.includes(sup)) { itemSupplier = sup; text = text.replace(sup, '').trim(); }
             });
-
-            const specMatch = text.match(/([\u4e00-\u9fa5\w\s]+)\s+([\d,A-Za-z\u4e00-\u9fa5\-\+]+)/);
-            
-            if (specMatch && specMatch[2].includes(',')) {
-              const name = specMatch[1].trim();
-              const specs = specMatch[2].split(',');
-              
-              specs.forEach(s => {
-                this.inventory.push({
-                  id: Date.now() + Math.random(),
-                  name: name,
-                  spec: s.trim(),
-                  origin: itemSupplier,
-                  unit: this.batchUnit,
-                  currentStock: 0,
-                  safetyStock: 5,
-                  isFavorite: false
-                });
-                addedCount++;
-              });
-            } else {
-              this.inventory.push({
-                id: Date.now() + Math.random(),
-                name: text,
-                spec: '',
-                origin: itemSupplier,
-                unit: this.batchUnit,
-                currentStock: 0,
-                safetyStock: 5,
-                isFavorite: false
-              });
-              addedCount++;
-            }
+            this.inventory.push({
+              id: Date.now() + Math.random(),
+              name: text,
+              spec: '',
+              origin: itemSupplier,
+              unit: this.batchUnit,
+              currentStock: 0,
+              safetyStock: 5,
+              isFavorite: false
+            });
+            addedCount++;
           });
-
           this.batchInputText = '';
           this.showBatchModal = false;
           this.saveInventory();
-          this.showToast(`順利批次新增 ${addedCount} 個包材品項`);
+          this.showToast(`順利批次新增 ${addedCount} 個品項`);
         },
 
         confirmZeroStock() {
-          if (confirm('確定要把所有品項的「現有庫存」批次歸 0 嗎？')) {
+          if (confirm('確定要把所有品項庫存批次歸 0 嗎？')) {
             this.inventory.forEach(i => i.currentStock = 0);
             this.saveInventory();
             this.showToast('庫存已全數歸零');
@@ -1225,36 +746,28 @@
         },
 
         confirmClearAll() {
-          if (confirm('警告：確定要清空「所有」庫存與叫貨資料嗎？此操作無法撤銷！')) {
+          if (confirm('警告：確定要清空所有資料嗎？')) {
             this.inventory = [];
             this.orderedItems = [];
             this.saveInventory();
-            this.showToast('已完全清空系統資料');
+            this.showToast('已清空');
           }
         },
 
         exportData() {
           const now = new Date();
-          const year = now.getFullYear();
-          const month = String(now.getMonth() + 1).padStart(2, '0');
-          const day = String(now.getDate()).padStart(2, '0');
-          const fileName = `${year}-${month}-${day}包材資料.json`;
-
-          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
-            inventory: this.inventory,
-            suppliers: this.suppliers
-          }, null, 2));
+          const fileName = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}包材資料.json`;
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ inventory: this.inventory, suppliers: this.suppliers }, null, 2));
           const dlAnchorElem = document.createElement('a');
           dlAnchorElem.setAttribute("href", dataStr);
           dlAnchorElem.setAttribute("download", fileName);
           dlAnchorElem.click();
-          this.showToast(`備份檔「${fileName}」已下載`);
+          this.showToast(`備份檔已下載`);
         },
 
         importData(event) {
           const file = event.target.files[0];
           if (!file) return;
-
           const reader = new FileReader();
           reader.onload = (e) => {
             try {
@@ -1262,69 +775,27 @@
               if (data.inventory) this.inventory = data.inventory;
               if (data.suppliers) this.suppliers = data.suppliers;
               this.saveInventory();
-              this.showToast('備份資料成功復原');
-            } catch (err) {
-              alert('JSON 檔案格式錯誤！');
-            }
+              this.showToast('備份還原成功');
+            } catch (err) { alert('格式錯誤'); }
           };
           reader.readAsText(file);
         },
 
         async exportToPDF() {
-          this.showToast('正在生成精簡採購摘要 PDF...');
-          const element = document.getElementById('compact-summary-export-target');
-          
+          this.showToast('正在生成 PDF...');
+          const element = document.getElementById('printable-purchase-order');
           if (!element) return;
-
           try {
-            const canvas = await html2canvas(element, {
-              scale: 2,
-              useCORS: true,
-              backgroundColor: '#ffffff'
-            });
-
-            const imgData = canvas.toDataURL('image/png');
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
-
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const imgWidth = pdfWidth - 20;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-            pdf.addImage(imgData, 'PNG', 10, 15, imgWidth, imgHeight);
-            pdf.save(`甜蜜果物_包材精簡採購單_${this.currentDateFormatted.replace(/\//g, '-')}.pdf`);
-            this.showToast('精簡採購摘要 PDF 匯出成功！');
-          } catch (error) {
-            console.error('PDF Export Error:', error);
-            alert('PDF 生成發生錯誤，請重試');
-          }
-        },
-
-        async downloadSupplierSummaryImage(supplier) {
-          const elementId = 'summary-card-' + supplier;
-          const element = document.getElementById(elementId);
-
-          if (!element) return;
-
-          this.showToast(`正在生成【${supplier}】採購摘要截圖...`);
-
-          try {
-            const canvas = await html2canvas(element, {
-              scale: 3,
-              useCORS: true,
-              backgroundColor: '#ffffff'
-            });
-
-            const link = document.createElement('a');
-            link.download = `甜蜜果物_叫貨摘要_${supplier}_${this.currentDateFormatted.replace(/\//g, '-')}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-
-            this.showToast(`【${supplier}】截圖下載完成！`);
-          } catch (error) {
-            console.error('Image Export Error:', error);
-            alert('圖片生成失敗，請再試一次');
-          }
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 15, imgWidth, imgHeight);
+            pdf.save(`採購單_${this.currentDateFormatted.replace(/\//g, '-')}.pdf`);
+            this.showToast('PDF 匯出成功！');
+          } catch (error) { alert('發生錯誤'); }
         }
       };
     }
