@@ -160,7 +160,7 @@
     <!-- TOOLBAR & GLOBAL CONTROLS -->
     <div x-show="currentTab === 'inventory' || currentTab === 'favorites'" class="mb-6 bg-white p-4 sm:p-4.5 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
       
-      <div class="flex items-center gap-2.5 flex-1 min-w-[240px]">
+      <div class="flex items-center gap-2.5 flex-1 min-w-[240px] flex-wrap">
         <div class="relative w-full max-w-sm">
           <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
           <input 
@@ -168,6 +168,17 @@
             x-model="searchQuery" 
             placeholder="搜尋品名、規格、廠商..." 
             class="w-full pl-10 pr-3.5 py-2.5 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition">
+        </div>
+
+        <!-- 新增：庫存頁面專屬廠商快速篩選下拉選單 -->
+        <div x-show="currentTab === 'inventory'" class="w-full sm:w-auto">
+          <select x-model="selectedSupplierFilter" 
+                  class="w-full sm:w-auto px-3.5 py-2.5 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-slate-700">
+            <option value="all">🏢 所有廠商 (全部顯示)</option>
+            <template x-for="sup in suppliers" :key="'filter-' + sup">
+              <option :value="sup" x-text="sup"></option>
+            </template>
+          </select>
         </div>
       </div>
 
@@ -197,7 +208,7 @@
     <!-- TAB 1: INVENTORY MANAGEMENT -->
     <div x-show="currentTab === 'inventory'" class="space-y-6">
       <template x-for="supplier in suppliers" :key="supplier">
-        <div x-show="getFilteredItemsBySupplier(supplier).length > 0 || !searchQuery" 
+        <div x-show="(selectedSupplierFilter === 'all' || selectedSupplierFilter === supplier) && (getFilteredItemsBySupplier(supplier).length > 0 || !searchQuery)" 
              class="rounded-2xl border p-4 sm:p-5 transition-all space-y-4"
              :class="getSupplierBlockStyle(supplier)">
           
@@ -248,7 +259,7 @@
                     </span>
                   </div>
 
-                  <div class="bg-slate-50/80 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-slate-200/80 flex flex-col gap-2 my-2.5">
+                  <div class="bg-slate-50/85 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-slate-200/80 flex flex-col gap-2 my-2.5">
                     <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
                       <span>現有庫存</span>
                       <select x-model="item.unit" @change="saveInventory()" class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg px-2 py-1 focus:outline-none font-bold shadow-2xs">
@@ -340,7 +351,7 @@
       </div>
     </div>
 
-    <!-- TAB 3: ORDER SHEET (全新重新設計的兩個區塊) -->
+    <!-- TAB 3: ORDER SHEET -->
     <div x-show="currentTab === 'order'" class="space-y-8">
       
       <!-- 頂部控制列 -->
@@ -370,7 +381,7 @@
       <!-- 有叫貨資料時顯示以下兩個區塊 -->
       <div x-show="orderedItems.length > 0" class="space-y-8">
         
-        <!-- ==================== 第一個區塊：採購叫貨編輯區 ==================== -->
+        <!-- 第一個區塊：採購叫貨編輯區 -->
         <div class="space-y-4">
           <div class="flex items-center gap-2 px-1">
             <span class="w-8 h-8 rounded-lg bg-teal-600 text-white flex items-center justify-center text-sm font-bold"><i class="fa-solid fa-pen-to-square"></i></span>
@@ -444,7 +455,7 @@
           </div>
         </div>
 
-        <!-- ==================== 第二個區塊：精簡摘要區 (供列印與匯出PDF) ==================== -->
+        <!-- 第二個區塊：精簡摘要區 (供列印與匯出PDF) -->
         <div class="pt-6">
           <div class="flex items-center gap-2 px-1 mb-4">
             <span class="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center text-sm font-bold"><i class="fa-solid fa-file-lines"></i></span>
@@ -703,6 +714,7 @@
       return {
         currentTab: 'inventory',
         searchQuery: '',
+        selectedSupplierFilter: 'all', // 新增：廠商過濾條件 (預設全部)
         showBatchModal: false,
         showSupplierModal: false,
         showEditModal: false,
