@@ -221,20 +221,21 @@
             <span class="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider" :class="getSupplierTagStyle(supplier)" x-text="supplier"></span>
           </div>
 
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             <template x-for="item in getFilteredItemsBySupplier(supplier)" :key="item.id">
-              <div class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group"
+              <div class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group cursor-pointer"
+                   @click="item.expanded = !item.expanded"
                    :class="[getItemCardBgStyle(supplier), item.currentStock <= item.safetyStock ? 'border-amber-400 ring-2 ring-amber-300' : '']">
                 <div>
                   <div class="flex items-start justify-between gap-1 mb-1.5">
-                    <button @click="toggleFavorite(item)" class="touch-btn p-1 text-lg focus:outline-none transition transform active:scale-125">
+                    <button @click.stop="toggleFavorite(item)" class="touch-btn p-1 text-lg focus:outline-none transition transform active:scale-125">
                       <i class="fa-solid fa-star" :class="item.isFavorite ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-300'"></i>
                     </button>
                     <div class="flex-1 px-1">
-                      <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2" x-text="item.name"></h3>
+                      <h3 class="text-sm sm:text-base font-bold text-slate-950 leading-snug" x-text="item.name"></h3>
                       <p class="text-xs text-slate-600 font-semibold mt-1" x-text="item.spec ? '規格: ' + item.spec : '標準規格'"></p>
                     </div>
-                    <div class="flex items-center gap-0.5">
+                    <div class="flex items-center gap-0.5" @click.stop>
                       <button @click="openEditModal(item)" class="touch-btn text-slate-400 hover:text-teal-600 text-xs p-1.5 transition"><i class="fa-solid fa-pen-to-square"></i></button>
                       <button @click="deleteItem(item.id)" class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5 transition"><i class="fa-solid fa-trash"></i></button>
                     </div>
@@ -246,7 +247,29 @@
                     </span>
                   </div>
 
-                  <div class="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-slate-200/80 flex flex-col gap-2 my-2.5">
+                  <!-- 點擊卡片展開後顯示：照片縮圖或上傳按鈕 -->
+                  <div x-show="item.expanded" x-transition class="my-2.5 p-2.5 bg-white rounded-xl border border-slate-200 text-center space-y-2" @click.stop>
+                    <template x-if="item.image">
+                      <div class="flex items-center justify-between gap-2">
+                        <img :src="item.image" @click="openLightbox(item)" class="w-16 h-16 object-cover rounded-lg border shadow-2xs cursor-pointer hover:opacity-90 transition" title="點擊放大檢視">
+                        <div class="flex-1 text-left text-xs">
+                          <p class="font-bold text-slate-700">實物照片已上傳</p>
+                          <button @click="openLightbox(item)" class="text-teal-600 font-bold hover:underline">全螢幕檢視</button>
+                        </div>
+                        <button @click="removeCardImage(item)" class="text-xs text-rose-600 hover:underline p-1"><i class="fa-solid fa-trash"></i></button>
+                      </div>
+                    </template>
+                    <template x-if="!item.image">
+                      <div>
+                        <label class="touch-btn w-full bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold py-2.5 cursor-pointer flex items-center justify-center gap-2 border">
+                          <i class="fa-solid fa-camera text-teal-600"></i> 上傳實物照片 (支援手機拍照/相簿)
+                          <input type="file" accept="image/*" class="hidden" @change="handleCardImageUpload($event, item)">
+                        </label>
+                      </div>
+                    </template>
+                  </div>
+
+                  <div class="bg-white/90 backdrop-blur-xs p-2.5 sm:p-3 rounded-xl border border-slate-200/80 flex flex-col gap-2 my-2.5" @click.stop>
                     <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
                       <span>現有庫存</span>
                       <select x-model="item.unit" @change="saveInventory()" class="bg-white border border-slate-300 text-slate-900 text-sm rounded-lg px-2 py-1 focus:outline-none font-bold shadow-2xs">
@@ -264,8 +287,11 @@
                   </div>
                 </div>
 
-                <div class="pt-2 mt-1 border-t border-slate-200/60 flex items-center justify-between gap-1">
-                  <div class="text-xs text-slate-500 font-medium">預警: <span class="font-bold" x-text="item.safetyStock"></span></div>
+                <div class="pt-2 mt-1 border-t border-slate-200/60 flex items-center justify-between gap-1" @click.stop>
+                  <div class="text-xs text-slate-500 font-medium flex items-center gap-1.5 cursor-pointer" @click="item.expanded = !item.expanded">
+                    <span>預警: <span class="font-bold" x-text="item.safetyStock"></span></span>
+                    <i class="fa-solid text-[10px]" :class="item.expanded ? 'fa-chevron-up text-teal-600' : 'fa-chevron-down text-slate-400'"></i>
+                  </div>
                   <button @click="addToOrder(item)" :class="isItemOrdered(item.id) ? 'bg-amber-500 text-white' : 'bg-teal-700 text-white'"
                           class="touch-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs">
                     <i class="fa-solid" :class="isItemOrdered(item.id) ? 'fa-check' : 'fa-plus'"></i>
@@ -291,22 +317,45 @@
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           <template x-for="item in getFavoriteItems()" :key="'fav-' + item.id">
-            <div class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group bg-amber-100/70 border-amber-300">
+            <div class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group cursor-pointer bg-amber-100/70 border-amber-300"
+                 @click="item.expanded = !item.expanded">
               <div>
                 <div class="flex items-start justify-between gap-1 mb-1.5">
-                  <button @click="toggleFavorite(item)" class="touch-btn p-1 text-lg"><i class="fa-solid fa-star text-amber-500 fill-amber-500"></i></button>
+                  <button @click.stop="toggleFavorite(item)" class="touch-btn p-1 text-lg"><i class="fa-solid fa-star text-amber-500 fill-amber-500"></i></button>
                   <div class="flex-1 px-1">
-                    <h3 class="text-sm sm:text-base font-bold text-slate-900 line-clamp-2" x-text="item.name"></h3>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-950 line-clamp-2" x-text="item.name"></h3>
                     <p class="text-xs text-slate-600 font-semibold mt-1" x-text="item.spec || '標準規格'"></p>
                   </div>
-                  <div class="flex items-center gap-0.5">
+                  <div class="flex items-center gap-0.5" @click.stop>
                     <button @click="openEditModal(item)" class="touch-btn text-slate-400 hover:text-teal-600 text-xs p-1.5"><i class="fa-solid fa-pen-to-square"></i></button>
                     <button @click="deleteItem(item.id)" class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5"><i class="fa-solid fa-trash"></i></button>
                   </div>
                 </div>
-                <div class="bg-white/90 p-2.5 rounded-xl border border-amber-200/80 flex flex-col gap-2 my-2.5">
+
+                <div x-show="item.expanded" x-transition class="my-2.5 p-2.5 bg-white rounded-xl border border-amber-200 text-center space-y-2" @click.stop>
+                  <template x-if="item.image">
+                    <div class="flex items-center justify-between gap-2">
+                      <img :src="item.image" @click="openLightbox(item)" class="w-16 h-16 object-cover rounded-lg border shadow-2xs cursor-pointer hover:opacity-90 transition">
+                      <div class="flex-1 text-left text-xs">
+                        <p class="font-bold text-slate-700">實物照片已上傳</p>
+                        <button @click="openLightbox(item)" class="text-teal-600 font-bold hover:underline">全螢幕檢視</button>
+                      </div>
+                      <button @click="removeCardImage(item)" class="text-xs text-rose-600 hover:underline p-1"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                  </template>
+                  <template x-if="!item.image">
+                    <div>
+                      <label class="touch-btn w-full bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold py-2.5 cursor-pointer flex items-center justify-center gap-2 border">
+                        <i class="fa-solid fa-camera text-amber-600"></i> 上傳實物照片
+                        <input type="file" accept="image/*" class="hidden" @change="handleCardImageUpload($event, item)">
+                      </label>
+                    </div>
+                  </template>
+                </div>
+
+                <div class="bg-white/90 p-2.5 rounded-xl border border-amber-200/80 flex flex-col gap-2 my-2.5" @click.stop>
                   <div class="flex items-center justify-between text-xs text-slate-600 font-bold">
                     <span>現有庫存</span>
                     <select x-model="item.unit" @change="saveInventory()" class="bg-white border rounded-lg px-2.5 py-1 text-sm font-bold">
@@ -320,7 +369,7 @@
                   </div>
                 </div>
               </div>
-              <div class="pt-2 mt-1 border-t border-amber-200/60 flex items-center justify-between">
+              <div class="pt-2 mt-1 border-t border-amber-200/60 flex items-center justify-between" @click.stop>
                 <span class="text-xs font-bold text-amber-950" x-text="item.origin"></span>
                 <button @click="addToOrder(item)" class="touch-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-700 text-white">
                   <span x-text="isItemOrdered(item.id) ? '已叫貨' : '+ 叫貨'"></span>
@@ -474,36 +523,77 @@
     </div>
   </div>
 
-  <!-- MODALS: Batch Add, Edit, Supplier Management -->
+  <!-- BATCH ADD MODAL (含廠商選擇) -->
   <div x-show="showBatchModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
     <div @click.away="showBatchModal = false" class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5">
       <div class="flex items-center justify-between border-b pb-4">
         <h3 class="text-base font-bold text-slate-900">批量新增包材品項</h3>
         <button @click="showBatchModal = false" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="space-y-4">
-        <textarea x-model="batchInputText" rows="6" placeholder="例如：瓦楞紙箱 3號,5號 必堅" class="w-full p-3.5 border-2 rounded-xl font-mono text-sm"></textarea>
+      <div class="space-y-4 text-sm">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">選擇所屬廠商</label>
+          <select x-model="batchSupplier" class="w-full p-3 border-2 rounded-xl font-bold bg-slate-50">
+            <template x-for="sup in suppliers" :key="'batch-sup-' + sup">
+              <option :value="sup" x-text="sup"></option>
+            </template>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">品名列表 (每行一個品項)</label>
+          <textarea x-model="batchInputText" rows="6" placeholder="例如：
+瓦楞紙箱 3號
+彩色禮盒 6入裝
+透明封箱膠帶" class="w-full p-3.5 border-2 rounded-xl font-mono text-sm bg-slate-50"></textarea>
+        </div>
       </div>
       <div class="flex justify-end gap-3 pt-4 border-t">
         <button @click="showBatchModal = false" class="px-5 py-2.5 border-2 rounded-xl font-bold">取消</button>
-        <button @click="processBatchAdd()" class="px-6 py-2.5 bg-sky-600 text-white rounded-xl font-bold">確認導入</button>
+        <button @click="processBatchAdd()" class="px-6 py-2.5 bg-teal-600 text-white rounded-xl font-bold">確認導入</button>
       </div>
     </div>
   </div>
 
+  <!-- EDIT MODAL (含照片上傳) -->
   <div x-show="showEditModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
-    <div @click.away="showEditModal = false" class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+    <div @click.away="showEditModal = false" class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b pb-3">
         <h3 class="text-base font-bold text-slate-900">編輯包材品項</h3>
         <button @click="showEditModal = false" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="space-y-3.5 text-sm">
-        <input type="text" x-model="editingItem.name" placeholder="品名" class="w-full p-3 border-2 rounded-xl font-bold">
-        <input type="text" x-model="editingItem.spec" placeholder="規格" class="w-full p-3 border-2 rounded-xl">
-        <select x-model="editingItem.origin" class="w-full p-3 border-2 rounded-xl font-bold">
-          <template x-for="sup in suppliers" :key="sup"><option :value="sup" x-text="sup"></option></template>
-        </select>
-        <input type="number" x-model.number="editingItem.safetyStock" placeholder="安全庫存" class="w-full p-3 border-2 rounded-xl text-center font-bold">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">品名</label>
+          <input type="text" x-model="editingItem.name" placeholder="品名" class="w-full p-3 border-2 rounded-xl font-bold">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">規格</label>
+          <input type="text" x-model="editingItem.spec" placeholder="規格" class="w-full p-3 border-2 rounded-xl">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">廠商</label>
+          <select x-model="editingItem.origin" class="w-full p-3 border-2 rounded-xl font-bold">
+            <template x-for="sup in suppliers" :key="sup"><option :value="sup" x-text="sup"></option></template>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">安全庫存預警</label>
+          <input type="number" x-model.number="editingItem.safetyStock" placeholder="安全庫存" class="w-full p-3 border-2 rounded-xl text-center font-bold">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">實物照片</label>
+          <div class="flex items-center gap-3">
+            <template x-if="editingItem.image">
+              <div class="relative w-20 h-20 rounded-xl overflow-hidden border shrink-0">
+                <img :src="editingItem.image" class="w-full h-full object-cover">
+              </div>
+            </template>
+            <label class="touch-btn flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold py-2.5 cursor-pointer flex items-center justify-center gap-2 border">
+              <i class="fa-solid fa-camera text-teal-600"></i> <span x-text="editingItem.image ? '更換照片' : '上傳照片'"></span>
+              <input type="file" accept="image/*" class="hidden" @change="handleEditImageUpload($event)">
+            </label>
+          </div>
+        </div>
       </div>
       <div class="flex justify-end gap-2.5 pt-3 border-t">
         <button @click="showEditModal = false" class="px-4 py-2 border-2 rounded-xl font-bold">取消</button>
@@ -512,6 +602,7 @@
     </div>
   </div>
 
+  <!-- SUPPLIER MODAL -->
   <div x-show="showSupplierModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" x-transition.opacity>
     <div @click.away="showSupplierModal = false" class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
       <div class="flex items-center justify-between border-b pb-4">
@@ -536,6 +627,19 @@
     </div>
   </div>
 
+  <!-- LIGHTBOX MODAL (全螢幕燈箱放大檢視) -->
+  <div x-show="lightboxOpen" x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4" @click="lightboxOpen = false">
+    <div @click.stop class="bg-white rounded-3xl max-w-xl w-full p-5 shadow-2xl relative flex flex-col items-center space-y-3">
+      <button @click="lightboxOpen = false" class="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-700 w-9 h-9 rounded-full flex items-center justify-center font-bold transition">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+      <h3 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight pr-10 text-center" x-text="lightboxTitle"></h3>
+      <div class="w-full max-h-[70vh] flex items-center justify-center bg-slate-100 rounded-2xl overflow-hidden p-2 border border-slate-200">
+        <img :src="lightboxImage" class="max-h-[65vh] w-auto object-contain rounded-xl shadow-sm">
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div x-show="toast.show" x-transition class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-sm px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-2.5 font-bold">
     <i class="fa-solid fa-circle-check text-emerald-400"></i>
@@ -555,23 +659,23 @@
         isCloudConnected: false,
 
         batchSupplier: '必堅',
-        batchUnit: '個',
         batchInputText: '',
         newSupplierName: '',
         cloudConfigText: localStorage.getItem('pkg_cloud_config') || '',
 
-        editingItem: { id: null, name: '', spec: '', origin: '', safetyStock: 5 },
+        lightboxOpen: false,
+        lightboxImage: '',
+        lightboxTitle: '',
+
+        editingItem: { id: null, name: '', spec: '', origin: '', safetyStock: 5, image: '' },
         toast: { show: false, message: '' },
 
         suppliers: JSON.parse(localStorage.getItem('pkg_suppliers')) || ['必堅', '利泰', '淘寶'],
-        inventory: JSON.parse(localStorage.getItem('pkg_inventory')) || [
-          { id: 1, name: '瓦楞外箱 5號', spec: '標準規格', origin: '必堅', unit: '箱', currentStock: 12, safetyStock: 5, isFavorite: true },
-          { id: 2, name: '彩色印刷禮盒', spec: '水果6入裝', origin: '必堅', unit: '個', currentStock: 30, safetyStock: 10, isFavorite: false },
-          { id: 3, name: '透明封箱膠帶', spec: '48mm x 90y', origin: '利泰', unit: '包', currentStock: 8, safetyStock: 10, isFavorite: true },
-          { id: 4, name: '防震氣泡袋', spec: '30cm x 30cm', origin: '利泰', unit: '包', currentStock: 25, safetyStock: 5, isFavorite: false },
-          { id: 5, name: '客製化提袋', spec: '大號藍色', origin: '淘寶', unit: '個', currentStock: 2, safetyStock: 20, isFavorite: true },
-          { id: 6, name: '網狀水果護套', spec: '12cm白色', origin: '淘寶', unit: '包', currentStock: 15, safetyStock: 5, isFavorite: false }
-        ],
+        inventory: (JSON.parse(localStorage.getItem('pkg_inventory')) || [
+          { id: 1, name: '瓦楞外箱 5號', spec: '標準規格', origin: '必堅', unit: '箱', currentStock: 12, safetyStock: 5, isFavorite: true, image: '' },
+          { id: 2, name: '彩色印刷禮盒', spec: '水果6入裝', origin: '必堅', unit: '個', currentStock: 30, safetyStock: 10, isFavorite: false, image: '' },
+          { id: 3, name: '透明封箱膠帶', spec: '48mm x 90y', origin: '利泰', unit: '包', currentStock: 8, safetyStock: 10, isFavorite: true, image: '' }
+        ]).map(i => ({ ...i, expanded: false, image: i.image || '' })),
         orderedItems: JSON.parse(localStorage.getItem('pkg_ordered_items')) || [],
 
         init() {
@@ -590,7 +694,9 @@
             dbRef.on('value', (snapshot) => {
               const cloudData = snapshot.val();
               if (cloudData) {
-                if (cloudData.inventory) this.inventory = cloudData.inventory;
+                if (cloudData.inventory) {
+                  this.inventory = cloudData.inventory.map(i => ({ ...i, expanded: false }));
+                }
                 if (cloudData.suppliers) this.suppliers = cloudData.suppliers;
                 if (cloudData.orderedItems) this.orderedItems = cloudData.orderedItems;
                 localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
@@ -633,6 +739,69 @@
           setTimeout(() => { this.toast.show = false; }, 2500);
         },
 
+        openLightbox(item) {
+          if (!item.image) return;
+          this.lightboxImage = item.image;
+          this.lightboxTitle = item.name + (item.spec ? ' (' + item.spec + ')' : '');
+          this.lightboxOpen = true;
+        },
+
+        handleCardImageUpload(event, item) {
+          const file = event.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            item.image = e.target.result;
+            this.saveInventory();
+            this.showToast('實物照片上傳成功！');
+          };
+          reader.readAsDataURL(file);
+        },
+
+        removeCardImage(item) {
+          if (confirm('確定要移除此品項的照片嗎？')) {
+            item.image = '';
+            this.saveInventory();
+            this.showToast('已移除照片');
+          }
+        },
+
+        handleEditImageUpload(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.editingItem.image = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        },
+
+        openEditModal(item) {
+          this.editingItem = { 
+            id: item.id, 
+            name: item.name, 
+            spec: item.spec || '', 
+            origin: item.origin, 
+            safetyStock: item.safetyStock ?? 5,
+            image: item.image || ''
+          };
+          this.showEditModal = true;
+        },
+
+        saveEditedItem() {
+          const item = this.inventory.find(i => i.id === this.editingItem.id);
+          if (item) {
+            item.name = this.editingItem.name.trim();
+            item.spec = this.editingItem.spec.trim();
+            item.origin = this.editingItem.origin;
+            item.safetyStock = Math.max(0, parseInt(this.editingItem.safetyStock) || 0);
+            item.image = this.editingItem.image;
+            this.saveInventory();
+            this.showEditModal = false;
+            this.showToast('品項資料更新成功');
+          }
+        },
+
         getSupplierBlockStyle(supplier) {
           switch (supplier) {
             case '必堅': return 'bg-blue-50/80 border-blue-200/90 shadow-xs';
@@ -657,7 +826,6 @@
           return supplier === '必堅' ? 'bg-blue-100/80 border-blue-300' : (supplier === '利泰' ? 'bg-emerald-100/80 border-emerald-300' : (supplier === '淘寶' ? 'bg-amber-100/80 border-amber-300' : 'bg-white border-slate-200'));
         },
 
-        // Order Sheet Supplier Color Styles (跳色區分)
         getOrderSupplierBlockStyle(supplier) {
           switch (supplier) {
             case '必堅': return 'bg-blue-50/70 border-blue-200';
@@ -709,24 +877,6 @@
         updateStock(item, delta) {
           item.currentStock = Math.max(0, item.currentStock + delta);
           this.saveInventory();
-        },
-
-        openEditModal(item) {
-          this.editingItem = { id: item.id, name: item.name, spec: item.spec || '', origin: item.origin, safetyStock: item.safetyStock ?? 5 };
-          this.showEditModal = true;
-        },
-
-        saveEditedItem() {
-          const item = this.inventory.find(i => i.id === this.editingItem.id);
-          if (item) {
-            item.name = this.editingItem.name.trim();
-            item.spec = this.editingItem.spec.trim();
-            item.origin = this.editingItem.origin;
-            item.safetyStock = Math.max(0, parseInt(this.editingItem.safetyStock) || 0);
-            this.saveInventory();
-            this.showEditModal = false;
-            this.showToast('品項資料更新成功');
-          }
         },
 
         toggleFavorite(item) {
@@ -808,27 +958,24 @@
           const lines = this.batchInputText.split('\n').filter(l => l.trim().length > 0);
           let addedCount = 0;
           lines.forEach(line => {
-            let itemSupplier = this.batchSupplier;
-            let text = line.trim();
-            this.suppliers.forEach(sup => {
-              if (text.includes(sup)) { itemSupplier = sup; text = text.replace(sup, '').trim(); }
-            });
             this.inventory.push({
               id: Date.now() + Math.random(),
-              name: text,
+              name: line.trim(),
               spec: '',
-              origin: itemSupplier,
-              unit: this.batchUnit,
+              origin: this.batchSupplier,
+              unit: '個',
               currentStock: 0,
               safetyStock: 5,
-              isFavorite: false
+              isFavorite: false,
+              expanded: false,
+              image: ''
             });
             addedCount++;
           });
           this.batchInputText = '';
           this.showBatchModal = false;
           this.saveInventory();
-          this.showToast(`順利批次新增 ${addedCount} 個品項`);
+          this.showToast(`順利批次新增 ${addedCount} 個品項（廠商：${this.batchSupplier}）`);
         },
 
         confirmZeroStock() {
@@ -866,7 +1013,7 @@
           reader.onload = (e) => {
             try {
               const data = JSON.parse(e.target.result);
-              if (data.inventory) this.inventory = data.inventory;
+              if (data.inventory) this.inventory = data.inventory.map(i => ({ ...i, expanded: false }));
               if (data.suppliers) this.suppliers = data.suppliers;
               if (data.orderedItems) this.orderedItems = data.orderedItems;
               this.saveInventory();
@@ -881,7 +1028,6 @@
           const element = document.getElementById('printable-purchase-order');
           if (!element) return;
 
-          // 針對 html2canvas 無法截取 input/select 內容的問題，暫時在複製節點中將其轉為文字顯示
           const inputs = element.querySelectorAll('input[type="number"]');
           const selects = element.querySelectorAll('select');
           const inputValues = [];
@@ -900,7 +1046,6 @@
           try {
             const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
             
-            // 恢復原狀
             element.querySelectorAll('.pdf-temp-text').forEach(el => el.remove());
             inputs.forEach(input => input.style.display = '');
             selects.forEach(select => select.style.display = '');
