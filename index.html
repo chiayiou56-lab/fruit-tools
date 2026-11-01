@@ -27,99 +27,106 @@
         .blue-gold-border:hover {
             border-color: #60a5fa;
         }
+        /* LINE 專屬綠金/綠色質感風格 */
+        .line-green-border {
+            border-color: rgba(6, 199, 85, 0.4);
+        }
+        .line-green-border:hover {
+            border-color: #06C755;
+        }
     </style>
 </head>
-<body class="bg-stone-950 p-4 sm:p-6 text-stone-200 min-h-screen">
+<body class="bg-stone-950 p-4 sm:p-8 text-stone-200 min-h-screen">
 
-    <div class="max-w-md mx-auto space-y-6 mt-4 sm:mt-6">
+    <div class="max-w-3xl mx-auto space-y-6 mt-4 sm:mt-6">
         
         <!-- 頂部標題區域 -->
         <div class="text-center space-y-3">
             <div class="inline-flex items-center justify-center bg-stone-900 border border-amber-500/30 p-3.5 rounded-full shadow-lg gold-border-glow">
                 <i class="fa-solid fa-apple-whole text-3xl text-amber-400"></i>
             </div>
-            <h1 class="text-2xl font-black tracking-wide gold-gradient-text">甜蜜果物專屬工具箱</h1>
-            <p class="text-xs text-stone-400">點擊下方按鈕切換不同作業工具</p>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-wide gold-gradient-text">甜蜜果物專屬工具箱</h1>
+            <p class="text-xs sm:text-sm text-stone-400">點擊下方按鈕切換不同作業工具</p>
         </div>
 
-        <!-- 工具選單列表 -->
-        <div class="space-y-4">
+        <!-- 工具選單列表 (左右兩行網格) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             <!-- 工具 1：進貨用小工具 -->
-            <a href="tool1.html" class="block bg-stone-900/90 border border-amber-500/30 p-5 rounded-xl shadow-md hover:border-amber-400 border-l-4 border-l-amber-500 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99]">
-                <div class="flex items-center justify-between">
+            <a href="tool1.html" class="block bg-stone-900/90 border border-amber-500/30 p-4 sm:p-5 rounded-xl shadow-md hover:border-amber-400 border-l-4 border-l-amber-500 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99] flex flex-col justify-between">
+                <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h2 class="font-bold text-lg text-amber-300 flex items-center gap-2.5">
+                        <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
                             <i class="fa-solid fa-truck-ramp-box text-amber-400"></i> 進貨用小工具
                         </h2>
-                        <p class="text-xs text-stone-400 mt-1">處理每日進貨品項、規格與上車明細</p>
+                        <p class="text-xs text-stone-400 mt-1.5 leading-relaxed">處理每日進貨品項、規格與上車明細</p>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-stone-500"></i>
+                    <i class="fa-solid fa-chevron-right text-stone-500 text-sm mt-1"></i>
                 </div>
             </a>
 
             <!-- 工具 2：水果售價計算 -->
-            <a href="tool2.html" class="block bg-stone-900/90 border border-amber-500/30 p-5 rounded-xl shadow-md hover:border-amber-400 border-l-4 border-l-amber-500 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99]">
-                <div class="flex items-center justify-between">
+            <a href="tool2.html" class="block bg-stone-900/90 border border-amber-500/30 p-4 sm:p-5 rounded-xl shadow-md hover:border-amber-400 border-l-4 border-l-amber-500 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99] flex flex-col justify-between">
+                <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h2 class="font-bold text-lg text-amber-300 flex items-center gap-2.5">
+                        <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
                             <i class="fa-solid fa-calculator text-amber-400"></i> 水果售價計算
                         </h2>
-                        <p class="text-xs text-stone-400 mt-1">計算損耗、單位成本與建議售價及 PDF 摘要</p>
+                        <p class="text-xs text-stone-400 mt-1.5 leading-relaxed">計算損耗、單位成本與建議售價及 PDF 摘要</p>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-stone-500"></i>
+                    <i class="fa-solid fa-chevron-right text-stone-500 text-sm mt-1"></i>
                 </div>
             </a>
 
             <!-- 工具 3：點貨/叫貨小工具 -->
-            <a href="tool3.html" class="block bg-stone-900/90 border border-amber-500/30 p-5 rounded-xl shadow-md hover:border-amber-400 border-l-4 border-l-amber-500 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99]">
-                <div class="flex items-center justify-between">
+            <a href="tool3.html" class="block bg-stone-900/90 border border-amber-500/30 p-4 sm:p-5 rounded-xl shadow-md hover:border-amber-400 border-l-4 border-l-amber-500 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99] flex flex-col justify-between">
+                <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h2 class="font-bold text-lg text-amber-300 flex items-center gap-2.5">
+                        <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
                             <i class="fa-solid fa-boxes-stacked text-amber-400"></i> 點貨 / 叫貨小工具
                         </h2>
-                        <p class="text-xs text-stone-400 mt-1">盤點現場庫存、快速產生叫貨與補貨清單</p>
+                        <p class="text-xs text-stone-400 mt-1.5 leading-relaxed">盤點現場庫存、快速產生叫貨與補貨清單</p>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-stone-500"></i>
+                    <i class="fa-solid fa-chevron-right text-stone-500 text-sm mt-1"></i>
                 </div>
             </a>
 
             <!-- 工具 4：包裝材料點貨/叫貨工具 -->
-            <a href="tool4.html" class="block bg-stone-900/90 border border-amber-500/30 p-5 rounded-xl shadow-md hover:border-amber-400 border-l-4 border-l-amber-500 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99]">
-                <div class="flex items-center justify-between">
+            <a href="tool4.html" class="block bg-stone-900/90 border border-amber-500/30 p-4 sm:p-5 rounded-xl shadow-md hover:border-amber-400 border-l-4 border-l-amber-500 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99] flex flex-col justify-between">
+                <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h2 class="font-bold text-lg text-amber-300 flex items-center gap-2.5">
+                        <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
                             <i class="fa-solid fa-box-archive text-amber-400"></i> 包裝材料點貨/叫貨工具
                         </h2>
-                        <p class="text-xs text-stone-400 mt-1">盤點禮盒、紙箱、包材庫存與採購叫貨管理</p>
+                        <p class="text-xs text-stone-400 mt-1.5 leading-relaxed">盤點禮盒、紙箱、包材庫存與採購叫貨管理</p>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-stone-500"></i>
+                    <i class="fa-solid fa-chevron-right text-stone-500 text-sm mt-1"></i>
                 </div>
             </a>
 
-            <!-- 工具 5：LINE訂單快速整理 -->
-            <a href="tool5.html" class="block bg-stone-900/90 border border-amber-500/30 p-5 rounded-xl shadow-md hover:border-amber-400 border-l-4 border-l-amber-500 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99]">
-                <div class="flex items-center justify-between">
+            <!-- 工具 5：LINE訂單快速整理 (LINE 專屬綠色配色) -->
+            <a href="tool5.html" class="block bg-stone-900/90 border line-green-border p-4 sm:p-5 rounded-xl shadow-md hover:border-[#06C755] border-l-4 border-l-[#06C755] transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99] flex flex-col justify-between">
+                <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h2 class="font-bold text-lg text-amber-300 flex items-center gap-2.5">
-                            <i class="fa-solid fa-receipt text-amber-400"></i> LINE訂單快速整理
+                        <h2 class="font-bold text-base sm:text-lg text-emerald-400 flex items-center gap-2">
+                            <i class="fa-brands fa-line text-[#06C755] text-lg"></i> LINE訂單快速整理
                         </h2>
-                        <p class="text-xs text-stone-400 mt-1">快速解析與整理 LINE 群組/聊天室的客戶訂單資訊</p>
+                        <p class="text-xs text-stone-400 mt-1.5 leading-relaxed">快速解析與整理 LINE 群組/聊天室的客戶訂單資訊</p>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-stone-500"></i>
+                    <i class="fa-solid fa-chevron-right text-stone-500 text-sm mt-1"></i>
                 </div>
             </a>
 
             <!-- 工具 6：陀螺賽事小工具 (藍金配色) -->
-            <a href="tool99.html" class="block bg-stone-900/90 border blue-gold-border p-5 rounded-xl shadow-md hover:border-amber-400 border-l-4 border-l-blue-500 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99]">
-                <div class="flex items-center justify-between">
+            <a href="tool99.html" class="block bg-stone-900/90 border blue-gold-border p-4 sm:p-5 rounded-xl shadow-md hover:border-amber-400 border-l-4 border-l-blue-500 transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99] flex flex-col justify-between">
+                <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h2 class="font-bold text-lg text-blue-400 flex items-center gap-2.5">
+                        <h2 class="font-bold text-base sm:text-lg text-blue-400 flex items-center gap-2">
                             <i class="fa-solid fa-trophy text-amber-400"></i> 陀螺賽事小工具
                         </h2>
-                        <p class="text-xs text-stone-400 mt-1">記錄對戰積分、抽籤分組與賽事晉級流程管理</p>
+                        <p class="text-xs text-stone-400 mt-1.5 leading-relaxed">記錄對戰積分、抽籤分組與賽事晉級流程管理</p>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-stone-500"></i>
+                    <i class="fa-solid fa-chevron-right text-stone-500 text-sm mt-1"></i>
                 </div>
             </a>
 
