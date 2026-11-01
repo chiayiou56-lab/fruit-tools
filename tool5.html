@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水果店 LINE 訂單快速整理工具</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-amber-50/50 min-h-screen text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2.5 rounded-xl backdrop-blur-sm">
+                    <i class="fa-solid fa-basket-shopping text-2xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">甜蜜果物 • LINE 訂單快速整理</h1>
+                    <p class="text-xs text-orange-100">智慧辨識貼上訊息，輕鬆計算金額與複製回覆</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="clearAllData()" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-2 rounded-lg transition border border-white/20 flex items-center gap-1.5">
+                    <i class="fa-solid fa-trash-can"></i> 清空全部
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-200%] opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-sm">
+            <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+            <span id="toast-message">操作成功</span>
+        </div>
+
+        <!-- Top Section: Batch Paste & Smart Parse -->
+        <section class="bg-white rounded-2xl shadow-sm border border-orange-100 p-5">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="font-bold text-slate-700 flex items-center gap-2 text-base">
+                    <i class="fa-solid fa-paste text-orange-500"></i> LINE 訊息批次貼上與智慧辨識
+                </h2>
+                <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md">支援多行文字</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-3">
+                直接把客人傳來的 LINE 訂單整段貼上（例如：「<span class="text-orange-600 font-mono">蘋果 2箱 600</span>」或「<span class="text-orange-600 font-mono">香蕉 3斤</span>」），系統會自動嘗試抓出品名、數量與金額。
+            </p>
+            <div class="space-y-3">
+                <textarea id="batchInput" rows="3" class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none transition bg-slate-50/50" placeholder="在此貼上 LINE 訂單文字...
+例如:
+富士蘋果 2盒 800
+台灣香蕉 3斤 150
+大目釋迦 5顆"></textarea>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 text-xs text-slate-500">
+                        <span>💡 提示：支援以空格、Tab、或「數量/價格」關鍵字分隔</span>
+                    </div>
+                    <button onclick="parseAndAddBatch()" class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl font-medium text-sm shadow-sm transition flex items-center gap-2 active:scale-95">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> 一鍵解析並加入表格
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Middle Section: Editable Order Table -->
+        <section class="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 class="font-bold text-slate-700 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice-dollar text-orange-500"></i> 訂單品項明細表
+                    </h2>
+                    <p class="text-xs text-slate-400">所有欄位皆可直接點擊修改</p>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button onclick="addNewRow()" class="flex-1 sm:flex-none bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-4 py-2 rounded-xl text-sm font-medium transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> 手動新增品項
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-100">
+                            <th class="py-3 px-4 w-12 text-center">#</th>
+                            <th class="py-3 px-4">品名</th>
+                            <th class="py-3 px-4 w-40">數量 / 單位</th>
+                            <th class="py-3 px-4 w-40">金額 (NT$)</th>
+                            <th class="py-3 px-4 w-16 text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderTableBody" class="divide-y divide-slate-100 text-sm">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden py-12 text-center">
+                <div class="w-16 h-16 bg-orange-50 text-orange-400 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                </div>
+                <p class="text-slate-600 font-medium text-sm">目前尚無訂單品項</p>
+                <p class="text-slate-400 text-xs mt-1">請在上方的文字框貼上 LINE 訊息，或點擊「手動新增品項」開始記錄</p>
+            </div>
+        </section>
+
+        <!-- Bottom Section: Summary & LINE Copy -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <!-- Summary Card -->
+            <div class="md:col-span-2 bg-white rounded-2xl shadow-sm border border-orange-100 p-5 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-slate-700 text-sm mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-orange-500"></i> 訂單精簡摘要
+                    </h3>
+                    <div class="grid grid-cols-3 gap-3 text-center">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <span class="block text-xs text-slate-400 mb-1">總品項數</span>
+                            <span id="summaryItemsCount" class="text-lg font-bold text-slate-700">0</span>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <span class="block text-xs text-slate-400 mb-1">總數量合計</span>
+                            <span id="summaryTotalQty" class="text-lg font-bold text-slate-700">0</span>
+                        </div>
+                        <div class="bg-orange-50 p-3 rounded-xl border border-orange-100">
+                            <span class="block text-xs text-orange-600 font-medium mb-1">總金額 (NT$)</span>
+                            <span id="summaryTotalPrice" class="text-xl font-extrabold text-orange-600">$0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
+                    <span>資料自動儲存於瀏覽器中</span>
+                    <span id="lastSavedTime" class="italic"></span>
+                </div>
+            </div>
+
+            <!-- Action / LINE Copy Card -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl shadow-md p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-sm flex items-center gap-2 text-emerald-400">
+                            <i class="fa-brands fa-line text-lg"></i> LINE 回覆清單
+                        </h3>
+                        <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded text-slate-300">一鍵複製</span>
+                    </div>
+                    <p class="text-xs text-slate-300 mb-3">預覽整理好的明細，可直接貼回給客人確認金額：</p>
+                    <div id="linePreviewBox" class="bg-slate-950/60 rounded-xl p-3 font-mono text-xs text-slate-300 h-28 overflow-y-auto whitespace-pre-wrap border border-slate-800">
+                        <!-- Preview text -->
+                    </div>
+                </div>
+                <button onclick="copyLineReply()" class="mt-4 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-3 rounded-xl text-sm transition shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 active:scale-95">
+                    <i class="fa-solid fa-copy"></i> 一鍵複製 LINE 回覆清單
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-6xl mx-auto px-4 py-8 text-center text-xs text-slate-400">
+        水果店快速訂單管理工具 &copy; 2026 Crafted for Fruit Store Owners
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Default initial state or loaded from localStorage
+        let orderItems = [];
+
+        // Load data on start
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            if (orderItems.length === 0) {
+                // Add sample item if empty to demonstrate
+                orderItems = [
+                    { id: generateId(), name: '富士蘋果', qty: '2盒', price: 600 },
+                    { id: generateId(), name: '台灣香蕉', qty: '3斤', price: 150 },
+                    { id: generateId(), name: '大目釋迦', qty: '2顆', price: 300 }
+                ];
+            }
+            renderTable();
+            updateSummary();
+            updateLinePreview();
+        });
+
+        function generateId() {
+            return '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Show Toast Notification (replaces alert)
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const messageEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            messageEl.textContent = message;
+            if (type === 'success') {
+                iconEl.className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
+            } else {
+                iconEl.className = 'fa-solid fa-circle-exclamation text-amber-400 text-lg';
+            }
+
+            toast.classList.remove('translate-y-[-200%]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-200%]', 'opacity-0');
+            }, 3000);
+        }
+
+        // Parse Batch Input from LINE
+        function parseAndAddBatch() {
+            const text = document.getElementById('batchInput').value.trim();
+            if (!text) {
+                showToast('請先貼上 LINE 訂單內容！', 'error');
+                return;
+            }
+
+            const lines = text.split('\n');
+            let addedCount = 0;
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+
+                let name = '';
+                let qty = '1份';
+                let price = 0;
+
+                // Remove currency symbols if present
+                let cleanedLine = line.replace(/[$NT元]/g, '').trim();
+
+                // Advanced smart parsing for formats like:
+                // "蓮霧8" -> name: 蓮霧, qty: 8
+                // "木瓜2可現吃的" -> name: 木瓜, qty: 2 (and extra notes stripped or appended if needed)
+                // "麝香葡萄1" -> name: 麝香葡萄, qty: 1
+                // Also handles standard spaces like "蘋果 2" or "富士蘋果 2箱 600"
+                
+                // Let's check if it matches pattern with spaces first
+                let parts = cleanedLine.split(/\s+/);
+                if (parts.length >= 3) {
+                    name = parts[0];
+                    qty = parts[1];
+                    let parsedPrice = parseInt(parts[2], 10);
+                    price = isNaN(parsedPrice) ? 0 : parsedPrice;
+                } else if (parts.length === 2) {
+                    name = parts[0];
+                    qty = parts[1];
+                    price = 0;
+                } else {
+                    // Single chunk line like "蓮霧8" or "木瓜2可現吃的" or "香蕉3斤" or "西瓜"
+                    // Regex to separate leading text from trailing digits/units and optional notes
+                    // Example: ^([^\d]+)(\d+)(.*)$
+                    const match = cleanedLine.match(/^([^\d]+)(\d+)(.*)$/);
+                    if (match) {
+                        name = match[1].trim();
+                        let numberPart = match[2];
+                        let remainder = match[3] ? match[3].trim() : '';
+                        
+                        // If there's a unit or text in remainder like "可現吃的" or "箱"
+                        if (remainder) {
+                            // Check if remainder starts with unit chars or notes
+                            // e.g. "箱", "斤", "顆", "包", "盒", "個", "斤裝"
+                            const unitMatch = remainder.match(/^([箱斤顆包盒個kg台斤g]+)(.*)$/);
+                            if (unitMatch) {
+                                qty = numberPart + unitMatch[1];
+                                // if there are further notes after unit, we can append or ignore, or put in name/qty
+                            } else {
+                                // e.g. "2可現吃的" -> qty: "2", maybe note is "可現吃的"
+                                qty = numberPart + '份';
+                                if (remainder) {
+                                    name += ` (${remainder})`;
+                                }
+                            }
+                        } else {
+                            qty = numberPart + '份';
+                        }
+                    } else {
+                        // No digits found, e.g. "富士蘋果"
+                        name = cleanedLine;
+                        qty = '1份';
+                        price = 0;
+                    }
+                }
+
+                if (name) {
+                    orderItems.push({
+                        id: generateId(),
+                        name: name,
+                        qty: qty,
+                        price: price
+                    });
+                    addedCount++;
+                }
+            });
+
+            if (addedCount > 0) {
+                document.getElementById('batchInput').value = '';
+                renderTable();
+                updateSummary();
+                updateLinePreview();
+                saveToLocalStorage();
+                showToast(`成功解析並加入 ${addedCount} 項品名！`);
+            } else {
+                showToast('無法辨識內容格式，請檢查後重試', 'error');
+            }
+        }
+
+        // Render Table
+        function renderTable() {
+            const tbody = document.getElementById('orderTableBody');
+            const emptyState = document.getElementById('emptyState');
+            tbody.innerHTML = '';
+
+            if (orderItems.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            orderItems.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-orange-50/30 transition border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-center text-xs text-slate-400 font-mono">${index + 1}</td>
+                    <td class="py-3 px-4">
+                        <input type="text" value="${escapeHtml(item.name)}" 
+                            onchange="updateItemField('${item.id}', 'name', this.value)"
+                            class="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-orange-400 focus:bg-white rounded-lg px-2.5 py-1 text-slate-800 font-medium transition focus:outline-none"
+                            placeholder="品名">
+                    </td>
+                    <td class="py-3 px-4">
+                        <input type="text" value="${escapeHtml(item.qty)}" 
+                            onchange="updateItemField('${item.id}', 'qty', this.value)"
+                            class="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-orange-400 focus:bg-white rounded-lg px-2.5 py-1 text-slate-800 transition focus:outline-none"
+                            placeholder="例如: 2箱">
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="relative">
+                            <span class="absolute left-2.5 top-1.5 text-slate-400 text-xs">$</span>
+                            <input type="number" value="${item.price}" 
+                                onchange="updateItemField('${item.id}', 'price', this.value)"
+                                class="w-full bg-transparent border border-transparent hover:border-slate-200 focus:border-orange-400 focus:bg-white rounded-lg pl-6 pr-2.5 py-1 text-slate-800 font-semibold transition focus:outline-none"
+                                placeholder="0">
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <button onclick="deleteItem('${item.id}')" class="text-slate-400 hover:text-rose-500 p-1.5 rounded-lg transition" title="刪除品項">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Add New Blank Row Manually
+        function addNewRow() {
+            orderItems.push({
+                id: generateId(),
+                name: '',
+                qty: '1份',
+                price: 0
+            });
+            renderTable();
+            updateSummary();
+            updateLinePreview();
+            saveToLocalStorage();
+        }
+
+        // Delete Single Item
+        function deleteItem(id) {
+            orderItems = orderItems.filter(item => item.id !== id);
+            renderTable();
+            updateSummary();
+            updateLinePreview();
+            saveToLocalStorage();
+            showToast('已刪除品項');
+        }
+
+        // Clear All Data
+        function clearAllData() {
+            if (orderItems.length === 0) return;
+            orderItems = [];
+            renderTable();
+            updateSummary();
+            updateLinePreview();
+            saveToLocalStorage();
+            showToast('已清空所有品項');
+        }
+
+        // Update Item Field upon change
+        function updateItemField(id, field, value) {
+            const item = orderItems.find(i => i.id === id);
+            if (!item) return;
+
+            if (field === 'price') {
+                item.price = parseFloat(value) || 0;
+            } else {
+                item[field] = value;
+            }
+
+            updateSummary();
+            updateLinePreview();
+            saveToLocalStorage();
+        }
+
+        // Calculate Summary
+        function updateSummary() {
+            const itemsCount = orderItems.length;
+            
+            // Calculate total quantity (extract number from qty string if possible)
+            let totalQtySum = 0;
+            orderItems.forEach(item => {
+                const numMatch = String(item.qty).match(/[\d.]+/);
+                if (numMatch) {
+                    totalQtySum += parseFloat(numMatch[0]) || 1;
+                } else {
+                    totalQtySum += 1;
+                }
+            });
+
+            // Calculate total price
+            let totalPrice = orderItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+
+            document.getElementById('summaryItemsCount').textContent = itemsCount;
+            document.getElementById('summaryTotalQty').textContent = Number.isInteger(totalQtySum) ? totalQtySum : totalQtySum.toFixed(1);
+            document.getElementById('summaryTotalPrice').textContent = '$' + totalPrice.toLocaleString();
+        }
+
+        // Update LINE Reply Preview
+        function updateLinePreview() {
+            const previewBox = document.getElementById('linePreviewBox');
+            if (orderItems.length === 0) {
+                previewBox.textContent = '尚無訂單明細內容...';
+                return;
+            }
+
+            let text = '🛒 【甜蜜果物】您的訂單明細如下：\n';
+            text += '--------------------\n';
+            let total = 0;
+            orderItems.forEach((item, i) => {
+                const name = item.name || '未命名';
+                const qty = item.qty || '1';
+                const price = Number(item.price) || 0;
+                total += price;
+                text += `${i + 1}. ${name} (${qty}) - $${price}\n`;
+            });
+            text += '--------------------\n';
+            text += `💰 總計金額：$${total} 元\n`;
+            text += '謝謝您的光臨！如有任何問題請隨時告知 😊';
+
+            previewBox.textContent = text;
+        }
+
+        // Copy LINE Reply to Clipboard
+        function copyLineReply() {
+            const previewBox = document.getElementById('linePreviewBox');
+            const textToCopy = previewBox.textContent;
+
+            if (orderItems.length === 0) {
+                showToast('沒有可複製的訂單內容', 'error');
+                return;
+            }
+
+            // Fallback for copy using execCommand to comply with iFrame limitations
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('已成功複製 LINE 回覆清單！可直接貼上');
+                } else {
+                    showToast('複製失敗，請手動複製', 'error');
+                }
+            } catch (err) {
+                showToast('複製失敗，請手動複製', 'error');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // LocalStorage Persistence
+        function saveToLocalStorage() {
+            localStorage.setItem('fruit_order_items', JSON.stringify(orderItems));
+            const now = new Date();
+            const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
+                               now.getMinutes().toString().padStart(2, '0') + ':' + 
+                               now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('lastSavedTime').textContent = `已自動儲存 (${timeString})`;
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('fruit_order_items');
+            if (saved) {
+                try {
+                    orderItems = JSON.parse(saved);
+                } catch (e) {
+                    orderItems = [];
+                }
+            }
+        }
+    </script>
+</body>
+</html>
