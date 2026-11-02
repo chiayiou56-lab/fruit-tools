@@ -164,7 +164,7 @@
         <div class="pb-4">
             <div class="inline-flex items-center space-x-2 text-slate-500 text-base md:text-lg bg-slate-100 px-6 py-3 rounded-2xl border border-slate-200 shadow-sm font-bold">
                 <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                <span>點擊畫面任意處即可返回修改金額</span>
+                <span>點擊畫面任意處即可返回並重設下一筆</span>
             </div>
         </div>
     </div>
@@ -383,10 +383,6 @@
             let totalSum = transactions.reduce((sum, t) => sum + t.amount, 0);
             document.getElementById("customerAmountDisplay").innerText = totalSum.toLocaleString();
             document.getElementById("customerView").classList.remove("hidden");
-
-            currentInput = "0";
-            expression = "";
-            updateDisplay();
         }
 
         function showWisdomToothNotice() {
@@ -394,8 +390,16 @@
         }
 
         function returnToControl() {
+            // 關閉所有全螢幕檢視
             document.getElementById("customerView").classList.add("hidden");
             document.getElementById("wisdomNoticeView").classList.add("hidden");
+
+            // 全螢幕顯示完畢返回後，自動清除交易紀錄與目前輸入，讓下一筆重新計算
+            transactions = [];
+            currentInput = "0";
+            expression = "";
+            updateDisplay();
+            renderTransactions();
         }
     </script>
 </body>
