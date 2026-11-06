@@ -88,10 +88,10 @@
 
                     <!-- 區塊獨立清除功能 (最上方) -->
                     <div class="pt-2 pb-4 mb-4 border-b border-emerald-800/60 flex gap-2">
-                        <button onclick="clearCompletedTodos()" class="flex-1 py-2.5 px-3 bg-emerald-950/60 hover:bg-amber-500/20 hover:text-amber-300 text-emerald-200 text-xs sm:text-sm font-medium rounded-xl border border-emerald-800 transition-all flex items-center justify-center gap-1.5 active:scale-95">
+                        <button onclick="clearCompletedTodos()" class="flex-1 py-3 px-3 bg-emerald-950/60 hover:bg-amber-500/20 hover:text-amber-300 text-emerald-200 text-xs sm:text-sm font-medium rounded-xl border border-emerald-800 transition-all flex items-center justify-center gap-1.5 active:scale-95">
                             <i class="fa-solid fa-check-double text-amber-400"></i> 清除已完成
                         </button>
-                        <button onclick="clearAllTodos()" class="flex-1 py-2.5 px-3 bg-emerald-950/60 hover:bg-rose-500/20 hover:text-rose-300 text-emerald-200 text-xs sm:text-sm font-medium rounded-xl border border-emerald-800 transition-all flex items-center justify-center gap-1.5 active:scale-95">
+                        <button onclick="clearAllTodos()" class="flex-1 py-3 px-3 bg-emerald-950/60 hover:bg-rose-500/20 hover:text-rose-300 text-emerald-200 text-xs sm:text-sm font-medium rounded-xl border border-emerald-800 transition-all flex items-center justify-center gap-1.5 active:scale-95">
                             <i class="fa-solid fa-trash-can text-rose-400"></i> 全部清除
                         </button>
                     </div>
@@ -99,9 +99,9 @@
                     <!-- 新增表單 -->
                     <form id="todo-form" class="flex gap-2 mb-5" onsubmit="addTodo(event)">
                         <input type="text" id="todo-input" placeholder="輸入新的待辦事項..." required
-                            class="flex-grow px-4 py-3 bg-emerald-950/60 border border-emerald-700/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-emerald-950 text-sm sm:text-base text-slate-100 placeholder-emerald-400/50 transition-all">
-                        <button type="submit" class="px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-2xl transition-all shadow-md shadow-amber-950 active:scale-95 flex items-center justify-center">
-                            <i class="fa-solid fa-plus"></i>
+                            class="flex-grow px-4 py-3.5 bg-emerald-950/60 border border-emerald-700/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-emerald-950 text-sm sm:text-base text-slate-100 placeholder-emerald-400/50 transition-all">
+                        <button type="submit" class="px-5 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-2xl transition-all shadow-md shadow-amber-950 active:scale-95 flex items-center justify-center">
+                            <i class="fa-solid fa-plus text-lg"></i>
                         </button>
                     </form>
 
@@ -130,14 +130,14 @@
 
                     <!-- 區塊獨立清除功能 (最上方) -->
                     <div class="pt-2 pb-4 mb-4 border-b border-emerald-800/60">
-                        <button onclick="clearNote()" class="w-full py-2.5 px-3 bg-emerald-950/60 hover:bg-rose-500/20 hover:text-rose-300 text-emerald-200 text-xs sm:text-sm font-medium rounded-xl border border-emerald-800 transition-all flex items-center justify-center gap-1.5 active:scale-95">
+                        <button onclick="clearNote()" class="w-full py-3 px-3 bg-emerald-950/60 hover:bg-rose-500/20 hover:text-rose-300 text-emerald-200 text-xs sm:text-sm font-medium rounded-xl border border-emerald-800 transition-all flex items-center justify-center gap-1.5 active:scale-95">
                             <i class="fa-solid fa-trash-can text-rose-400"></i> 清空筆記內容
                         </button>
                     </div>
 
                     <div class="mb-2">
                         <textarea id="quick-note" placeholder="在此隨手輸入或貼上文字記錄..." rows="9" oninput="handleNoteInput()"
-                            class="w-full px-4 py-3 bg-emerald-950/60 border border-emerald-700/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-emerald-950 text-sm sm:text-base text-slate-100 placeholder-emerald-400/50 transition-all resize-y leading-relaxed"></textarea>
+                            class="w-full px-4 py-3.5 bg-emerald-950/60 border border-emerald-700/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-emerald-950 text-sm sm:text-base text-slate-100 placeholder-emerald-400/50 transition-all resize-y leading-relaxed"></textarea>
                     </div>
                 </div>
             </section>
@@ -152,47 +152,47 @@
                             </div>
                             <div>
                                 <h2 class="font-bold text-base sm:text-lg text-amber-200">計算機</h2>
-                                <p class="text-xs text-emerald-300/70">支援按鍵與 PC 鍵盤輸入</p>
+                                <p class="text-xs text-emerald-300/70">震動回饋與 PC 鍵盤支援</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- 區塊獨立清除功能 (最上方) -->
                     <div class="pt-2 pb-4 mb-4 border-b border-emerald-800/60">
-                        <button onclick="calcReset()" class="w-full py-2.5 px-3 bg-emerald-950/60 hover:bg-amber-500/20 hover:text-amber-300 text-emerald-200 text-xs sm:text-sm font-medium rounded-xl border border-emerald-800 transition-all flex items-center justify-center gap-1.5 active:scale-95">
+                        <button onclick="calcReset()" class="w-full py-3 px-3 bg-emerald-950/60 hover:bg-amber-500/20 hover:text-amber-300 text-emerald-200 text-xs sm:text-sm font-medium rounded-xl border border-emerald-800 transition-all flex items-center justify-center gap-1.5 active:scale-95">
                             <i class="fa-solid fa-arrows-rotate text-amber-400"></i> 計算機歸零重置
                         </button>
                     </div>
-
-                    <div class="bg-emerald-950 text-amber-300 p-4 rounded-2xl mb-4 shadow-inner text-right border border-emerald-800">
-                        <div id="calc-history" class="text-xs text-emerald-400/70 h-5 overflow-hidden font-mono"></div>
-                        <div id="calc-display" class="text-2xl sm:text-3xl font-bold font-mono tracking-wider truncate mt-1 text-amber-200">0</div>
+                    <div class="bg-emerald-950 text-amber-300 p-4 sm:p-5 rounded-2xl mb-4 shadow-inner text-right border border-emerald-800">
+                        <div id="calc-history" class="text-xs sm:text-sm text-emerald-400/70 h-6 overflow-hidden font-mono"></div>
+                        <div id="calc-display" class="text-3xl sm:text-4xl font-bold font-mono tracking-wider truncate mt-1 text-amber-200">0</div>
                     </div>
 
-                    <div class="grid grid-cols-4 gap-2.5 mb-2">
-                        <button onclick="calcClear()" class="p-3.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-900/60 rounded-xl font-bold transition-all active:scale-95 text-sm">C</button>
-                        <button onclick="calcAppend('%')" class="p-3.5 bg-emerald-950/80 hover:bg-emerald-800 text-emerald-200 border border-emerald-800 rounded-xl font-bold transition-all active:scale-95 text-sm">%</button>
-                        <button onclick="calcBackSpace()" class="p-3.5 bg-emerald-950/80 hover:bg-emerald-800 text-emerald-200 border border-emerald-800 rounded-xl font-bold transition-all active:scale-95 text-sm"><i class="fa-solid fa-delete-left"></i></button>
-                        <button onclick="calcAppend('/')" class="p-3.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-xl font-bold transition-all active:scale-95 text-sm">÷</button>
+                    <!-- 計算機按鈕 (超大觸控面積與震動回饋) -->
+                    <div class="grid grid-cols-4 gap-3.5 mb-2">
+                        <button onclick="calcClear()" class="py-6 sm:py-7 bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-900/60 rounded-2xl font-bold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">C</button>
+                        <button onclick="calcAppend('%')" class="py-6 sm:py-7 bg-emerald-950/80 hover:bg-emerald-800 text-emerald-200 border border-emerald-800 rounded-2xl font-bold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">%</button>
+                        <button onclick="calcBackSpace()" class="py-6 sm:py-7 bg-emerald-950/80 hover:bg-emerald-800 text-emerald-200 border border-emerald-800 rounded-2xl font-bold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md"><i class="fa-solid fa-delete-left"></i></button>
+                        <button onclick="calcAppend('/')" class="py-6 sm:py-7 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-2xl font-bold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">÷</button>
                         
-                        <button onclick="calcAppend('7')" class="p-3.5 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-xl font-medium transition-all active:scale-95">7</button>
-                        <button onclick="calcAppend('8')" class="p-3.5 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-xl font-medium transition-all active:scale-95">8</button>
-                        <button onclick="calcAppend('9')" class="p-3.5 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-xl font-medium transition-all active:scale-95">9</button>
-                        <button onclick="calcAppend('*')" class="p-3.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-xl font-bold transition-all active:scale-95 text-sm">×</button>
+                        <button onclick="calcAppend('7')" class="py-6 sm:py-7 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-2xl font-semibold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">7</button>
+                        <button onclick="calcAppend('8')" class="py-6 sm:py-7 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-2xl font-semibold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">8</button>
+                        <button onclick="calcAppend('9')" class="py-6 sm:py-7 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-2xl font-semibold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">9</button>
+                        <button onclick="calcAppend('*')" class="py-6 sm:py-7 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-2xl font-bold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">×</button>
                         
-                        <button onclick="calcAppend('4')" class="p-3.5 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-xl font-medium transition-all active:scale-95">4</button>
-                        <button onclick="calcAppend('5')" class="p-3.5 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-xl font-medium transition-all active:scale-95">5</button>
-                        <button onclick="calcAppend('6')" class="p-3.5 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-xl font-medium transition-all active:scale-95">6</button>
-                        <button onclick="calcAppend('-')" class="p-3.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-xl font-bold transition-all active:scale-95 text-sm">-</button>
+                        <button onclick="calcAppend('4')" class="py-6 sm:py-7 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-2xl font-semibold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">4</button>
+                        <button onclick="calcAppend('5')" class="py-6 sm:py-7 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-2xl font-semibold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">5</button>
+                        <button onclick="calcAppend('6')" class="py-6 sm:py-7 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-2xl font-semibold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">6</button>
+                        <button onclick="calcAppend('-')" class="py-6 sm:py-7 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-2xl font-bold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">-</button>
                         
-                        <button onclick="calcAppend('1')" class="p-3.5 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-xl font-medium transition-all active:scale-95">1</button>
-                        <button onclick="calcAppend('2')" class="p-3.5 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-xl font-medium transition-all active:scale-95">2</button>
-                        <button onclick="calcAppend('3')" class="p-3.5 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-xl font-medium transition-all active:scale-95">3</button>
-                        <button onclick="calcAppend('+')" class="p-3.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-xl font-bold transition-all active:scale-95 text-sm">+</button>
+                        <button onclick="calcAppend('1')" class="py-6 sm:py-7 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-2xl font-semibold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">1</button>
+                        <button onclick="calcAppend('2')" class="py-6 sm:py-7 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-2xl font-semibold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">2</button>
+                        <button onclick="calcAppend('3')" class="py-6 sm:py-7 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-2xl font-semibold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">3</button>
+                        <button onclick="calcAppend('+')" class="py-6 sm:py-7 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-2xl font-bold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">+</button>
                         
-                        <button onclick="calcAppend('0')" class="col-span-2 p-3.5 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-xl font-medium transition-all active:scale-95">0</button>
-                        <button onclick="calcAppend('.')" class="p-3.5 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-xl font-medium transition-all active:scale-95">.</button>
-                        <button onclick="calcCompute()" class="p-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-xl font-bold transition-all active:scale-95 shadow-md shadow-amber-950">=</button>
+                        <button onclick="calcAppend('0')" class="col-span-2 py-6 sm:py-7 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-2xl font-semibold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">0</button>
+                        <button onclick="calcAppend('.')" class="py-6 sm:py-7 bg-emerald-950/40 hover:bg-emerald-800 text-slate-100 border border-emerald-800/60 rounded-2xl font-semibold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">.</button>
+                        <button onclick="calcCompute()" class="py-6 sm:py-7 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-amber-950 text-2xl sm:text-3xl flex items-center justify-center">=</button>
                     </div>
                 </div>
             </section>
@@ -202,7 +202,7 @@
 
     <!-- 頁尾 -->
     <footer class="bg-emerald-950/85 border-t border-amber-500/20 py-6 text-center text-xs text-emerald-300/60 mt-12">
-        <p>© 2026 實用工具箱 (綠金雲端同步版) | Firebase Realtime Database 即時連線</p>
+        <p>© 2026 實用工具箱 (綠金雲端同步震動版) | Firebase Realtime Database 即時連線</p>
     </footer>
 
     <!-- 自定義訊息彈窗取代 alert() -->
@@ -329,25 +329,21 @@
             }
 
             modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                box.classList.remove('scale-95');
-                box.classList.add('scale-100');
-            }, 10);
-        };
-
-        window.closeModal = function() {
-            const modal = document.getElementById('custom-modal');
-            const box = document.getElementById('modal-content-box');
-            modal.classList.add('opacity-0');
-            box.classList.remove('scale-100');
-            box.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
-        };
+        // 觸覺震動回饋輔助函式
+        function triggerVibration() {
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                try {
+                    navigator.vibrate(15);
+                } catch (e) {
+                    // 忽略不支援震動的瀏覽器環境限制
+                }
+            }
+        }
 
         // 待辦事項邏輯
         window.addTodo = function(e) {
             e.preventDefault();
+            triggerVibration();
             const input = document.getElementById('todo-input');
             const text = input.value.trim();
             if (!text) return;
@@ -358,16 +354,19 @@
         };
 
         window.toggleTodo = function(id) {
+            triggerVibration();
             todos = todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
             syncToCloud();
         };
 
         window.deleteTodo = function(id) {
+            triggerVibration();
             todos = todos.filter(t => t.id !== id);
             syncToCloud();
         };
 
         window.clearCompletedTodos = function() {
+            triggerVibration();
             const initialCount = todos.length;
             todos = todos.filter(t => !t.completed);
             if (todos.length === initialCount) {
@@ -378,6 +377,7 @@
         };
 
         window.clearAllTodos = function() {
+            triggerVibration();
             if (todos.length === 0) {
                 window.showMessage('提示', '待辦清單已經是空的了。');
                 return;
@@ -433,6 +433,7 @@
         }
 
         window.clearNote = function() {
+            triggerVibration();
             const textarea = document.getElementById('quick-note');
             if (!textarea.value.trim()) {
                 window.showMessage('提示', '筆記內容已經是空的了。');
@@ -457,6 +458,7 @@
         }
 
         window.calcAppend = function(val) {
+            triggerVibration();
             if (calcInput === '0' && !['+', '-', '*', '/', '%', '.'].includes(val)) {
                 calcInput = val;
             } else {
@@ -466,17 +468,20 @@
         };
 
         window.calcClear = function() {
+            triggerVibration();
             calcInput = '0';
             calcHistoryStr = '';
             updateCalcDisplay();
         };
 
         window.calcReset = function() {
+            triggerVibration();
             window.calcClear();
             window.showMessage('提示', '計算機已成功歸零重置。');
         };
 
         window.calcBackSpace = function() {
+            triggerVibration();
             if (calcInput.length > 1) {
                 calcInput = calcInput.slice(0, -1);
             } else {
@@ -486,6 +491,7 @@
         };
 
         window.calcCompute = function() {
+            triggerVibration();
             try {
                 let expression = calcInput.replace(/×/g, '*').replace(/÷/g, '/');
                 expression = expression.replace(/%$/g, '/100');
