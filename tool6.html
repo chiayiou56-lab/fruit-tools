@@ -307,6 +307,8 @@
 
         window.scrollToTop = function() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+            document.body.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
         window.showMessage = function(title, message, type = 'info') {
@@ -344,10 +346,12 @@
         };
 
         function triggerVibration() {
-            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
                 try {
-                    navigator.vibrate(15);
-                } catch (e) {}
+                    navigator.vibrate([25]);
+                } catch (e) {
+                    console.log('Vibration not supported or blocked', e);
+                }
             }
         }
 
