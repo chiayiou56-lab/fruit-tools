@@ -38,7 +38,7 @@
 </head>
 <body class="bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-950 min-h-screen text-slate-100 font-sans antialiased flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
 
-    <!-- 頂部固定導覽列 -->
+    <!-- 頂部固定導覽列 (加入 id="top" 作為回首頁錨點) -->
     <header id="top" class="sticky top-0 z-50 backdrop-blur-md bg-emerald-950/85 border-b border-amber-500/30 shadow-lg shadow-emerald-950/50 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -57,11 +57,11 @@
                     <span id="status-text">連線中...</span>
                 </div>
 
-                <!-- 回首頁 / 快速導航按鈕 -->
-                <button onclick="scrollToTop()" class="flex items-center space-x-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-emerald-900/80 hover:bg-amber-500 hover:text-slate-950 text-amber-200 border border-amber-500/30 transition-all font-medium text-sm sm:text-base active:scale-95 shadow-sm">
+                <!-- 回首頁 / 連結外部首頁按鈕 -->
+                <a href="https://fruit-tools.vercel.app/index.html" class="flex items-center space-x-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-emerald-900/80 hover:bg-amber-500 hover:text-slate-950 text-amber-200 border border-amber-500/30 transition-all font-medium text-sm sm:text-base active:scale-95 shadow-sm cursor-pointer no-underline">
                     <i class="fa-solid fa-house-chimney text-xs sm:text-sm"></i>
                     <span>回首頁</span>
-                </button>
+                </a>
             </div>
         </div>
     </header>
@@ -304,12 +304,6 @@
                 updateCloudStatus('offline', '連線異常');
             });
         }
-
-        window.scrollToTop = function() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
-            document.body.scrollTo({ top: 0, behavior: 'smooth' });
-        };
 
         window.showMessage = function(title, message, type = 'info') {
             const modal = document.getElementById('custom-modal');
