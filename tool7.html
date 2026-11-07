@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>陀螺比賽賽事成本與獎品計算工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="calculatorApp()">
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- 頁面標題 -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-extrabold text-amber-400 tracking-wide mb-2">🏆 陀螺比賽財務與獎品計算工具</h1>
+            <p class="text-slate-400 text-sm">支援正向預算分配與獎品金額反推，完美對應雙級距與名次規則</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- 左側：參數設定面板 (7格) -->
+            <div class="lg:col-span-7 bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700 space-y-6">
+                <h2 class="text-xl font-bold text-emerald-400 border-b border-slate-700 pb-3 flex items-center gap-2">
+                    <span>⚙️</span> 賽事參數設定
+                </h2>
+
+                <!-- 模式選擇 -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">計算模式</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button @click="calcMode = 'forward'" 
+                                :class="calcMode === 'forward' ? 'bg-amber-500 text-slate-950 font-bold shadow-lg' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'"
+                                class="py-2.5 px-4 rounded-xl transition text-sm">
+                            正向計算 (報名費 ➔ 獎品)
+                        </button>
+                        <button @click="calcMode = 'reverse'" 
+                                :class="calcMode === 'reverse' ? 'bg-amber-500 text-slate-950 font-bold shadow-lg' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'"
+                                class="py-2.5 px-4 rounded-xl transition text-sm">
+                            反向推算 (獎品金額 ➔ 報名費)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 級距規格選擇 -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">參賽人數級距規格</label>
+                    <select x-model="tierType" @change="onTierChange" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-400">
+                        <option value="tier1">級距一：12人 ~ 16人上限 (12人冠亞 / 16人冠亞季)</option>
+                        <option value="tier2">級距二：16人 ~ 24人上限 (16人冠亞季 / 24人冠亞季殿)</option>
+                    </select>
+                </div>
+
+                <!-- 參賽人數設定 -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-sm font-medium text-slate-300">參賽人數</label>
+                        <span class="text-amber-400 font-bold text-lg" x-text="participants + ' 人'"></span>
+                    </div>
+                    <input type="range" :min="minParticipants" :max="maxParticipants" x-model.number="participants" @input="validateParticipants" class="w-full accent-amber-400 bg-slate-700 h-2 rounded-lg cursor-pointer">
+                    <div class="flex justify-between text-xs text-slate-500 mt-1">
+                        <span x-text="minParticipants + '人'"></span>
+                        <span x-text="maxParticipants + '人 (上限)'"></span>
+                    </div>
+                </div>
+
+                <!-- 正向模式下的報名費設定 -->
+                <div x-show="calcMode === 'forward'">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">預設報名費 (元/人)</label>
+                    <input type="number" x-model.number="entryFee" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-400" placeholder="例如：250">
+                </div>
+
+                <!-- 反向模式下的目標獎品總預算設定 -->
+                <div x-show="calcMode === 'reverse'">
+                    <label class="block text-sm font-medium text-slate-300 mb-2">欲採購的獎品總金額 (元)</label>
+                    <input type="number" x-model.number="targetPrizeBudget" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-400" placeholder="例如：4200">
+                    <p class="text-xs text-slate-400 mt-1">系統將自動幫您反推在當前人數下達成此預算所需的報名費。</p>
+                </div>
+
+                <!-- 目標利潤設定 -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-sm font-medium text-slate-300">主辦目標利潤比例</label>
+                        <span class="text-emerald-400 font-bold" x-text="profitMargin + '%'"></span>
+                    </div>
+                    <input type="range" min="10" max="50" step="5" x-model.number="profitMargin" class="w-full accent-emerald-400 bg-slate-700 h-2 rounded-lg cursor-pointer">
+                </div>
+            </div>
+
+            <!-- 右側：計算結果與獎品分配 (5格) -->
+            <div class="lg:col-span-5 bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-700 flex flex-col justify-between space-y-6">
+                <div>
+                    <h2 class="text-xl font-bold text-amber-400 border-b border-slate-700 pb-3 mb-4 flex items-center justify-between">
+                        <span>📊 財務與獎品試算</span>
+                        <span class="text-xs bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full border border-amber-500/30" x-text="currentTierBadge"></span>
+                    </h2>
+
+                    <!-- 財務總覽數據 -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
+                            <span class="text-xs text-slate-400 block mb-1">預估總收入</span>
+                            <span class="text-2xl font-black text-slate-100" x-text="'$' + totalRevenue"></span>
+                        </div>
+                        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
+                            <span class="text-xs text-slate-400 block mb-1">主辦預留利潤 (<span x-text="profitMargin+'%'"></span>)</span>
+                            <span class="text-2xl font-black text-emerald-400" x-text="'$' + totalProfit"></span>
+                        </div>
+                    </div>
+
+                    <!-- 獎品總預算顯示 -->
+                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6">
+                        <span class="text-xs text-amber-300 block mb-1">建議獎品採購總預算 (成本池)</span>
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-3xl font-extrabold text-amber-400" x-text="'$' + prizeBudget"></span>
+                            <span class="text-xs text-slate-400" x-text="'佔總收入 ' + (100 - profitMargin) + '%'"></span>
+                        </div>
+                        <div class="mt-2 text-xs text-amber-200/80" x-show="calcMode === 'reverse'">
+                            反推適用報名費：<strong class="text-amber-400 text-sm" x-text="'$' + calculatedEntryFee + ' /人'"></strong>
+                        </div>
+                    </div>
+
+                    <!-- 各名次分配明細 -->
+                    <h3 class="text-sm font-semibold text-slate-300 mb-3">各名次獎品採購預算分配</h3>
+                    <div class="space-y-2.5">
+                        <template x-for="(item, index) in prizeDistribution" :key="index">
+                            <div class="bg-slate-900 px-4 py-3 rounded-xl flex items-center justify-between border border-slate-700/40">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                                          :class="{
+                                              'bg-amber-400 text-slate-950': index === 0,
+                                              'bg-slate-300 text-slate-950': index === 1,
+                                              'bg-amber-700 text-slate-100': index === 2,
+                                              'bg-slate-700 text-slate-300': index === 3
+                                          }" x-text="index + 1"></span>
+                                    <span class="text-sm font-medium text-slate-200" x-text="item.name"></span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-base font-bold text-amber-400" x-text="'$' + item.amount"></span>
+                                    <span class="text-xs text-slate-500 ml-2" x-text="'(' + item.percent + '%)'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- 一鍵複製按鈕 -->
+                <div>
+                    <button @click="copySummary" 
+                            class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 px-4 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                        <span>📋</span> 複製試算結果與夥伴對帳
+                    </button>
+                    <p class="text-center text-xs text-slate-500 mt-2" x-show="copied">已成功複製到剪貼簿！</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculatorApp() {
+            return {
+                calcMode: 'forward', // 'forward' 或 'reverse'
+                tierType: 'tier2', // 'tier1' 或 'tier2'
+                participants: 24,
+                minParticipants: 16,
+                maxParticipants: 24,
+                entryFee: 250,
+                targetPrizeBudget: 4200,
+                profitMargin: 30,
+                copied: false,
+
+                onTierChange() {
+                    if (this.tierType === 'tier1') {
+                        this.minParticipants = 12;
+                        this.maxParticipants = 16;
+                        if (this.participants < 12) this.participants = 12;
+                        if (this.participants > 16) this.participants = 16;
+                    } else {
+                        this.minParticipants = 16;
+                        this.maxParticipants = 24;
+                        if (this.participants < 16) this.participants = 16;
+                        if (this.participants > 24) this.participants = 24;
+                    }
+                },
+
+                validateParticipants() {
+                    let min = parseInt(this.minParticipants);
+                    let max = parseInt(this.maxParticipants);
+                    if (this.participants < min) this.participants = min;
+                    if (this.participants > max) this.participants = max;
+                },
+
+                get currentTierBadge() {
+                    if (this.tierType === 'tier1') {
+                        return this.participants === 16 ? '16人級距 (冠、亞、季軍)' : '12-15人級距 (冠、亞軍)';
+                    } else {
+                        return this.participants === 24 ? '24人滿編 (冠、亞、季、殿軍)' : '16-23人級距 (冠、亞、季軍)';
+                    }
+                },
+
+                // 計算得獎名次與預設百分比權重
+                get activeRanks() {
+                    if (this.tierType === 'tier1') {
+                        if (this.participants >= 16) {
+                            return [
+                                { name: '冠軍', weight: 0.55 },
+                                { name: '亞軍', weight: 0.30 },
+                                { name: '季軍', weight: 0.15 }
+                            ];
+                        } else {
+                            return [
+                                { name: '冠軍', weight: 0.65 },
+                                { name: '亞軍', weight: 0.35 }
+                            ];
+                        }
+                    } else {
+                        if (this.participants >= 24) {
+                            return [
+                                { name: '冠軍', weight: 0.45 },
+                                { name: '亞軍', weight: 0.25 },
+                                { name: '季軍', weight: 0.18 },
+                                { name: '殿軍', weight: 0.12 }
+                            ];
+                        } else {
+                            return [
+                                { name: '冠軍', weight: 0.50 },
+                                { name: '亞軍', weight: 0.30 },
+                                { name: '季軍', weight: 0.20 }
+                            ];
+                        }
+                    }
+                },
+
+                get totalRevenue() {
+                    if (this.calcMode === 'forward') {
+                        return this.participants * this.entryFee;
+                    } else {
+                        // 從獎品預算反推總收入：獎品預算 = 總收入 * (1 - 利潤%) => 總收入 = 獎品預算 / (1 - 利潤%)
+                        let costRatio = (100 - this.profitMargin) / 100;
+                        if (costRatio <= 0) costRatio = 0.7;
+                        return Math.round(this.targetPrizeBudget / costRatio);
+                    }
+                },
+
+                get totalProfit() {
+                    return Math.round(this.totalRevenue * (this.profitMargin / 100));
+                },
+
+                get prizeBudget() {
+                    if (this.calcMode === 'forward') {
+                        return this.totalRevenue - this.totalProfit;
+                    } else {
+                        return parseInt(this.targetPrizeBudget) || 0;
+                    }
+                },
+
+                get calculatedEntryFee() {
+                    if (this.participants <= 0) return 0;
+                    return Math.ceil(this.totalRevenue / this.participants);
+                },
+
+                get prizeDistribution() {
+                    let budget = this.prizeBudget;
+                    let ranks = this.activeRanks;
+                    return ranks.map(rank => {
+                        let amount = Math.round(budget * rank.weight);
+                        return {
+                            name: rank.name,
+                            amount: amount,
+                            percent: Math.round(rank.weight * 100)
+                        };
+                    });
+                },
+
+                copySummary() {
+                    let text = `🏆 陀螺比賽財務與獎品試算摘要\n`;
+                    text += `------------------------------------\n`;
+                    text += `• 參賽規格：${this.currentTierBadge}\n`;
+                    text += `• 參賽人數：${this.participants} 人\n`;
+                    text += `• 報名費：$${this.calcMode === 'forward' ? this.entryFee : this.calculatedEntryFee} /人\n`;
+                    text += `• 預估總收入：$${this.totalRevenue}\n`;
+                    text += `• 主辦目標利潤 (${this.profitMargin}%)：$${this.totalProfit}\n`;
+                    text += `• 獎品採購總預算：$${this.prizeBudget}\n\n`;
+                    text += `🎁 各名次獎品採購分配：\n`;
+                    this.prizeDistribution.forEach(item => {
+                        text += `  - ${item.name}：$${item.amount} (${item.percent}%)\n`;
+                    });
+                    
+                    navigator.clipboard.writeText(text).then(() => {
+                        this.copied = true;
+                        setTimeout(() => this.copied = false, 2500);
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
