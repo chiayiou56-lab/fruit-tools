@@ -822,24 +822,35 @@ dbRef.on('value', (snapshot) => {
 
 
         async uploadToCloud() {
-          if (!this.isCloudConnected || !firebase.apps.length) {
-            alert('尚未連接 Firebase 雲端，請先至「雲端設定」完成連線。');
+          if (!firebase.apps.length) {
+            alert('尚未初始化 Firebase，請先至「雲端設定」完成連線。');
             return;
           }
           if (!confirm('確定將目前本機的庫存、廠商與叫貨資料上傳至雲端？\\n上傳後會覆蓋雲端現有資料。')) return;
+
+          const payload = JSON.parse(JSON.stringify({
+            inventory: this.inventory,
+            suppliers: this.suppliers,
+            orderedItems: this.orderedItems
+          }));
+
           try {
-            await firebase.database().ref('packagingData').set({
-              inventory: this.inventory,
-              suppliers: this.suppliers,
-              orderedItems: this.orderedItems
-            });
-            localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
-            localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
-            localStorage.setItem('pkg_ordered_items', JSON.stringify(this.orderedItems));
+            // 以 Firebase 寫入的完成結果判斷雲端上傳，不讓本機快取保存失敗
+            // 被誤判成雲端上傳失敗
+            await firebase.database().ref('packagingData').set(payload);
             this.showToast('本機資料已成功手動上傳至雲端！');
+
+            try {
+              localStorage.setItem('pkg_inventory', JSON.stringify(payload.inventory));
+              localStorage.setItem('pkg_suppliers', JSON.stringify(payload.suppliers));
+              localStorage.setItem('pkg_ordered_items', JSON.stringify(payload.orderedItems));
+            } catch (localError) {
+              console.warn('雲端上傳成功，但本機快取保存失敗:', localError);
+              this.showToast('雲端上傳成功；本機快取保存未完成');
+            }
           } catch (error) {
-            console.error('手動上傳雲端失敗:', error);
-            alert('上傳失敗，請確認網路連線與 Firebase 資料庫權限。');
+            console.error('Firebase 手動上傳寫入失敗:', error);
+            alert('雲端上傳未成功：' + (error?.message || '請檢查網路連線與 Firebase Database Rules'));
           }
         },
 
