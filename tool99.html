@@ -83,19 +83,22 @@
                     <i class="fa-solid fa-cloud"></i><span>雲端設定</span>
                 </button>
 
-                <!-- Page Navigation Tabs -->
-                <nav class="flex items-center space-x-1 sm:space-x-2 bg-bey-dark/80 p-1.5 rounded-xl border border-bey-border">
-                    <button onclick="switchTab('A')" id="navA" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 bg-bey-accent text-bey-dark shadow-md">
-                        <i class="fa-solid fa-users"></i><span>A 選手管理</span>
+                <!-- Page Navigation Tabs (已加入 E 頁面) -->
+                <nav class="flex items-center space-x-1 sm:space-x-2 bg-bey-dark/80 p-1.5 rounded-xl border border-bey-border overflow-x-auto">
+                    <button onclick="switchTab('A')" id="navA" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 bg-bey-accent text-bey-dark shadow-md whitespace-nowrap">
+                        <i class="fa-solid fa-users"></i><span>A 選手</span>
                     </button>
-                    <button onclick="switchTab('B')" id="navB" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white">
-                        <i class="fa-solid fa-shuffle"></i><span>B 抽籤分組</span>
+                    <button onclick="switchTab('B')" id="navB" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap">
+                        <i class="fa-solid fa-shuffle"></i><span>B 抽籤</span>
                     </button>
-                    <button onclick="switchTab('C')" id="navC" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white">
-                        <i class="fa-solid fa-sitemap"></i><span>C 淘汰樹狀</span>
+                    <button onclick="switchTab('C')" id="navC" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap">
+                        <i class="fa-solid fa-sitemap"></i><span>C 淘汰</span>
                     </button>
-                    <button onclick="switchTab('D')" id="navD" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white">
-                        <i class="fa-solid fa-trophy"></i><span>D 決賽循環</span>
+                    <button onclick="switchTab('D')" id="navD" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap">
+                        <i class="fa-solid fa-trophy"></i><span>D 決賽</span>
+                    </button>
+                    <button onclick="switchTab('E')" id="navE" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap">
+                        <i class="fa-solid fa-dice"></i><span>E 號碼抽獎</span>
                     </button>
                 </nav>
             </div>
@@ -326,6 +329,50 @@
                             <p class="text-xs text-slate-500 text-center py-4">循環賽名單尚未產生</p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== PAGE E: 隨機號碼抽獎 ==================== -->
+        <section id="pageE" class="space-y-6 hidden">
+            <div class="bg-bey-card border border-bey-border rounded-2xl p-6 sm:p-8 shadow-xl max-w-2xl mx-auto space-y-6">
+                <div class="border-b border-bey-border pb-4 text-center sm:text-left">
+                    <h2 class="font-orbitron font-bold text-lg text-bey-gold flex items-center justify-center sm:justify-start space-x-2">
+                        <i class="fa-solid fa-dice"></i><span>隨機號碼抽獎專區</span>
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">自訂號碼區間範圍，即可隨機抽出幸運號碼！</p>
+                </div>
+
+                <!-- 範圍設定表單 -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-bey-dark/60 p-5 rounded-2xl border border-bey-border">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">最小號碼 (起點)</label>
+                        <input type="number" id="lotteryMin" value="1" class="w-full bg-bey-dark border border-bey-border rounded-xl px-4 py-2.5 text-sm font-orbitron font-bold text-bey-accent focus:outline-none focus:border-bey-accent">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">最大號碼 (終點)</label>
+                        <input type="number" id="lotteryMax" value="100" class="w-full bg-bey-dark border border-bey-border rounded-xl px-4 py-2.5 text-sm font-orbitron font-bold text-bey-accent focus:outline-none focus:border-bey-accent">
+                    </div>
+                </div>
+
+                <!-- 抽獎結果顯示區 -->
+                <div class="bg-gradient-to-b from-bey-dark to-slate-900 border border-bey-border rounded-3xl p-8 text-center space-y-4 shadow-inner relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-bey-gold/5 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="text-xs font-orbitron text-slate-400 uppercase tracking-widest">抽獎結果</div>
+                    <div id="lotteryResultDisplay" class="font-orbitron font-black text-6xl sm:text-7xl text-bey-gold glow-gold tracking-wider py-4">
+                        --
+                    </div>
+                    <div id="lotterySubText" class="text-xs text-slate-500">請設定號碼區間並點擊下方按鈕開始抽獎</div>
+                </div>
+
+                <!-- 控制按鈕 -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button onclick="executeNumberLottery()" class="flex-1 py-4 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-bey-dark font-orbitron font-black text-sm uppercase tracking-wider rounded-xl shadow-xl transition-all flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-base"></i><span>開始隨機抽獎</span>
+                    </button>
+                    <button onclick="resetLottery()" class="px-5 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold text-xs rounded-xl transition-all">
+                        重設
+                    </button>
                 </div>
             </div>
         </section>
@@ -564,12 +611,12 @@
         }
 
         function switchTab(tabId) {
-            ['A', 'B', 'C', 'D'].forEach(id => {
+            ['A', 'B', 'C', 'D', 'E'].forEach(id => {
                 document.getElementById(`page${id}`).classList.add('hidden');
-                document.getElementById(`nav${id}`).className = "px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white";
+                document.getElementById(`nav${id}`).className = "px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap";
             });
             document.getElementById(`page${tabId}`).classList.remove('hidden');
-            document.getElementById(`nav${tabId}`).className = "px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 bg-bey-accent text-bey-dark shadow-md";
+            document.getElementById(`nav${tabId}`).className = "px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 bg-bey-accent text-bey-dark shadow-md whitespace-nowrap";
 
             if (tabId === 'B') updatePageBUI();
             if (tabId === 'C') renderBracketTree();
@@ -665,7 +712,7 @@
             assignedSeeds = [];
             bracketData = { rounds: [] };
             top3Data = { players: [], matches: [] };
-            saveAllToStorage(); // 確保同時將空陣列推送到雲端
+            saveAllToStorage();
             renderPlayerTable();
             renderAssignedSeeds();
             renderBracketTree();
@@ -1327,6 +1374,53 @@
             saveAllToStorage();
             renderTop3Section();
             showToast('已記錄勝場！');
+        }
+
+        // --- Page E Functions (Random Number Lottery) ---
+        function executeNumberLottery() {
+            const minInput = parseInt(document.getElementById('lotteryMin').value);
+            const maxInput = parseInt(document.getElementById('lotteryMax').value);
+
+            if (isNaN(minInput) || isNaN(maxInput)) {
+                showToast('請填寫有效的最小與最大號碼！');
+                return;
+            }
+
+            if (minInput > maxInput) {
+                showToast('最小號碼不可大於最大號碼！');
+                return;
+            }
+
+            const display = document.getElementById('lotteryResultDisplay');
+            const subText = document.getElementById('lotterySubText');
+            
+            // 抽獎動畫效果
+            let counter = 0;
+            const totalSteps = 15;
+            display.classList.add('scale-105', 'text-bey-accent');
+            
+            const interval = setInterval(() => {
+                const randomTemp = Math.floor(Math.random() * (maxInput - minInput + 1)) + minInput;
+                display.innerText = randomTemp;
+                counter++;
+                
+                if (counter >= totalSteps) {
+                    clearInterval(interval);
+                    const finalResult = Math.floor(Math.random() * (maxInput - minInput + 1)) + minInput;
+                    display.innerText = finalResult;
+                    display.classList.remove('scale-105', 'text-bey-accent');
+                    subText.innerText = `成功從 ${minInput} ~ ${maxInput} 之中隨機抽選！`;
+                    showToast(`🎉 恭喜抽中幸運號碼：【${finalResult}】！`);
+                }
+            }, 60);
+        }
+
+        function resetLottery() {
+            document.getElementById('lotteryMin').value = '1';
+            document.getElementById('lotteryMax').value = '100';
+            document.getElementById('lotteryResultDisplay').innerText = '--';
+            document.getElementById('lotterySubText').innerText = '請設定號碼區間並點擊下方按鈕開始抽獎';
+            showToast('已重設抽獎區間');
         }
     </script>
 </body>
