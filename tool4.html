@@ -708,7 +708,7 @@
     <span x-text="toast.message"></span>
   </div>
 
-  <!-- APP SCRIPT WITH FIREBASE SYNC -->
+  <!-- APP SCRIPT WITH ROBUST FIREBASE SYNC -->
   <script>
     function packagingApp() {
       return {
@@ -742,15 +742,15 @@
         init() {
           this.initFirebase();
 
-          // 監聽手機端切換分頁或解鎖畫面時重新抓取雲端最新資料，避免資料停滯
+          // 監聽手機端切換分頁或解鎖畫面時重新抓取雲端最新資料
           document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && this.isCloudConnected && firebase.apps.length) {
               firebase.database().ref('packagingData').once('value').then((snapshot) => {
                 const cloudData = snapshot.val();
                 if (cloudData) {
-                  if (cloudData.inventory) this.inventory = cloudData.inventory;
-                  if (cloudData.suppliers) this.suppliers = cloudData.suppliers;
-                  if (cloudData.orderedItems) this.orderedItems = cloudData.orderedItems;
+                  if (cloudData.inventory) this.inventory = [...cloudData.inventory];
+                  if (cloudData.suppliers) this.suppliers = [...cloudData.suppliers];
+                  if (cloudData.orderedItems) this.orderedItems = [...cloudData.orderedItems];
                 }
               }).catch(err => console.log('背景重連同步錯誤:', err));
             }
@@ -765,7 +765,6 @@
               firebase.initializeApp(config);
             }
             
-            // 強制開啟網路連線狀態
             firebase.database().goOnline();
             const dbRef = firebase.database().ref('packagingData');
             
@@ -773,9 +772,10 @@
             dbRef.on('value', (snapshot) => {
               const cloudData = snapshot.val();
               if (cloudData) {
-                if (cloudData.inventory) this.inventory = cloudData.inventory;
-                if (cloudData.suppliers) this.suppliers = cloudData.suppliers;
-                if (cloudData.orderedItems) this.orderedItems = cloudData.orderedItems;
+                // 使用解構賦值確保 Alpine.js 響應式陣列強制偵測更新
+                if (cloudData.inventory) this.inventory = [...cloudData.inventory];
+                if (cloudData.suppliers) this.suppliers = [...cloudData.suppliers];
+                if (cloudData.orderedItems) this.orderedItems = [...cloudData.orderedItems];
                 
                 localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
                 localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
@@ -802,6 +802,11 @@
         },
 
         saveInventory() {
+          // 強制複製陣列以觸發 Alpine.js 偵測
+          this.inventory = [...this.inventory];
+          this.suppliers = [...this.suppliers];
+          this.orderedItems = [...this.orderedItems];
+
           localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
           localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
           localStorage.setItem('pkg_ordered_items', JSON.stringify(this.orderedItems));
