@@ -727,6 +727,8 @@
         showCloudModal: false,
         showLightboxModal: false,
         isCloudConnected: false,
+        cloudSaveQueue: Promise.resolve(),
+        isCloudWritePending: false,
 
         batchSupplier: '必堅',
         batchInputText: '',
@@ -756,9 +758,13 @@
             if (!firebase.apps.length) {
               firebase.initializeApp(config);
             }
-            const dbRef = firebase.database().ref('packagingData');
-            
-            dbRef.on('value', (snapshot) => {
+            const db = firebase.database();
+            // 監測 Firebase 資料庫實際連線狀態
+            db.ref('.info/connected').on('value', (snapshot) => {
+              this.isCloudConnected = snapshot.val() === true;
+            });
+            const dbRef = db.ref('packagingData');
+dbRef.on('value', (snapshot) => {
               const cloudData = snapshot.val();
               if (cloudData) {
                 if (cloudData.inventory) this.inventory = cloudData.inventory;
@@ -784,17 +790,33 @@
           this.showToast('雲端設定已儲存並重新連線！');
         },
 
-        saveInventory() {
+        async saveInventory() {
+          // 先儲存本機，避免網路暫時中斷時編輯內容遺失
           localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
           localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
           localStorage.setItem('pkg_ordered_items', JSON.stringify(this.orderedItems));
-          
-          if (this.isCloudConnected && firebase.apps.length) {
-            firebase.database().ref('packagingData').set({
-              inventory: this.inventory,
-              suppliers: this.suppliers,
-              orderedItems: this.orderedItems
-            });
+
+          if (!this.isCloudConnected || !firebase.apps.length) return;
+
+          // 取當下資料快照，並依序寫入，避免連續編輯時舊請求覆蓋新資料
+          const payload = JSON.parse(JSON.stringify({
+            inventory: this.inventory,
+            suppliers: this.suppliers,
+            orderedItems: this.orderedItems
+          }));
+
+          this.isCloudWritePending = true;
+          this.cloudSaveQueue = this.cloudSaveQueue
+            .catch(() => {}) // 前次失敗不阻擋後續同步
+            .then(() => firebase.database().ref('packagingData').set(payload));
+
+          try {
+            await this.cloudSaveQueue;
+            this.isCloudWritePending = false;
+          } catch (error) {
+            this.isCloudWritePending = false;
+            console.error('Firebase 自動同步寫入失敗:', error);
+            this.showToast('雲端同步失敗，請確認網路或 Firebase 資料庫權限');
           }
         },
 
