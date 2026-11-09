@@ -17,12 +17,12 @@
         }
     
         .gift-key {
-            min-height: 54px;
+            min-height: 60px;
             border-radius: 14px;
             border: 1px solid #cbd8c9;
             background: #f5f8f3;
             color: #294b35;
-            font-size: 1.35rem;
+            font-size: 1.45rem;
             font-weight: 700;
             box-shadow: 0 2px 0 rgba(41,75,53,.10);
             touch-action: manipulation;
@@ -35,10 +35,11 @@
         }
         .gift-key-action {
             background: #e5eee3;
-            font-size: 1rem;
+            font-size: 1.1rem;
+            color: #496451;
         }
         @media (min-width: 640px) {
-            .gift-key { min-height: 58px; }
+            .gift-key { min-height: 64px; }
         }
 </style>
 
@@ -243,7 +244,7 @@
 </head>
 <body class="bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-950 min-h-screen text-slate-100 font-sans antialiased flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
 
-    <!-- 頂部固定導覽列 (加入 id="top" 作為回首頁錨點) -->
+    <!-- 頂部固定導覽列 -->
     <header id="top" class="sticky top-0 z-50 backdrop-blur-md bg-emerald-950/85 border-b border-amber-500/30 shadow-lg shadow-emerald-950/50 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -256,13 +257,11 @@
             </div>
             
             <div class="flex items-center space-x-3">
-                <!-- 雲端連線狀態指示燈 -->
                 <div id="cloud-status" class="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-emerald-950/85 border border-emerald-800 rounded-xl text-xs font-medium text-emerald-300">
                     <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
                     <span id="status-text">連線中...</span>
                 </div>
 
-                <!-- 回首頁 / 連結外部首頁按鈕 -->
                 <a href="https://fruit-tools.vercel.app/index.html" class="flex items-center space-x-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-emerald-900/80 hover:bg-amber-500 hover:text-slate-950 text-amber-200 border border-amber-500/30 transition-all font-medium text-sm sm:text-base active:scale-95 shadow-sm cursor-pointer no-underline">
                     <i class="fa-solid fa-house-chimney text-xs sm:text-sm"></i>
                     <span>回首頁</span>
@@ -291,7 +290,6 @@
                         <span id="todo-count" class="text-xs font-semibold px-2.5 py-1 bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/30">0 項</span>
                     </div>
 
-                    <!-- 區塊獨立清除功能 (置頂) -->
                     <div class="pt-2 pb-4 mb-4 border-b border-emerald-800/60 flex gap-2">
                         <button onclick="clearCompletedTodos()" class="flex-1 py-3 px-3 bg-emerald-950/60 hover:bg-amber-500/20 hover:text-amber-300 text-emerald-200 text-xs sm:text-sm font-medium rounded-xl border border-emerald-800 transition-all flex items-center justify-center gap-1.5 active:scale-95">
                             <i class="fa-solid fa-check-double text-amber-400"></i> 清除已完成
@@ -301,7 +299,6 @@
                         </button>
                     </div>
 
-                    <!-- 新增表單 -->
                     <form id="todo-form" class="flex gap-2 mb-5" onsubmit="addTodo(event)">
                         <input type="text" id="todo-input" placeholder="輸入新的待辦事項..." required
                             class="flex-grow px-4 py-3.5 bg-emerald-950/60 border border-emerald-700/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-emerald-950 text-sm sm:text-base text-slate-100 placeholder-emerald-400/50 transition-all">
@@ -310,10 +307,7 @@
                         </button>
                     </form>
 
-                    <!-- 列表區 -->
-                    <div class="space-y-3 max-h-72 sm:max-h-80 overflow-y-auto pr-1 mb-2" id="todo-list">
-                        <!-- 動態插入 -->
-                    </div>
+                    <div class="space-y-3 max-h-72 sm:max-h-80 overflow-y-auto pr-1 mb-2" id="todo-list"></div>
                 </div>
             </section>
 
@@ -333,7 +327,6 @@
                         <span id="note-count" class="text-xs font-semibold px-2.5 py-1 bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/30">0 字</span>
                     </div>
 
-                    <!-- 區塊獨立清除功能 (置頂) -->
                     <div class="pt-2 pb-4 mb-4 border-b border-emerald-800/60">
                         <button onclick="clearNote()" class="w-full py-3 px-3 bg-emerald-950/60 hover:bg-rose-500/20 hover:text-rose-300 text-emerald-200 text-xs sm:text-sm font-medium rounded-xl border border-emerald-800 transition-all flex items-center justify-center gap-1.5 active:scale-95">
                             <i class="fa-solid fa-trash-can text-rose-400"></i> 清空筆記內容
@@ -379,7 +372,6 @@
                         </div>
                     </div>
 
-                    <!-- 區塊獨立清除功能 (置頂) -->
                     <div class="pt-2 pb-4 mb-4 border-b border-emerald-800/60">
                         <button onclick="calcReset()" class="w-full py-3 px-3 bg-emerald-950/60 hover:bg-amber-500/20 hover:text-amber-300 text-emerald-200 text-xs sm:text-sm font-medium rounded-xl border border-emerald-800 transition-all flex items-center justify-center gap-1.5 active:scale-95">
                             <i class="fa-solid fa-arrows-rotate text-amber-400"></i> 計算機歸零重置
@@ -390,7 +382,6 @@
                         <div id="calc-display" class="text-3xl sm:text-4xl font-bold font-mono tracking-wider truncate mt-1 text-amber-200">0</div>
                     </div>
 
-                    <!-- 計算機按鈕 (iPad 超大觸控面積與震動回饋) -->
                     <div class="grid grid-cols-4 gap-3.5 mb-2">
                         <button onclick="calcClear(event)" class="py-6 sm:py-7 bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-900/60 rounded-2xl font-bold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">C</button>
                         <button onclick="calcAppend(event, '%')" class="py-6 sm:py-7 bg-emerald-950/80 hover:bg-emerald-800 text-emerald-200 border border-emerald-800 rounded-2xl font-bold transition-all active:scale-95 text-2xl sm:text-3xl flex items-center justify-center shadow-md">%</button>
@@ -447,42 +438,48 @@
                                 <input id="gift-name" type="text" maxlength="40" placeholder="例如：日本麝香葡萄"
                                     class="gift-input mt-2 w-full rounded-xl px-4 py-3 text-base">
                             </label>
-                            <label class="sm:col-span-3 text-sm font-medium">
+                            <label class="sm:col-span-4 text-sm font-medium">
                                 單價（元）
                                 <input id="gift-price" type="text" inputmode="none" autocomplete="off" readonly placeholder="使用下方數字鍵輸入"
                                     class="gift-input mt-2 w-full rounded-xl px-4 py-3 text-base text-lg font-semibold">
                             </label>
-                            <label class="sm:col-span-2 text-sm font-medium">
+                            <label class="sm:col-span-3 text-sm font-medium">
                                 數量
                                 <input id="gift-qty" type="number" min="1" step="1" inputmode="numeric" value="1"
                                     class="gift-input mt-2 w-full rounded-xl px-3 py-3 text-base text-center">
                             </label>
-                            <div class="sm:col-span-2">
-                                <button type="button" onclick="addGiftItem()" class="gift-primary-btn w-full rounded-xl py-3 font-bold text-base">
-                                    <i class="fa-solid fa-plus mr-1"></i>加入
+                            <div class="sm:col-span-12">
+                                <button type="button" onclick="addGiftItem()" class="gift-primary-btn w-full rounded-xl py-3.5 font-bold text-base shadow-sm">
+                                    <i class="fa-solid fa-plus mr-1"></i>加入品項
                                 </button>
                             </div>
-                            <div class="sm:col-start-6 sm:col-span-3">
+                            
+                            <!-- 專屬放大數字鍵盤 (兩排五個，刪除/清除置頂) -->
+                            <div class="sm:col-span-12 mt-3 pt-3 border-t border-emerald-200/60">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium">單價數字鍵</span>
-                                    <span class="text-xs gift-muted">點選輸入金額</span>
+                                    <span class="text-sm font-bold text-emerald-800">單價觸控數字鍵盤</span>
+                                    <span class="text-xs gift-muted">點選按鈕直接輸入金額</span>
                                 </div>
-                                <div class="grid grid-cols-4 gap-2" id="gift-price-keypad">
-                                    <button type="button" onclick="giftPriceKey('7')" class="gift-key">7</button>
-                                    <button type="button" onclick="giftPriceKey('8')" class="gift-key">8</button>
-                                    <button type="button" onclick="giftPriceKey('9')" class="gift-key">9</button>
-                                    <button type="button" onclick="giftPriceKey('backspace')" class="gift-key gift-key-action" aria-label="刪除一位">⌫</button>
-                                    <button type="button" onclick="giftPriceKey('4')" class="gift-key">4</button>
-                                    <button type="button" onclick="giftPriceKey('5')" class="gift-key">5</button>
-                                    <button type="button" onclick="giftPriceKey('6')" class="gift-key">6</button>
-                                    <button type="button" onclick="giftPriceKey('clear')" class="gift-key gift-key-action">清除</button>
+                                <div class="grid grid-cols-5 gap-2">
+                                    <button type="button" onclick="giftPriceKey('backspace')" class="gift-key gift-key-action col-span-2 sm:col-span-2">
+                                        <i class="fa-solid fa-delete-left mr-1"></i> 刪除
+                                    </button>
+                                    <button type="button" onclick="giftPriceKey('clear')" class="gift-key gift-key-action col-span-3 sm:col-span-3">
+                                        <i class="fa-solid fa-rotate-right mr-1"></i> 清除
+                                    </button>
                                     <button type="button" onclick="giftPriceKey('1')" class="gift-key">1</button>
                                     <button type="button" onclick="giftPriceKey('2')" class="gift-key">2</button>
                                     <button type="button" onclick="giftPriceKey('3')" class="gift-key">3</button>
-                                    <button type="button" onclick="giftPriceKey('0')" class="gift-key">0</button>
+                                    <button type="button" onclick="giftPriceKey('4')" class="gift-key">4</button>
+                                    <button type="button" onclick="giftPriceKey('5')" class="gift-key">5</button>
+                                    <button type="button" onclick="giftPriceKey('6')" class="gift-key">6</button>
+                                    <button type="button" onclick="giftPriceKey('7')" class="gift-key">7</button>
+                                    <button type="button" onclick="giftPriceKey('8')" class="gift-key">8</button>
+                                    <button type="button" onclick="giftPriceKey('9')" class="gift-key">9</button>
+                                    <button type="button" onclick="giftPriceKey('0')" class="gift-key col-span-2 sm:col-span-2">0</button>
+                                    <button type="button" onclick="giftPriceKey('00')" class="gift-key col-span-3 sm:col-span-3">00</button>
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
@@ -762,8 +759,6 @@
             setTimeout(() => { isLocalSyncing = false; }, 500);
         };
 
-
-        // 將目前輸入框內容存成獨立紀錄；紀錄會透過原本 Firebase 路徑同步。
         window.saveNoteRecord = function() {
             const textarea = document.getElementById('quick-note');
             const content = textarea.value.trim();
@@ -817,7 +812,6 @@
             }).join('');
         }
 
-        // iPad Safari / 支援 Web Speech API 的瀏覽器可直接語音轉文字。
         window.toggleVoiceInput = function() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const button = document.getElementById('voice-note-btn');
@@ -985,19 +979,31 @@
                       .replace(/'/g, "&#039;");
         }
 
-
-        // 現組禮盒計價：資料只保留在目前頁面，不影響既有雲端待辦與筆記同步。
+        // 現組禮盒計價
         let giftItems = [];
         let nextGiftId = 1;
 
-        // 禮盒單價專用數字鍵：不呼叫系統鍵盤，直接將數字寫入單價欄位。
+        // 禮盒單價專用數字鍵 (修復並支援數字、00、清除、刪除)
         window.giftPriceKey = function(key) {
             const priceEl = document.getElementById('gift-price');
             if (!priceEl) return;
             let value = priceEl.value || '';
-            if (key === 'clear') value = '';
-            else if (key === 'backspace') value = value.slice(0, -1);
-            else if (/^\\d$/.test(key)) value += key;
+            
+            if (key === 'clear') {
+                value = '';
+            } else if (key === 'backspace') {
+                value = value.slice(0, -1);
+            } else if (key === '00') {
+                if (value !== '' && value !== '0') {
+                    value += '00';
+                }
+            } else if (/^\d$/.test(key)) {
+                if (value === '0') {
+                    value = key;
+                } else {
+                    value += key;
+                }
+            }
             priceEl.value = value;
             triggerVibration();
         };
@@ -1022,7 +1028,6 @@
                 return;
             }
 
-            // 相同名稱、相同單價視為同一品項，直接累加數量。
             const existing = name ? giftItems.find(item => item.name === displayName && item.price === price) : null;
             if (existing) existing.qty += qty;
             else giftItems.push({ id: nextGiftId++, name: displayName, price, qty });
@@ -1095,7 +1100,7 @@
                     <div class="flex items-center justify-between gap-3">
                         <div class="min-w-0 flex-1">
                             <div class="gift-item-name">${escapeHtml(item.name)}</div>
-                            <div class="gift-item-meta mt-1">$${item.price.toLocaleString('zh-TW')} × ${item.qty}　=　<strong class="text-base" style="color:#496451">$${(item.price * item.qty).toLocaleString('zh-TW')}</strong></div>
+                            <div class="gift-item-meta mt-1">$${item.price.toLocaleString('zh-TW')} × ${item.qty} = <strong class="text-base" style="color:#496451">$${(item.price * item.qty).toLocaleString('zh-TW')}</strong></div>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
                             <button type="button" class="gift-qty-btn" aria-label="減少數量" onclick="changeGiftQty(${item.id}, -1)">−</button>
@@ -1121,7 +1126,6 @@
                 }
             }));
         });
-
 
         window.onload = function() {
             updateCalcDisplay();
