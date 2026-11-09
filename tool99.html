@@ -98,7 +98,10 @@
                         <i class="fa-solid fa-trophy"></i><span>D 決賽</span>
                     </button>
                     <button onclick="switchTab('E')" id="navE" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap">
-                        <i class="fa-solid fa-dice"></i><span>E 號碼抽獎</span>
+                        <i class="fa-solid fa-user-check"></i><span>E 選手抽選</span>
+                    </button>
+                    <button onclick="switchTab('F')" id="navF" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap">
+                        <i class="fa-solid fa-dice"></i><span>F 號碼抽獎</span>
                     </button>
                 </nav>
             </div>
@@ -333,8 +336,39 @@
             </div>
         </section>
 
-        <!-- ==================== PAGE E: 隨機號碼抽獎 ==================== -->
+        <!-- ==================== PAGE E: 隨機選手抽選 ==================== -->
         <section id="pageE" class="space-y-6 hidden">
+            <div class="bg-bey-card border border-bey-border rounded-2xl p-6 sm:p-8 shadow-xl max-w-2xl mx-auto space-y-6">
+                <div class="border-b border-bey-border pb-4 text-center">
+                    <h2 class="font-orbitron font-bold text-lg text-bey-gold flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-user-check"></i><span>參賽選手隨機抽選</span>
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-2">讀取 A 頁面目前的參賽選手名單，隨機抽出一位選手。</p>
+                </div>
+
+                <div class="bg-bey-dark/60 border border-bey-border rounded-2xl p-5 text-center">
+                    <div class="text-xs text-slate-400 mb-2">目前 A 頁面選手人數</div>
+                    <div id="fPlayerCount" class="font-orbitron font-black text-3xl text-bey-accent">0 人</div>
+                </div>
+
+                <div class="bg-gradient-to-b from-bey-dark to-slate-900 border border-bey-border rounded-3xl p-8 text-center shadow-inner">
+                    <div class="text-xs font-orbitron text-slate-400 uppercase tracking-widest">隨機抽選結果</div>
+                    <div id="fRandomPlayerDisplay" class="font-orbitron font-black text-3xl sm:text-5xl text-bey-gold glow-gold py-8 break-words">尚未抽選</div>
+                    <div id="fRandomPlayerSubText" class="text-xs text-slate-500">按下按鈕即可抽出一名尚未抽過的參賽選手</div>
+                    <div id="fDrawnPlayerCount" class="text-xs text-slate-400 mt-3">已抽選：0 人</div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button id="fDrawButton" onclick="executeRandomPlayerDraw()" class="flex-1 w-full py-4 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-bey-dark font-orbitron font-black text-sm uppercase tracking-wider rounded-xl shadow-xl transition-all flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-base"></i><span>隨機抽選一名選手</span>
+                    </button>
+                    <button onclick="resetRandomPlayerDraw()" class="px-5 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold text-xs rounded-xl transition-all">重新抽選</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== PAGE F: 隨機號碼抽獎 ==================== -->
+        <section id="pageF" class="space-y-6 hidden">
             <div class="bg-bey-card border border-bey-border rounded-2xl p-6 sm:p-8 shadow-xl max-w-2xl mx-auto space-y-6">
                 <div class="border-b border-bey-border pb-4 text-center sm:text-left">
                     <h2 class="font-orbitron font-bold text-lg text-bey-gold flex items-center justify-center sm:justify-start space-x-2">
@@ -611,7 +645,7 @@
         }
 
         function switchTab(tabId) {
-            ['A', 'B', 'C', 'D', 'E'].forEach(id => {
+            ['A', 'B', 'C', 'D', 'E', 'F'].forEach(id => {
                 document.getElementById(`page${id}`).classList.add('hidden');
                 document.getElementById(`nav${id}`).className = "px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap";
             });
@@ -621,6 +655,7 @@
             if (tabId === 'B') updatePageBUI();
             if (tabId === 'C') renderBracketTree();
             if (tabId === 'D') renderTop3Section();
+            if (tabId === 'E') renderRandomPlayerDrawUI();
         }
 
         // --- Storage Management & Cloud Sync ---
@@ -781,6 +816,92 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // --- Page F Functions: Animated draw without repeating previously drawn players ---
+        let fDrawnPlayerIds = [];
+        let fDrawAnimationTimer = null;
+        let fDrawInProgress = false;
+
+        function renderRandomPlayerDrawUI() {
+            const allPlayers = Array.isArray(players) ? players : [];
+            const drawnIds = new Set(fDrawnPlayerIds);
+            const remainingPlayers = allPlayers.filter(p => !drawnIds.has(p.id));
+            document.getElementById('fPlayerCount').innerText = `${allPlayers.length} 人`;
+            document.getElementById('fDrawnPlayerCount').innerText = `已抽選：${fDrawnPlayerIds.length} 人｜剩餘：${remainingPlayers.length} 人`;
+            const drawButton = document.getElementById('fDrawButton');
+            if (drawButton) {
+                drawButton.disabled = fDrawInProgress || remainingPlayers.length === 0;
+                drawButton.classList.toggle('opacity-50', drawButton.disabled);
+                drawButton.classList.toggle('cursor-not-allowed', drawButton.disabled);
+            }
+        }
+
+        function executeRandomPlayerDraw() {
+            renderRandomPlayerDrawUI();
+
+            if (fDrawInProgress) return;
+
+            if (!Array.isArray(players) || players.length === 0) {
+                document.getElementById('fRandomPlayerDisplay').innerText = '目前沒有選手';
+                document.getElementById('fRandomPlayerSubText').innerText = '請先至 A 頁面新增參賽選手';
+                showToast('A 頁面目前沒有參賽選手名單');
+                return;
+            }
+
+            const drawnIds = new Set(fDrawnPlayerIds);
+            const remainingPlayers = players.filter(p => !drawnIds.has(p.id));
+
+            if (remainingPlayers.length === 0) {
+                document.getElementById('fRandomPlayerDisplay').innerText = '全部抽選完成';
+                document.getElementById('fRandomPlayerSubText').innerText = '所有參賽選手都已抽過，請按「重新抽選」開始新一輪';
+                showToast('所有選手都已抽選過！');
+                return;
+            }
+
+            fDrawInProgress = true;
+            renderRandomPlayerDrawUI();
+
+            const display = document.getElementById('fRandomPlayerDisplay');
+            const subText = document.getElementById('fRandomPlayerSubText');
+            let counter = 0;
+            const totalSteps = 15;
+            display.classList.add('scale-105', 'text-bey-accent');
+            subText.innerText = '抽選中……';
+
+            fDrawAnimationTimer = setInterval(() => {
+                const randomTemp = remainingPlayers[Math.floor(Math.random() * remainingPlayers.length)];
+                display.innerText = randomTemp.name;
+                counter++;
+
+                if (counter >= totalSteps) {
+                    clearInterval(fDrawAnimationTimer);
+                    fDrawAnimationTimer = null;
+
+                    const selectedPlayer = remainingPlayers[Math.floor(Math.random() * remainingPlayers.length)];
+                    fDrawnPlayerIds.push(selectedPlayer.id);
+                    display.innerText = selectedPlayer.name;
+                    display.classList.remove('scale-105', 'text-bey-accent');
+                    subText.innerText = `抽選完成｜此選手本輪不會再次抽中`;
+                    fDrawInProgress = false;
+                    renderRandomPlayerDrawUI();
+                    showToast(`🎉 恭喜抽中：【${selectedPlayer.name}】！`);
+                }
+            }, 60);
+        }
+
+        function resetRandomPlayerDraw() {
+            if (fDrawAnimationTimer) {
+                clearInterval(fDrawAnimationTimer);
+                fDrawAnimationTimer = null;
+            }
+            fDrawInProgress = false;
+            fDrawnPlayerIds = [];
+            document.getElementById('fRandomPlayerDisplay').innerText = '尚未抽選';
+            document.getElementById('fRandomPlayerDisplay').classList.remove('scale-105', 'text-bey-accent');
+            document.getElementById('fRandomPlayerSubText').innerText = '按下按鈕即可抽出一名尚未抽過的參賽選手';
+            renderRandomPlayerDrawUI();
+            showToast('已重新開始抽選，本輪抽選紀錄已清空');
         }
 
         // --- Page B Functions ---
