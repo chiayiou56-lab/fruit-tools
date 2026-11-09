@@ -752,34 +752,45 @@
         },
 
         initFirebase() {
-          if (!this.cloudConfigText.trim()) return;
+          if (!this.cloudConfigText || !this.cloudConfigText.trim()) {
+            this.isCloudConnected = false;
+            return;
+          }
           try {
-            let config = JSON.parse(this.cloudConfigText);
-            if (!firebase.apps.length) {
-              firebase.initializeApp(config);
-            }
+            const config = JSON.parse(this.cloudConfigText);
+            if (!firebase.apps.length) firebase.initializeApp(config);
+
             const db = firebase.database();
-            // 監測 Firebase 資料庫實際連線狀態
+            // 連線狀態只用來顯示，不拿來阻擋 Firebase SDK 的寫入佇列。
             db.ref('.info/connected').on('value', (snapshot) => {
               this.isCloudConnected = snapshot.val() === true;
             });
-            const dbRef = db.ref('packagingData');
-dbRef.on('value', (snapshot) => {
+
+            // 與 tool3 相同：監聽資料節點，收到雲端更新後同步更新本機畫面及快取。
+            db.ref('packagingData').on('value', (snapshot) => {
               const cloudData = snapshot.val();
-              if (cloudData) {
-                if (cloudData.inventory) this.inventory = cloudData.inventory;
-                if (cloudData.suppliers) this.suppliers = cloudData.suppliers;
-                if (cloudData.orderedItems) this.orderedItems = cloudData.orderedItems;
+              if (!cloudData) return;
+
+              if (Array.isArray(cloudData.inventory)) this.inventory = cloudData.inventory;
+              if (Array.isArray(cloudData.suppliers)) this.suppliers = cloudData.suppliers;
+              if (Array.isArray(cloudData.orderedItems)) this.orderedItems = cloudData.orderedItems;
+
+              try {
                 localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
                 localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
                 localStorage.setItem('pkg_ordered_items', JSON.stringify(this.orderedItems));
-                this.isCloudConnected = true;
+              } catch (storageError) {
+                console.warn('雲端資料已載入，但本機快取保存失敗:', storageError);
               }
+            }, (error) => {
+              console.error('Firebase 雲端資料監聽失敗:', error);
+              this.isCloudConnected = false;
+              this.showToast('雲端讀取失敗：' + (error?.message || '請檢查資料庫權限'));
             });
-            this.isCloudConnected = true;
           } catch (e) {
-            console.error('Firebase 連結失敗:', e);
+            console.error('Firebase 初始化失敗:', e);
             this.isCloudConnected = false;
+            this.showToast('雲端設定錯誤：' + (e?.message || '請確認設定內容'));
           }
         },
 
@@ -787,25 +798,26 @@ dbRef.on('value', (snapshot) => {
           localStorage.setItem('pkg_cloud_config', this.cloudConfigText);
           this.showCloudModal = false;
           this.initFirebase();
-          this.showToast('雲端設定已儲存並重新連線！');
+          this.showToast('雲端設定已儲存，正在連線');
         },
 
         saveInventory() {
-          // 本機先保存
-          localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
-          localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
-          localStorage.setItem('pkg_ordered_items', JSON.stringify(this.orderedItems));
+          // 先寫入本機，保持 tool4 原有的離線使用方式。
+          try {
+            localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
+            localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
+            localStorage.setItem('pkg_ordered_items', JSON.stringify(this.orderedItems));
+          } catch (storageError) {
+            console.warn('本機資料保存失敗:', storageError);
+          }
 
-          // 不以 isCloudConnected 作為寫入門檻：
-          // 手機端 .info/connected 狀態可能短暫回報 false，但 Firebase SDK
-          // 仍可排隊並在恢復連線後送出寫入。工具3採用此直接寫入方式且同步正常。
+          // 參照 tool3 的簡單直接寫入模式。不要用 isCloudConnected 當寫入門檻，
+          // Firebase SDK 可先排入寫入佇列，待手機網路恢復後再送出。
           if (!firebase.apps.length) {
-            console.warn('自動同步略過：Firebase 尚未初始化');
+            console.warn('自動同步未執行：Firebase 尚未初始化（請確認雲端設定）');
             return;
           }
 
-          // 將 Alpine reactive Proxy 轉成純 JSON 資料，再送進 Firebase。
-          // 手動上傳已驗證可成功，且手動上傳使用相同的 JSON 深拷貝方式。
           let payload;
           try {
             payload = JSON.parse(JSON.stringify({
@@ -814,22 +826,18 @@ dbRef.on('value', (snapshot) => {
               orderedItems: this.orderedItems
             }));
           } catch (serializeError) {
-            console.error('自動同步資料整理失敗:', serializeError);
-            this.showToast('自動同步資料整理失敗：' + (serializeError?.message || '資料格式異常'));
+            console.error('自動同步資料序列化失敗:', serializeError);
+            this.showToast('自動同步資料格式錯誤');
             return;
           }
 
           firebase.database().ref('packagingData').set(payload)
-            .then(() => {
-              console.debug('庫存自動同步寫入完成');
-              this.showToast('資料已自動同步至雲端');
-            })
+            .then(() => console.debug('tool4 packagingData 自動同步寫入成功'))
             .catch((error) => {
-              console.error('Firebase 自動同步寫入失敗:', error);
+              console.error('tool4 Firebase 自動同步寫入失敗:', error);
               this.showToast('自動同步失敗：' + (error?.message || '請檢查 Firebase 權限或網路'));
             });
         },
-
 
         async uploadToCloud() {
           if (!firebase.apps.length) {
