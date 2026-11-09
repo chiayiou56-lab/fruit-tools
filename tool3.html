@@ -804,15 +804,25 @@ dbRef.on('value', (snapshot) => {
             return;
           }
 
-          const payload = {
-            inventory: this.inventory,
-            suppliers: this.suppliers,
-            orderedItems: this.orderedItems
-          };
+          // 將 Alpine reactive Proxy 轉成純 JSON 資料，再送進 Firebase。
+          // 手動上傳已驗證可成功，且手動上傳使用相同的 JSON 深拷貝方式。
+          let payload;
+          try {
+            payload = JSON.parse(JSON.stringify({
+              inventory: this.inventory,
+              suppliers: this.suppliers,
+              orderedItems: this.orderedItems
+            }));
+          } catch (serializeError) {
+            console.error('自動同步資料整理失敗:', serializeError);
+            this.showToast('自動同步資料整理失敗：' + (serializeError?.message || '資料格式異常'));
+            return;
+          }
 
           firebase.database().ref('packagingData').set(payload)
             .then(() => {
               console.debug('庫存自動同步寫入完成');
+              this.showToast('資料已自動同步至雲端');
             })
             .catch((error) => {
               console.error('Firebase 自動同步寫入失敗:', error);
