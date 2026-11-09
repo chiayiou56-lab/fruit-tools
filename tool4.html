@@ -742,7 +742,7 @@
         init() {
           this.initFirebase();
 
-          // 監聽手機頁面恢復可見狀態 (切回瀏覽器分頁或解鎖) 時強制與雲端同步一次
+          // 監聽手機端切換分頁或解鎖畫面時重新抓取雲端最新資料，避免資料停滯
           document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && this.isCloudConnected && firebase.apps.length) {
               firebase.database().ref('packagingData').once('value').then((snapshot) => {
@@ -752,7 +752,7 @@
                   if (cloudData.suppliers) this.suppliers = cloudData.suppliers;
                   if (cloudData.orderedItems) this.orderedItems = cloudData.orderedItems;
                 }
-              });
+              }).catch(err => console.log('背景重連同步錯誤:', err));
             }
           });
         },
@@ -763,24 +763,30 @@
             let config = JSON.parse(this.cloudConfigText);
             if (!firebase.apps.length) {
               firebase.initializeApp(config);
-              // 啟用離線資料持久化，避免手機瞬斷造成資料未寫入雲端
-              firebase.database().goOnline();
             }
+            
+            // 強制開啟網路連線狀態
+            firebase.database().goOnline();
             const dbRef = firebase.database().ref('packagingData');
             
+            // 即時監聽雲端變動
             dbRef.on('value', (snapshot) => {
               const cloudData = snapshot.val();
               if (cloudData) {
-                // 如果雲端有資料，且筆數或結構正確則更新
                 if (cloudData.inventory) this.inventory = cloudData.inventory;
                 if (cloudData.suppliers) this.suppliers = cloudData.suppliers;
                 if (cloudData.orderedItems) this.orderedItems = cloudData.orderedItems;
+                
                 localStorage.setItem('pkg_inventory', JSON.stringify(this.inventory));
                 localStorage.setItem('pkg_suppliers', JSON.stringify(this.suppliers));
                 localStorage.setItem('pkg_ordered_items', JSON.stringify(this.orderedItems));
                 this.isCloudConnected = true;
               }
+            }, (error) => {
+              console.error('Firebase 監聽錯誤:', error);
+              this.isCloudConnected = false;
             });
+            
             this.isCloudConnected = true;
           } catch (e) {
             console.error('Firebase 連結失敗:', e);
@@ -806,8 +812,10 @@
               suppliers: this.suppliers,
               orderedItems: this.orderedItems,
               lastUpdated: Date.now()
+            }).then(() => {
+              this.isCloudConnected = true;
             }).catch((err) => {
-              console.error('雲端同步失敗: ', err);
+              console.error('雲端寫入失敗:', err);
               this.isCloudConnected = false;
             });
           }
