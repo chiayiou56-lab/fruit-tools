@@ -170,7 +170,7 @@
             class="w-full pl-10 pr-3.5 py-2.5 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition">
         </div>
 
-        <!-- 新增：庫存頁面專屬廠商快速篩選下拉選單 -->
+        <!-- 廠商快速篩選下拉選單 -->
         <div x-show="currentTab === 'inventory'" class="w-full sm:w-auto">
           <select x-model="selectedSupplierFilter" 
                   class="w-full sm:w-auto px-3.5 py-2.5 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-slate-700">
@@ -714,7 +714,7 @@
       return {
         currentTab: 'inventory',
         searchQuery: '',
-        selectedSupplierFilter: 'all', // 新增：廠商過濾條件 (預設全部)
+        selectedSupplierFilter: 'all',
         showBatchModal: false,
         showSupplierModal: false,
         showEditModal: false,
@@ -741,6 +741,20 @@
 
         init() {
           this.initFirebase();
+
+          // 監聽手機頁面恢復可見狀態 (切回瀏覽器分頁或解鎖) 時強制與雲端同步一次
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && this.isCloudConnected && firebase.apps.length) {
+              firebase.database().ref('packagingData').once('value').then((snapshot) => {
+                const cloudData = snapshot.val();
+                if (cloudData) {
+                  if (cloudData.inventory) this.inventory = cloudData.inventory;
+                  if (cloudData.suppliers) this.suppliers = cloudData.suppliers;
+                  if (cloudData.orderedItems) this.orderedItems = cloudData.orderedItems;
+                }
+              });
+            }
+          });
         },
 
         initFirebase() {
@@ -749,12 +763,15 @@
             let config = JSON.parse(this.cloudConfigText);
             if (!firebase.apps.length) {
               firebase.initializeApp(config);
+              // 啟用離線資料持久化，避免手機瞬斷造成資料未寫入雲端
+              firebase.database().goOnline();
             }
             const dbRef = firebase.database().ref('packagingData');
             
             dbRef.on('value', (snapshot) => {
               const cloudData = snapshot.val();
               if (cloudData) {
+                // 如果雲端有資料，且筆數或結構正確則更新
                 if (cloudData.inventory) this.inventory = cloudData.inventory;
                 if (cloudData.suppliers) this.suppliers = cloudData.suppliers;
                 if (cloudData.orderedItems) this.orderedItems = cloudData.orderedItems;
@@ -787,7 +804,11 @@
             firebase.database().ref('packagingData').set({
               inventory: this.inventory,
               suppliers: this.suppliers,
-              orderedItems: this.orderedItems
+              orderedItems: this.orderedItems,
+              lastUpdated: Date.now()
+            }).catch((err) => {
+              console.error('雲端同步失敗: ', err);
+              this.isCloudConnected = false;
             });
           }
         },
