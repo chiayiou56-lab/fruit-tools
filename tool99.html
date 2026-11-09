@@ -53,58 +53,59 @@
     </div>
 
     <!-- Top Navigation Header -->
-    <header class="bg-bey-card/80 backdrop-blur-md border-b border-bey-border sticky top-0 z-40 px-4 py-3">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div class="flex items-center space-x-3">
-                <!-- 回到首頁按鈕 -->
-                <a href="index.html" class="flex items-center justify-center w-10 h-10 rounded-xl bg-bey-dark border border-bey-gold/40 text-bey-gold hover:bg-bey-gold hover:text-bey-dark transition-all shadow-md group" title="回到首頁">
-                    <i class="fa-solid fa-house text-sm group-hover:scale-110 transition-transform"></i>
-                </a>
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center shadow-lg shadow-amber-500/20">
-                    <i class="fa-solid fa-burst text-bey-dark text-xl"></i>
+    <header class="bg-bey-card/90 backdrop-blur-md border-b border-bey-border sticky top-0 z-40 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <!-- 回到首頁按鈕 -->
+                    <a href="index.html" class="flex items-center justify-center w-10 h-10 rounded-xl bg-bey-dark border border-bey-gold/40 text-bey-gold hover:bg-bey-gold hover:text-bey-dark transition-all shadow-md group" title="回到首頁">
+                        <i class="fa-solid fa-house text-sm group-hover:scale-110 transition-transform"></i>
+                    </a>
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                        <i class="fa-solid fa-burst text-bey-dark text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-orbitron font-black tracking-wider text-base sm:text-lg bg-gradient-to-r from-white via-slate-200 to-bey-gold bg-clip-text text-transparent flex items-center gap-2">
+                            BEYBLADE X
+                            <!-- 雲端連線狀態指示燈 -->
+                            <span id="cloud-status-badge" class="text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 bg-amber-500 text-slate-950 shadow-2xs font-sans">
+                                <i class="fa-solid fa-cloud-slash text-[10px]"></i>
+                                <span id="cloud-status-text">本機模式</span>
+                            </span>
+                        </h1>
+                        <p class="text-[10px] text-slate-400 font-orbitron tracking-widest uppercase">陀螺賽事管理系統 (雲端即時同步)</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="font-orbitron font-black tracking-wider text-base sm:text-lg bg-gradient-to-r from-white via-slate-200 to-bey-gold bg-clip-text text-transparent flex items-center gap-2">
-                        BEYBLADE X
-                        <!-- 雲端連線狀態指示燈 -->
-                        <span id="cloud-status-badge" class="text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 bg-amber-500 text-slate-950 shadow-2xs font-sans">
-                            <i class="fa-solid fa-cloud-slash text-[10px]"></i>
-                            <span id="cloud-status-text">本機模式</span>
-                        </span>
-                    </h1>
-                    <p class="text-[10px] text-slate-400 font-orbitron tracking-widest uppercase">陀螺賽事管理系統 (雲端即時同步)</p>
+
+                <!-- Header Utilities -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="openCloudModal()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-bey-accent font-bold text-xs rounded-xl transition-all flex items-center space-x-1.5 shadow-md">
+                        <i class="fa-solid fa-cloud"></i><span>雲端設定</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Header Utilities & Page Nav -->
-            <div class="flex items-center space-x-2">
-                <!-- 雲端設定按鈕 -->
-                <button onclick="openCloudModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-bey-accent font-bold text-xs rounded-xl transition-all flex items-center space-x-1.5 shadow-md">
-                    <i class="fa-solid fa-cloud"></i><span>雲端設定</span>
+            <!-- Page Navigation Grid (A ~ F 兩行獨立按鈕設計) -->
+            <nav class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-bey-dark/80 p-2 rounded-2xl border border-bey-border">
+                <button onclick="switchTab('A')" id="navA" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 bg-bey-accent text-bey-dark shadow-md">
+                    <i class="fa-solid fa-users text-sm"></i><span>A 選手</span>
                 </button>
-
-                <!-- Page Navigation Tabs (已加入 E 頁面) -->
-                <nav class="flex items-center space-x-1 sm:space-x-2 bg-bey-dark/80 p-1.5 rounded-xl border border-bey-border overflow-x-auto">
-                    <button onclick="switchTab('A')" id="navA" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 bg-bey-accent text-bey-dark shadow-md whitespace-nowrap">
-                        <i class="fa-solid fa-users"></i><span>A 選手</span>
-                    </button>
-                    <button onclick="switchTab('B')" id="navB" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap">
-                        <i class="fa-solid fa-shuffle"></i><span>B 抽籤</span>
-                    </button>
-                    <button onclick="switchTab('C')" id="navC" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap">
-                        <i class="fa-solid fa-sitemap"></i><span>C 淘汰</span>
-                    </button>
-                    <button onclick="switchTab('D')" id="navD" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap">
-                        <i class="fa-solid fa-trophy"></i><span>D 決賽</span>
-                    </button>
-                    <button onclick="switchTab('E')" id="navE" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap">
-                        <i class="fa-solid fa-user-check"></i><span>E 選手抽選</span>
-                    </button>
-                    <button onclick="switchTab('F')" id="navF" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap">
-                        <i class="fa-solid fa-dice"></i><span>F 號碼抽獎</span>
-                    </button>
-                </nav>
-            </div>
+                <button onclick="switchTab('B')" id="navB" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 bg-bey-card border border-bey-border text-slate-300 hover:text-white hover:border-bey-accent">
+                    <i class="fa-solid fa-shuffle text-sm"></i><span>B 抽籤</span>
+                </button>
+                <button onclick="switchTab('C')" id="navC" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 bg-bey-card border border-bey-border text-slate-300 hover:text-white hover:border-bey-accent">
+                    <i class="fa-solid fa-sitemap text-sm"></i><span>C 淘汰</span>
+                </button>
+                <button onclick="switchTab('D')" id="navD" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 bg-bey-card border border-bey-border text-slate-300 hover:text-white hover:border-bey-accent">
+                    <i class="fa-solid fa-trophy text-sm"></i><span>D 決賽</span>
+                </button>
+                <button onclick="switchTab('E')" id="navE" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 bg-bey-card border border-bey-border text-slate-300 hover:text-white hover:border-bey-accent">
+                    <i class="fa-solid fa-user-check text-sm"></i><span>E 選手抽選</span>
+                </button>
+                <button onclick="switchTab('F')" id="navF" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 bg-bey-card border border-bey-border text-slate-300 hover:text-white hover:border-bey-accent">
+                    <i class="fa-solid fa-dice text-sm"></i><span>F 號碼抽獎</span>
+                </button>
+            </nav>
         </div>
     </header>
 
@@ -281,7 +282,6 @@
                 <!-- Horizontal Scrollable Bracket Area -->
                 <div class="overflow-x-auto pb-4 pt-2">
                     <div id="bracketTreeContainer" class="flex items-center space-x-8 min-w-max px-2">
-                        <!-- Rendered by JS -->
                         <div class="text-slate-500 text-xs py-12 text-center w-full">請先至 B 頁面完成抽籤並初始化對戰樹。</div>
                     </div>
                 </div>
@@ -438,7 +438,7 @@
         </div>
     </div>
 
-    <!-- ==================== C Page Match Scoring Modal (iPad Optimized) ==================== -->
+    <!-- ==================== C Page Match Scoring Modal ==================== -->
     <div id="matchModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-bey-card border border-bey-border rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
             <div class="flex items-center justify-between border-b border-bey-border pb-4">
@@ -446,7 +446,6 @@
                 <button onclick="closeMatchModal()" class="text-slate-400 hover:text-white text-xl p-2"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <!-- Match Score Board inside Modal -->
             <div class="grid grid-cols-5 gap-4 items-center text-center">
                 <!-- Player 1 -->
                 <div class="col-span-2 space-y-3 bg-bey-dark/70 border border-bey-border p-4 sm:p-5 rounded-2xl">
@@ -492,7 +491,7 @@
         </div>
     </div>
 
-    <!-- ==================== D Page Match Scoring Modal (iPad Optimized) ==================== -->
+    <!-- ==================== D Page Match Scoring Modal ==================== -->
     <div id="dMatchModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-bey-card border border-bey-border rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
             <div class="flex items-center justify-between border-b border-bey-border pb-4">
@@ -567,6 +566,7 @@
             renderAssignedSeeds();
             renderBracketTree();
             renderTop3Section();
+            renderRandomPlayerDrawUI();
         };
 
         function initFirebase() {
@@ -587,12 +587,13 @@
                         bracketData = cloudData.bracketData || { rounds: [] };
                         top3Data = cloudData.top3Data || { players: [], matches: [] };
 
-                        saveAllToStorage(false); // Update local storage without looping cloud push
+                        saveAllToStorage(false);
                         renderPlayerTable();
                         updatePageBUI();
                         renderAssignedSeeds();
                         renderBracketTree();
                         renderTop3Section();
+                        renderRandomPlayerDrawUI();
                     }
                     isCloudConnected = true;
                     updateCloudStatusUI(true);
@@ -647,10 +648,12 @@
         function switchTab(tabId) {
             ['A', 'B', 'C', 'D', 'E', 'F'].forEach(id => {
                 document.getElementById(`page${id}`).classList.add('hidden');
-                document.getElementById(`nav${id}`).className = "px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white whitespace-nowrap";
+                const navBtn = document.getElementById(`nav${id}`);
+                navBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 bg-bey-card border border-bey-border text-slate-300 hover:text-white hover:border-bey-accent";
             });
             document.getElementById(`page${tabId}`).classList.remove('hidden');
-            document.getElementById(`nav${tabId}`).className = "px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 bg-bey-accent text-bey-dark shadow-md whitespace-nowrap";
+            const activeBtn = document.getElementById(`nav${tabId}`);
+            activeBtn.className = "py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-1.5 bg-bey-accent text-bey-dark shadow-md";
 
             if (tabId === 'B') updatePageBUI();
             if (tabId === 'C') renderBracketTree();
@@ -658,7 +661,6 @@
             if (tabId === 'E') renderRandomPlayerDrawUI();
         }
 
-        // --- Storage Management & Cloud Sync ---
         function saveAllToStorage(pushToCloud = true) {
             const payload = {
                 players,
@@ -693,7 +695,6 @@
             } catch(e) { console.error(e); }
         }
 
-        // --- Page A Functions ---
         function addSinglePlayer() {
             const nameInput = document.getElementById('singlePlayerName');
             const name = nameInput.value.trim();
@@ -702,6 +703,7 @@
             nameInput.value = '';
             saveAllToStorage();
             renderPlayerTable();
+            renderRandomPlayerDrawUI();
             showToast(`成功新增選手: ${name}`);
         }
 
@@ -730,6 +732,7 @@
             document.getElementById('batchPlayerInput').value = '';
             saveAllToStorage();
             renderPlayerTable();
+            renderRandomPlayerDrawUI();
             showToast(`成功批量匯入 ${count} 位選手（已自動去除編號）`);
         }
 
@@ -738,6 +741,7 @@
             players = samples.map((name, i) => ({ id: 'SAMPLE_' + i, name, paid: i < 12 }));
             saveAllToStorage();
             renderPlayerTable();
+            renderRandomPlayerDrawUI();
             showToast('已載入 16 位範例選手資料');
         }
 
@@ -752,6 +756,7 @@
             renderAssignedSeeds();
             renderBracketTree();
             renderTop3Section();
+            renderRandomPlayerDrawUI();
             showToast('已清空所有選手與賽程資料');
         }
 
@@ -768,6 +773,7 @@
             players = players.filter(x => x.id !== id);
             saveAllToStorage();
             renderPlayerTable();
+            renderRandomPlayerDrawUI();
         }
 
         function copyPlayerNamesOnly() {
@@ -818,7 +824,6 @@
             });
         }
 
-        // --- Page F Functions: Animated draw without repeating previously drawn players ---
         let fDrawnPlayerIds = [];
         let fDrawAnimationTimer = null;
         let fDrawInProgress = false;
@@ -827,8 +832,10 @@
             const allPlayers = Array.isArray(players) ? players : [];
             const drawnIds = new Set(fDrawnPlayerIds);
             const remainingPlayers = allPlayers.filter(p => !drawnIds.has(p.id));
-            document.getElementById('fPlayerCount').innerText = `${allPlayers.length} 人`;
-            document.getElementById('fDrawnPlayerCount').innerText = `已抽選：${fDrawnPlayerIds.length} 人｜剩餘：${remainingPlayers.length} 人`;
+            const countEl = document.getElementById('fPlayerCount');
+            const drawnCountEl = document.getElementById('fDrawnPlayerCount');
+            if (countEl) countEl.innerText = `${allPlayers.length} 人`;
+            if (drawnCountEl) drawnCountEl.innerText = `已抽選：${fDrawnPlayerIds.length} 人｜剩餘：${remainingPlayers.length} 人`;
             const drawButton = document.getElementById('fDrawButton');
             if (drawButton) {
                 drawButton.disabled = fDrawInProgress || remainingPlayers.length === 0;
@@ -839,7 +846,6 @@
 
         function executeRandomPlayerDraw() {
             renderRandomPlayerDrawUI();
-
             if (fDrawInProgress) return;
 
             if (!Array.isArray(players) || players.length === 0) {
@@ -904,7 +910,6 @@
             showToast('已重新開始抽選，本輪抽選紀錄已清空');
         }
 
-        // --- Page B Functions ---
         function setTournamentSize(size) {
             tournamentSize = size;
             saveAllToStorage();
@@ -923,8 +928,10 @@
                     }
                 }
             });
-            document.getElementById('currentSizeLabel').innerText = `${tournamentSize} 人賽制`;
-            document.getElementById('activePlayerCountLabel').innerText = players.length;
+            const szLbl = document.getElementById('currentSizeLabel');
+            const cntLbl = document.getElementById('activePlayerCountLabel');
+            if (szLbl) szLbl.innerText = `${tournamentSize} 人賽制`;
+            if (cntLbl) cntLbl.innerText = players.length;
         }
 
         function refreshPageBData() {
@@ -969,6 +976,7 @@
 
         function renderAssignedSeeds() {
             const grid = document.getElementById('assignedSeedGrid');
+            if (!grid) return;
             if (assignedSeeds.length === 0) {
                 grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-500 text-xs">尚未進行抽籤，請點擊上方按鈕開始。</div>`;
                 return;
@@ -997,7 +1005,6 @@
             });
         }
 
-        // --- Page C Functions (Bracket Tree & 3 Rounds Limit) ---
         function generateBracketFromDraw() {
             if (assignedSeeds.length === 0) {
                 if (players.length === 0) { showToast('請先新增選手'); return; }
@@ -1084,6 +1091,7 @@
 
         function renderBracketTree() {
             const container = document.getElementById('bracketTreeContainer');
+            if (!container) return;
             if (!bracketData.rounds || bracketData.rounds.length === 0) {
                 container.innerHTML = `<div class="text-slate-500 text-xs py-12 text-center w-full">請先至 B 頁面完成抽籤並初始化對戰樹。</div>`;
                 return;
@@ -1136,7 +1144,6 @@
             });
         }
 
-        // Match Modal Controller (Page C)
         function openMatchModal(rIdx, mIdx) {
             activeModalRef = { rIdx, mIdx };
             const m = bracketData.rounds[rIdx][mIdx];
@@ -1229,7 +1236,6 @@
             showToast('已確認勝者並晉級！');
         }
 
-        // --- Page D Functions (Round Robin Finals) ---
         function generateRoundRobinFromC() {
             const rrType = parseInt(document.getElementById('roundRobinTypeSelect').value) || 4;
             
@@ -1292,6 +1298,7 @@
         function renderTop3Section() {
             const container = document.getElementById('rrMatchesContainer');
             const leaderboard = document.getElementById('rrLeaderboard');
+            if (!container || !leaderboard) return;
 
             if (!top3Data.players || top3Data.players.length === 0) {
                 container.innerHTML = `
@@ -1407,7 +1414,6 @@
             });
         }
 
-        // Page D Match Modal Controllers
         function openDMatchModal(idx) {
             activeDModalIdx = idx;
             const m = top3Data.matches[idx];
@@ -1497,7 +1503,6 @@
             showToast('已記錄勝場！');
         }
 
-        // --- Page E Functions (Random Number Lottery) ---
         function executeNumberLottery() {
             const minInput = parseInt(document.getElementById('lotteryMin').value);
             const maxInput = parseInt(document.getElementById('lotteryMax').value);
@@ -1515,7 +1520,6 @@
             const display = document.getElementById('lotteryResultDisplay');
             const subText = document.getElementById('lotterySubText');
             
-            // 抽獎動畫效果
             let counter = 0;
             const totalSteps = 15;
             display.classList.add('scale-105', 'text-bey-accent');
