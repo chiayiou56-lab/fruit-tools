@@ -15,7 +15,32 @@
         * {
             touch-action: manipulation;
         }
-    </style>
+    
+        .gift-key {
+            min-height: 54px;
+            border-radius: 14px;
+            border: 1px solid #cbd8c9;
+            background: #f5f8f3;
+            color: #294b35;
+            font-size: 1.35rem;
+            font-weight: 700;
+            box-shadow: 0 2px 0 rgba(41,75,53,.10);
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .gift-key:active {
+            background: #dceadd;
+            transform: scale(.97);
+        }
+        .gift-key-action {
+            background: #e5eee3;
+            font-size: 1rem;
+        }
+        @media (min-width: 640px) {
+            .gift-key { min-height: 58px; }
+        }
+</style>
 
     <style>
         :root {
@@ -424,8 +449,8 @@
                             </label>
                             <label class="sm:col-span-3 text-sm font-medium">
                                 單價（元）
-                                <input id="gift-price" type="number" min="0" step="1" inputmode="decimal" placeholder="輸入單價"
-                                    class="gift-input mt-2 w-full rounded-xl px-4 py-3 text-base">
+                                <input id="gift-price" type="text" inputmode="none" autocomplete="off" readonly placeholder="使用下方數字鍵輸入"
+                                    class="gift-input mt-2 w-full rounded-xl px-4 py-3 text-base text-lg font-semibold">
                             </label>
                             <label class="sm:col-span-2 text-sm font-medium">
                                 數量
@@ -437,6 +462,27 @@
                                     <i class="fa-solid fa-plus mr-1"></i>加入
                                 </button>
                             </div>
+                            <div class="sm:col-start-6 sm:col-span-3">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium">單價數字鍵</span>
+                                    <span class="text-xs gift-muted">點選輸入金額</span>
+                                </div>
+                                <div class="grid grid-cols-4 gap-2" id="gift-price-keypad">
+                                    <button type="button" onclick="giftPriceKey('7')" class="gift-key">7</button>
+                                    <button type="button" onclick="giftPriceKey('8')" class="gift-key">8</button>
+                                    <button type="button" onclick="giftPriceKey('9')" class="gift-key">9</button>
+                                    <button type="button" onclick="giftPriceKey('backspace')" class="gift-key gift-key-action" aria-label="刪除一位">⌫</button>
+                                    <button type="button" onclick="giftPriceKey('4')" class="gift-key">4</button>
+                                    <button type="button" onclick="giftPriceKey('5')" class="gift-key">5</button>
+                                    <button type="button" onclick="giftPriceKey('6')" class="gift-key">6</button>
+                                    <button type="button" onclick="giftPriceKey('clear')" class="gift-key gift-key-action">清除</button>
+                                    <button type="button" onclick="giftPriceKey('1')" class="gift-key">1</button>
+                                    <button type="button" onclick="giftPriceKey('2')" class="gift-key">2</button>
+                                    <button type="button" onclick="giftPriceKey('3')" class="gift-key">3</button>
+                                    <button type="button" onclick="giftPriceKey('0')" class="gift-key">0</button>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
@@ -943,6 +989,18 @@
         // 現組禮盒計價：資料只保留在目前頁面，不影響既有雲端待辦與筆記同步。
         let giftItems = [];
         let nextGiftId = 1;
+
+        // 禮盒單價專用數字鍵：不呼叫系統鍵盤，直接將數字寫入單價欄位。
+        window.giftPriceKey = function(key) {
+            const priceEl = document.getElementById('gift-price');
+            if (!priceEl) return;
+            let value = priceEl.value || '';
+            if (key === 'clear') value = '';
+            else if (key === 'backspace') value = value.slice(0, -1);
+            else if (/^\\d$/.test(key)) value += key;
+            priceEl.value = value;
+            triggerVibration();
+        };
 
         window.addGiftItem = function() {
             const nameEl = document.getElementById('gift-name');
