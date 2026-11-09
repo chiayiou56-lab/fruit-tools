@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-  <title>包裝材料盤點與叫貨管理系統</title>
+  <title>甜蜜果物 - 包裝材料盤點與叫貨管理系統</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -87,48 +87,49 @@
   <!-- TOP HEADER & NAVBAR -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-md text-white">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-18 gap-2">
+      <div class="flex items-center justify-between h-20 gap-2">
         
         <!-- App Title / Logo & Cloud Status -->
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-teal-500 via-cyan-400 to-blue-500 text-slate-950 flex items-center justify-center shadow-md shadow-teal-900/50 shrink-0">
+          <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 text-slate-950 flex items-center justify-center shadow-lg shadow-emerald-950/50 shrink-0">
             <i class="fa-solid fa-boxes-packing text-xl sm:text-2xl"></i>
           </div>
           <div>
-            <h1 class="text-sm sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              甜蜜果物-包材盤點/叫貨系統
-              <span class="text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-2xs"
+            <h1 class="text-sm sm:text-lg font-bold text-white tracking-tight flex items-center gap-2 flex-wrap">
+              甜蜜果物 - 包裝材料盤點與叫貨系統
+              <span class="text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-xs"
                     :class="isCloudConnected ? 'bg-emerald-500 text-slate-950' : 'bg-amber-500 text-slate-950'">
                 <i class="fa-solid" :class="isCloudConnected ? 'fa-cloud' : 'fa-cloud-slash'"></i>
                 <span x-text="isCloudConnected ? '雲端即時連線中' : '本機模式'"></span>
               </span>
             </h1>
+            <p class="text-xs text-slate-400 hidden sm:block">一果入魂 · 嚴選包裝與庫存管理</p>
           </div>
         </div>
 
         <!-- Navigation Tabs & Actions -->
         <div class="flex items-center gap-2 sm:gap-3">
           
-          <button @click="showCloudModal = true" class="touch-btn bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-teal-400 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 border border-slate-700" title="設定雲端同步">
+          <button @click="showCloudModal = true" class="touch-btn bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-emerald-400 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-xs" title="設定雲端同步">
             <i class="fa-solid fa-cloud-arrow-up text-base"></i> 雲端設定
           </button>
 
-          <a href="index.html" class="touch-btn bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 px-3.5 sm:px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 border border-slate-700">
-            <i class="fa-solid fa-house text-slate-400 text-base"></i> 回首頁
+          <a href="index.html" class="touch-btn bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 px-3.5 sm:px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 border border-slate-700 shadow-xs">
+            <i class="fa-solid fa-house text-emerald-400 text-base"></i> 回首頁
           </a>
 
           <!-- Tab Switcher -->
-          <div class="bg-slate-800 p-1.5 rounded-2xl flex gap-1.5 border border-slate-700 text-sm font-semibold">
+          <div class="bg-slate-800 p-1.5 rounded-2xl flex gap-1.5 border border-slate-700 text-sm font-semibold shadow-inner">
             <button 
               @click="currentTab = 'inventory'"
-              :class="currentTab === 'inventory' ? 'bg-teal-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'"
+              :class="currentTab === 'inventory' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'text-slate-300 hover:text-white'"
               class="touch-btn px-3 sm:px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold text-xs sm:text-sm">
               <i class="fa-solid fa-boxes-stacked"></i>
               庫存
             </button>
             <button 
               @click="currentTab = 'favorites'"
-              :class="currentTab === 'favorites' ? 'bg-amber-400 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'"
+              :class="currentTab === 'favorites' ? 'bg-amber-400 text-slate-950 shadow-md' : 'text-slate-300 hover:text-white'"
               class="touch-btn px-3 sm:px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold text-xs sm:text-sm relative">
               <i class="fa-solid fa-star text-amber-500" :class="currentTab === 'favorites' ? 'text-slate-950' : ''"></i>
               常叫貨
@@ -138,7 +139,7 @@
             </button>
             <button 
               @click="currentTab = 'order'"
-              :class="currentTab === 'order' ? 'bg-teal-500 text-slate-950 shadow-xs' : 'text-slate-300 hover:text-white'"
+              :class="currentTab === 'order' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'text-slate-300 hover:text-white'"
               class="touch-btn px-3 sm:px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 relative font-bold text-xs sm:text-sm">
               <i class="fa-solid fa-clipboard-check"></i>
               叫貨
@@ -158,7 +159,7 @@
   <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-5 sm:py-7">
 
     <!-- TOOLBAR & GLOBAL CONTROLS -->
-    <div x-show="currentTab === 'inventory' || currentTab === 'favorites'" class="mb-6 bg-white p-4 sm:p-4.5 rounded-2xl border border-teal-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
+    <div x-show="currentTab === 'inventory' || currentTab === 'favorites'" class="mb-6 bg-white p-4 sm:p-5 rounded-2xl border border-emerald-100 shadow-xs flex flex-wrap items-center justify-between gap-3">
       
       <div class="flex items-center gap-2.5 flex-1 min-w-[240px] flex-wrap">
         <div class="relative w-full max-w-sm">
@@ -167,13 +168,13 @@
             type="text" 
             x-model="searchQuery" 
             placeholder="搜尋品名、規格、廠商..." 
-            class="w-full pl-10 pr-3.5 py-2.5 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition">
+            class="w-full pl-10 pr-3.5 py-2.5 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
         </div>
 
         <!-- 廠商快速篩選下拉選單 -->
         <div x-show="currentTab === 'inventory'" class="w-full sm:w-auto">
           <select x-model="selectedSupplierFilter" 
-                  class="w-full sm:w-auto px-3.5 py-2.5 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-slate-700">
+                  class="w-full sm:w-auto px-3.5 py-2.5 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-slate-700">
             <option value="all">🏢 所有廠商 (全部顯示)</option>
             <template x-for="sup in suppliers" :key="'filter-' + sup">
               <option :value="sup" x-text="sup"></option>
@@ -183,11 +184,11 @@
       </div>
 
       <div class="flex items-center flex-wrap gap-2 text-sm">
-        <button @click="showBatchModal = true" class="touch-btn bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-2">
+        <button @click="showBatchModal = true" class="touch-btn bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-2">
           <i class="fa-solid fa-layer-group text-base"></i> 批量新增
         </button>
         <button @click="showSupplierModal = true" class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-2">
-          <i class="fa-solid fa-industry text-teal-600 text-base"></i> 管理廠商
+          <i class="fa-solid fa-industry text-emerald-600 text-base"></i> 管理廠商
         </button>
         <button @click="exportData()" class="touch-btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5" title="匯出JSON備份檔">
           <i class="fa-solid fa-file-export text-slate-500 text-base"></i> 匯出
@@ -209,7 +210,7 @@
     <div x-show="currentTab === 'inventory'" class="space-y-6">
       <template x-for="supplier in suppliers" :key="supplier">
         <div x-show="(selectedSupplierFilter === 'all' || selectedSupplierFilter === supplier) && (getFilteredItemsBySupplier(supplier).length > 0 || !searchQuery)" 
-             class="rounded-2xl border p-4 sm:p-5 transition-all space-y-4"
+             class="rounded-2xl border p-4 sm:p-5 transition-all space-y-4 shadow-sm"
              :class="getSupplierBlockStyle(supplier)">
           
           <div class="flex items-center justify-between border-b pb-3" :class="getSupplierHeaderBorderStyle(supplier)">
@@ -229,7 +230,7 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
             <template x-for="item in getFilteredItemsBySupplier(supplier)" :key="item.id">
-              <div class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group bg-white"
+              <div class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow-md flex flex-col justify-between relative group bg-white"
                    :class="[getItemCardBgStyle(supplier), item.currentStock <= item.safetyStock ? 'border-amber-400 ring-2 ring-amber-300' : '']">
                 <div>
                   <div class="flex items-start justify-between gap-1 mb-1.5">
@@ -237,8 +238,8 @@
                       <button @click="toggleFavorite(item)" class="touch-btn p-1 text-base focus:outline-none transition transform active:scale-125">
                         <i class="fa-solid fa-star" :class="item.isFavorite ? 'text-amber-400 fill-amber-400' : 'text-slate-300 hover:text-amber-300'"></i>
                       </button>
-                      <button @click="openLightbox(item)" class="touch-btn p-1 text-sm text-slate-400 hover:text-teal-600 transition" :title="item.image ? '檢視實物照片' : '尚未上傳照片'">
-                        <i class="fa-solid fa-eye" :class="item.image ? 'text-teal-600' : 'text-slate-300'"></i>
+                      <button @click="openLightbox(item)" class="touch-btn p-1 text-sm text-slate-400 hover:text-emerald-600 transition" :title="item.image ? '檢視實物照片' : '尚未上傳照片'">
+                        <i class="fa-solid fa-eye" :class="item.image ? 'text-emerald-600' : 'text-slate-300'"></i>
                       </button>
                     </div>
 
@@ -248,7 +249,7 @@
                     </div>
 
                     <div class="flex items-center gap-0.5">
-                      <button @click="openEditModal(item)" class="touch-btn text-slate-400 hover:text-teal-600 text-xs p-1.5 transition"><i class="fa-solid fa-pen-to-square"></i></button>
+                      <button @click="openEditModal(item)" class="touch-btn text-slate-400 hover:text-emerald-600 text-xs p-1.5 transition"><i class="fa-solid fa-pen-to-square"></i></button>
                       <button @click="deleteItem(item.id)" class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5 transition"><i class="fa-solid fa-trash"></i></button>
                     </div>
                   </div>
@@ -271,7 +272,7 @@
                       <input type="number" inputmode="numeric" :value="item.currentStock ?? 0"
                              @input="item.currentStock = $event.target.value === '' ? 0 : Math.max(0, parseInt($event.target.value) || 0); saveInventory()"
                              @blur="if (item.currentStock === '' || isNaN(item.currentStock)) item.currentStock = 0; saveInventory()"
-                             class="w-16 h-11 text-center text-base sm:text-lg font-black bg-white border-2 border-teal-500 rounded-xl shadow-inner text-slate-900 focus:outline-none">
+                             class="w-16 h-11 text-center text-base sm:text-lg font-black bg-white border-2 border-emerald-500 rounded-xl shadow-inner text-slate-900 focus:outline-none">
                       <button @click="updateStock(item, 1)" class="touch-btn w-11 h-11 bg-white border-2 border-slate-300 rounded-xl text-slate-800 hover:bg-slate-100 text-lg font-extrabold flex items-center justify-center shadow-xs">+</button>
                     </div>
                   </div>
@@ -279,7 +280,7 @@
 
                 <div class="pt-2 mt-1 border-t border-slate-200/60 flex items-center justify-between gap-1">
                   <div class="text-xs text-slate-500 font-medium">預警: <span class="font-bold" x-text="item.safetyStock"></span></div>
-                  <button @click="addToOrder(item)" :class="isItemOrdered(item.id) ? 'bg-amber-500 text-white' : 'bg-teal-700 text-white'"
+                  <button @click="addToOrder(item)" :class="isItemOrdered(item.id) ? 'bg-amber-500 text-white' : 'bg-emerald-700 text-white'"
                           class="touch-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs">
                     <i class="fa-solid" :class="isItemOrdered(item.id) ? 'fa-check' : 'fa-plus'"></i>
                     <span x-text="isItemOrdered(item.id) ? '已叫貨' : '+ 叫貨'"></span>
@@ -294,7 +295,7 @@
 
     <!-- TAB 2: FAVORITES -->
     <div x-show="currentTab === 'favorites'" class="space-y-6">
-      <div class="rounded-2xl border p-4 sm:p-6 transition-all space-y-4 bg-amber-50/70 border-amber-300 shadow-xs">
+      <div class="rounded-2xl border p-4 sm:p-6 transition-all space-y-4 bg-amber-50/70 border-amber-300 shadow-sm">
         <div class="flex items-center justify-between border-b border-amber-300 pb-3.5">
           <div class="flex items-center gap-3">
             <span class="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shadow-xs text-white bg-amber-500"><i class="fa-solid fa-star"></i></span>
@@ -306,13 +307,13 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           <template x-for="item in getFavoriteItems()" :key="'fav-' + item.id">
-            <div class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow flex flex-col justify-between relative group bg-white border-amber-300">
+            <div class="rounded-2xl border p-3.5 sm:p-4 transition shadow-xs hover:shadow-md flex flex-col justify-between relative group bg-white border-amber-300">
               <div>
                 <div class="flex items-start justify-between gap-1 mb-1.5">
                   <div class="flex items-center gap-1">
                     <button @click="toggleFavorite(item)" class="touch-btn p-1 text-base"><i class="fa-solid fa-star text-amber-500 fill-amber-500"></i></button>
-                    <button @click="openLightbox(item)" class="touch-btn p-1 text-sm text-slate-400 hover:text-teal-600 transition" :title="item.image ? '檢視實物照片' : '尚未上傳照片'">
-                      <i class="fa-solid fa-eye" :class="item.image ? 'text-teal-600' : 'text-slate-300'"></i>
+                    <button @click="openLightbox(item)" class="touch-btn p-1 text-sm text-slate-400 hover:text-emerald-600 transition" :title="item.image ? '檢視實物照片' : '尚未上傳照片'">
+                      <i class="fa-solid fa-eye" :class="item.image ? 'text-emerald-600' : 'text-slate-300'"></i>
                     </button>
                   </div>
                   <div class="flex-1 px-1">
@@ -320,7 +321,7 @@
                     <p class="text-xs text-slate-600 font-semibold mt-1" x-text="item.spec || '標準規格'"></p>
                   </div>
                   <div class="flex items-center gap-0.5">
-                    <button @click="openEditModal(item)" class="touch-btn text-slate-400 hover:text-teal-600 text-xs p-1.5"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button @click="openEditModal(item)" class="touch-btn text-slate-400 hover:text-emerald-600 text-xs p-1.5"><i class="fa-solid fa-pen-to-square"></i></button>
                     <button @click="deleteItem(item.id)" class="touch-btn text-slate-300 hover:text-rose-500 text-xs p-1.5"><i class="fa-solid fa-trash"></i></button>
                   </div>
                 </div>
@@ -341,7 +342,7 @@
               </div>
               <div class="pt-2 mt-1 border-t border-amber-200/60 flex items-center justify-between">
                 <span class="text-xs font-bold text-amber-950" x-text="item.origin"></span>
-                <button @click="addToOrder(item)" class="touch-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-700 text-white">
+                <button @click="addToOrder(item)" class="touch-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white">
                   <span x-text="isItemOrdered(item.id) ? '已叫貨' : '+ 叫貨'"></span>
                 </button>
               </div>
@@ -358,13 +359,13 @@
       <div class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">今日採購叫貨管理</h2>
-          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">已選取 <span x-text="orderedItems.length" class="font-extrabold text-teal-600"></span> 項包材</p>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5">已選取 <span x-text="orderedItems.length" class="font-extrabold text-emerald-600"></span> 項包材</p>
         </div>
         <div class="flex items-center gap-3">
           <button @click="clearOrderList()" x-show="orderedItems.length > 0" class="touch-btn bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-2xl transition flex items-center gap-2 border border-slate-200 shadow-2xs">
             <i class="fa-solid fa-trash-can text-slate-400"></i> 清空
           </button>
-          <button @click="exportToPDF()" x-show="orderedItems.length > 0" class="touch-btn bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 active:scale-98 text-white text-sm font-bold px-5 py-2.5 rounded-2xl shadow-md shadow-teal-900/10 transition flex items-center gap-2">
+          <button @click="exportToPDF()" x-show="orderedItems.length > 0" class="touch-btn bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-98 text-white text-sm font-bold px-5 py-2.5 rounded-2xl shadow-md shadow-emerald-900/10 transition flex items-center gap-2">
             <i class="fa-solid fa-file-pdf text-base"></i> 匯出 PDF
           </button>
         </div>
@@ -384,7 +385,7 @@
         <!-- 第一個區塊：採購叫貨編輯區 -->
         <div class="space-y-4">
           <div class="flex items-center gap-2 px-1">
-            <span class="w-8 h-8 rounded-lg bg-teal-600 text-white flex items-center justify-center text-sm font-bold"><i class="fa-solid fa-pen-to-square"></i></span>
+            <span class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-sm font-bold"><i class="fa-solid fa-pen-to-square"></i></span>
             <h3 class="text-base font-extrabold text-slate-900">第一區塊：叫貨明細與編輯（依廠商區分跳色）</h3>
           </div>
 
@@ -422,7 +423,7 @@
                                  x-model.number="item.orderWeight"
                                  @input="saveInventory()"
                                  @blur="if (item.orderWeight === '' || isNaN(item.orderWeight)) item.orderWeight = 1; saveInventory()"
-                                 class="w-20 text-center font-black text-sm sm:text-base bg-white border-2 border-teal-500 rounded-xl px-2 py-1 focus:outline-none text-slate-900 shadow-inner">
+                                 class="w-20 text-center font-black text-sm sm:text-base bg-white border-2 border-emerald-500 rounded-xl px-2 py-1 focus:outline-none text-slate-900 shadow-inner">
                           
                           <select x-model="item.unit" @change="saveInventory()" 
                                   class="bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl px-2.5 py-1.5 font-bold focus:outline-none">
@@ -443,7 +444,7 @@
                                  x-model="item.orderNote"
                                  @input="saveInventory()"
                                  placeholder="輸入採購備註或注意事項..." 
-                                 class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-teal-500 transition">
+                                 class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-500 transition">
                         </div>
 
                       </div>
@@ -472,7 +473,7 @@
               <div class="text-center border-b border-slate-100 pb-5 space-y-1.5">
                 <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">甜蜜果物 - 包裝材料採購對照單</h1>
                 <div class="text-xs sm:text-sm text-slate-500 font-medium">
-                  日期：<span x-text="currentDateFormatted" class="font-bold text-slate-800"></span> &nbsp;&nbsp;|&nbsp;&nbsp; 叫貨總品項：<span x-text="orderedItems.length" class="font-bold text-teal-600"></span> 項
+                  日期：<span x-text="currentDateFormatted" class="font-bold text-slate-800"></span> &nbsp;&nbsp;|&nbsp;&nbsp; 叫貨總品項：<span x-text="orderedItems.length" class="font-bold text-emerald-600"></span> 項
                 </div>
               </div>
 
@@ -508,7 +509,7 @@
                                 <td class="py-3 px-2 font-bold text-slate-900">
                                   <span x-text="item.name"></span>
                                 </td>
-                                <td class="py-3 px-2 text-center font-black text-teal-700">
+                                <td class="py-3 px-2 text-center font-black text-emerald-700">
                                   <span x-text="item.orderWeight + ' ' + item.unit"></span>
                                 </td>
                                 <td class="py-3 px-2 text-slate-600 text-xs">
@@ -574,7 +575,7 @@
     <div @click.away="showCloudModal = false" class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b pb-3">
         <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-          <i class="fa-solid fa-cloud text-teal-600 text-lg"></i> Firebase 即時雲端同步設定
+          <i class="fa-solid fa-cloud text-emerald-600 text-lg"></i> Firebase 即時雲端同步設定
         </h3>
         <button @click="showCloudModal = false" class="touch-btn text-slate-400 p-2"><i class="fa-solid fa-xmark"></i></button>
       </div>
@@ -591,7 +592,7 @@
       </div>
       <div class="flex justify-end gap-2 pt-3 border-t">
         <button @click="showCloudModal = false" class="touch-btn px-4 py-2 border-2 rounded-xl font-bold">取消</button>
-        <button @click="saveCloudConfig()" class="touch-btn px-5 py-2 bg-teal-600 text-white rounded-xl font-bold">儲存並連線</button>
+        <button @click="saveCloudConfig()" class="touch-btn px-5 py-2 bg-emerald-600 text-white rounded-xl font-bold">儲存並連線</button>
       </div>
     </div>
   </div>
@@ -622,7 +623,7 @@
       </div>
       <div class="flex justify-end gap-3 pt-4 border-t">
         <button @click="showBatchModal = false" class="px-5 py-2.5 border-2 rounded-xl font-bold">取消</button>
-        <button @click="processBatchAdd()" class="px-6 py-2.5 bg-teal-600 text-white rounded-xl font-bold">確認導入</button>
+        <button @click="processBatchAdd()" class="px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-bold">確認導入</button>
       </div>
     </div>
   </div>
@@ -662,7 +663,7 @@
               </div>
             </template>
             <label class="touch-btn flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold py-2.5 cursor-pointer flex items-center justify-center gap-2 border">
-              <i class="fa-solid fa-camera text-teal-600"></i> <span x-text="editingItem.image ? '更換照片' : '上傳照片'"></span>
+              <i class="fa-solid fa-camera text-emerald-600"></i> <span x-text="editingItem.image ? '更換照片' : '上傳照片'"></span>
               <input type="file" accept="image/*" class="hidden" @change="handleEditImageUpload($event)">
             </label>
           </div>
@@ -673,7 +674,7 @@
       </div>
       <div class="flex justify-end gap-2.5 pt-3 border-t">
         <button @click="showEditModal = false" class="px-4 py-2 border-2 rounded-xl font-bold">取消</button>
-        <button @click="saveEditedItem()" class="px-5 py-2 bg-teal-600 text-white rounded-xl font-bold">儲存變更</button>
+        <button @click="saveEditedItem()" class="px-5 py-2 bg-emerald-600 text-white rounded-xl font-bold">儲存變更</button>
       </div>
     </div>
   </div>
@@ -687,7 +688,7 @@
       <div class="space-y-4">
         <div class="flex gap-2">
           <input type="text" x-model="newSupplierName" placeholder="新廠商名稱" class="flex-1 px-3.5 py-2.5 border-2 rounded-xl font-bold">
-          <button @click="addSupplier()" class="px-4 py-2.5 bg-sky-600 text-white rounded-xl font-bold">新增</button>
+          <button @click="addSupplier()" class="px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-bold">新增</button>
         </div>
         <div class="border-2 rounded-2xl divide-y max-h-52 overflow-y-auto">
           <template x-for="sup in suppliers" :key="sup">
@@ -772,7 +773,6 @@
             dbRef.on('value', (snapshot) => {
               const cloudData = snapshot.val();
               if (cloudData) {
-                // 使用解構賦值確保 Alpine.js 響應式陣列強制偵測更新
                 if (cloudData.inventory) this.inventory = [...cloudData.inventory];
                 if (cloudData.suppliers) this.suppliers = [...cloudData.suppliers];
                 if (cloudData.orderedItems) this.orderedItems = [...cloudData.orderedItems];
@@ -802,7 +802,6 @@
         },
 
         saveInventory() {
-          // 強制複製陣列以觸發 Alpine.js 偵測
           this.inventory = [...this.inventory];
           this.suppliers = [...this.suppliers];
           this.orderedItems = [...this.orderedItems];
