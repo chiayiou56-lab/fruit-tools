@@ -100,6 +100,9 @@
                 <i class="fa-solid" :class="isCloudConnected ? 'fa-cloud' : 'fa-cloud-slash'"></i>
                 <span x-text="isCloudConnected ? '雲端同步中' : '本機模式 (點擊設定)'"></span>
               </button>
+              <button @click="manualSyncToCloud()" class="text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 transition-colors cursor-pointer bg-sky-100 text-sky-700 hover:bg-sky-200" title="手動更新資料至雲端">
+                <i class="fa-solid fa-cloud-arrow-up"></i> 手動同步
+              </button>
             </div>
           </div>
         </div>
@@ -693,6 +696,26 @@
           } catch(e) {
              this.showToast('JSON 格式錯誤，請檢查內容');
           }
+        },
+
+        manualSyncToCloud() {
+          if (!this.isCloudConnected || typeof firebase === 'undefined' || !firebase.apps.length) {
+            this.showToast('❌ 尚未連接雲端，請先完成雲端設定！');
+            this.showCloudModal = true;
+            return;
+          }
+          this.showToast('⏳ 正在同步資料至雲端...');
+          firebase.database().ref('packagingData').set({
+            inventory: this.inventory,
+            suppliers: this.suppliers,
+            orderedItems: this.orderedItems,
+            lastUpdated: Date.now()
+          }).then(() => {
+            this.showToast('✅ 手動同步雲端成功！');
+          }).catch((err) => {
+            console.error('手動同步失敗:', err);
+            this.showToast('❌ 同步失敗，請檢查網路連線');
+          });
         },
 
         // --- Core Data Management ---
