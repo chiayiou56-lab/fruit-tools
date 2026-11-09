@@ -80,8 +80,15 @@
             border-color: #526b59 !important;
         }
         section:not(.gift-calculator) #todo-list > div {
-            background: #f7f9f6 !important;
-            border-color: var(--line) !important;
+            background: #e8f1e7 !important;
+            border-color: #cbdcc9 !important;
+        }
+        section:not(.gift-calculator) #todo-list > div span:not(.line-through) {
+            color: #32613f !important;
+            font-weight: 600;
+        }
+        section:not(.gift-calculator) #todo-list > div span.line-through {
+            color: #8a9b8d !important;
         }
         footer {
             background: #e9eee7 !important;
@@ -128,6 +135,30 @@
         .gift-total-card strong { color: var(--sage-dark); }
         .gift-divider { border-color: #d8e3d8; }
         .gift-tip { background: #f8f6ed; color: #7c795f; }
+
+        .note-action-btn { min-height: 48px; }
+        #note-record-list .note-record {
+            background: #f4f8f3;
+            border: 1px solid #dce7dc;
+            border-radius: 14px;
+            padding: 13px;
+        }
+        #note-record-list .note-record-content {
+            color: #3d5944;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            line-height: 1.65;
+        }
+        #note-record-list .note-record-time { color: #879589; font-size: 12px; }
+        #note-record-list .note-record-delete {
+            color: #a36d68; background: #f8eeee;
+            border-radius: 10px; width: 38px; height: 38px; flex-shrink: 0;
+        }
+        #voice-note-btn.is-recording {
+            color: #9b4944 !important;
+            background: #f9e9e7 !important;
+            border-color: #e9c8c4 !important;
+        }
         .gift-item {
             background: white;
             border: 1px solid var(--line);
@@ -284,9 +315,26 @@
                         </button>
                     </div>
 
-                    <div class="mb-2">
-                        <textarea id="quick-note" placeholder="在此隨手輸入或貼上文字記錄..." rows="9" oninput="handleNoteInput()"
+                    <div class="mb-3">
+                        <textarea id="quick-note" placeholder="在此輸入文字，或使用語音輸入..." rows="6" oninput="handleNoteInput()"
                             class="w-full px-4 py-3.5 bg-emerald-950/60 border border-emerald-700/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-emerald-950 text-sm sm:text-base text-slate-100 placeholder-emerald-400/50 transition-all resize-y leading-relaxed"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                        <button id="voice-note-btn" type="button" onclick="toggleVoiceInput()"
+                            class="py-3 px-3 rounded-xl border border-emerald-800 bg-emerald-950/60 text-emerald-200 font-semibold text-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-microphone"></i><span>語音輸入</span>
+                        </button>
+                        <button type="button" onclick="saveNoteRecord()"
+                            class="py-3 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bookmark"></i><span>紀錄一筆</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-sm text-emerald-800">已儲存紀錄</h3>
+                        <span id="note-record-count" class="text-xs px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">0 筆</span>
+                    </div>
+                    <div id="note-record-list" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                        <div class="text-center py-5 text-sm text-slate-400">目前尚無紀錄</div>
                     </div>
                 </div>
             </section>
@@ -494,6 +542,8 @@
 
         let todos = [];
         let quickNoteContent = '';
+        let noteRecords = [];
+        let voiceRecognition = null;
         let isLocalSyncing = false;
 
         onValue(dbRef, (snapshot) => {
@@ -512,6 +562,8 @@
                         updateNoteCount(quickNoteContent);
                     }
                 }
+                noteRecords = Array.isArray(data.noteRecords) ? data.noteRecords : [];
+                renderNoteRecords();
                 renderTodos();
                 updateCloudStatus('connected', '雲端同步就緒');
             } else {
@@ -526,6 +578,7 @@
             set(dbRef, {
                 todos: todos,
                 note: quickNoteContent,
+                noteRecords: noteRecords,
                 updatedAt: Date.now()
             }).then(() => {
                 updateCloudStatus('connected', '雲端已連線');
@@ -663,6 +716,117 @@
             setTimeout(() => { isLocalSyncing = false; }, 500);
         };
 
+
+        // 將目前輸入框內容存成獨立紀錄；紀錄會透過原本 Firebase 路徑同步。
+        window.saveNoteRecord = function() {
+            const textarea = document.getElementById('quick-note');
+            const content = textarea.value.trim();
+            if (!content) {
+                window.showMessage('尚無內容', '請先輸入文字或使用語音輸入，再按「紀錄一筆」。', 'error');
+                textarea.focus();
+                return;
+            }
+            noteRecords.unshift({
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                content,
+                createdAt: Date.now()
+            });
+            textarea.value = '';
+            quickNoteContent = '';
+            updateNoteCount('');
+            renderNoteRecords();
+            syncToCloud();
+            triggerVibration();
+            window.showMessage('已儲存', '這筆筆記已加入紀錄清單。');
+        };
+
+        window.deleteNoteRecord = function(id) {
+            noteRecords = noteRecords.filter(record => String(record.id) !== String(id));
+            renderNoteRecords();
+            syncToCloud();
+            triggerVibration();
+        };
+
+        function renderNoteRecords() {
+            const list = document.getElementById('note-record-list');
+            const count = document.getElementById('note-record-count');
+            if (!list || !count) return;
+            count.textContent = `${noteRecords.length} 筆`;
+            if (!noteRecords.length) {
+                list.innerHTML = '<div class="text-center py-5 text-sm text-slate-400">目前尚無紀錄</div>';
+                return;
+            }
+            list.innerHTML = noteRecords.map(record => {
+                const date = new Date(record.createdAt || Date.now());
+                const timeText = date.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+                return `<div class="note-record flex items-start gap-3">
+                    <div class="min-w-0 flex-1">
+                        <div class="note-record-content">${escapeHtml(String(record.content || ''))}</div>
+                        <div class="note-record-time mt-2">${timeText}</div>
+                    </div>
+                    <button type="button" class="note-record-delete" aria-label="刪除此筆紀錄" onclick="deleteNoteRecord('${String(record.id).replace(/'/g, '')}')">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>`;
+            }).join('');
+        }
+
+        // iPad Safari / 支援 Web Speech API 的瀏覽器可直接語音轉文字。
+        window.toggleVoiceInput = function() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const button = document.getElementById('voice-note-btn');
+            if (!SpeechRecognition) {
+                window.showMessage('目前瀏覽器不支援', '此瀏覽器未提供語音辨識功能。請改用支援語音輸入的瀏覽器，或使用 iPad 鍵盤上的麥克風聽寫。', 'error');
+                return;
+            }
+
+            if (voiceRecognition) {
+                voiceRecognition.stop();
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            voiceRecognition = recognition;
+            recognition.lang = 'zh-TW';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            let finalText = '';
+            const textarea = document.getElementById('quick-note');
+            const originalText = textarea.value;
+            button.classList.add('is-recording');
+            button.innerHTML = '<i class="fa-solid fa-stop"></i><span>停止語音</span>';
+
+            recognition.onresult = event => {
+                let interim = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) finalText += transcript;
+                    else interim += transcript;
+                }
+                textarea.value = originalText + (originalText && (finalText || interim) ? '\n' : '') + finalText + interim;
+                handleNoteInput();
+            };
+            recognition.onerror = event => {
+                if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                    window.showMessage('語音輸入提醒', '語音辨識發生問題，請確認麥克風權限後再試一次。', 'error');
+                }
+            };
+            recognition.onend = () => {
+                if (voiceRecognition === recognition) voiceRecognition = null;
+                button.classList.remove('is-recording');
+                button.innerHTML = '<i class="fa-solid fa-microphone"></i><span>語音輸入</span>';
+                handleNoteInput();
+            };
+            try {
+                recognition.start();
+            } catch (error) {
+                voiceRecognition = null;
+                button.classList.remove('is-recording');
+                button.innerHTML = '<i class="fa-solid fa-microphone"></i><span>語音輸入</span>';
+                window.showMessage('無法啟動語音輸入', '請確認網站使用 HTTPS，並允許瀏覽器使用麥克風。', 'error');
+            }
+        };
+
         function updateNoteCount(text) {
             const countEl = document.getElementById('note-count');
             if (countEl) countEl.innerText = `${text.length} 字`;
@@ -788,11 +952,7 @@
             const price = Number(priceEl.value);
             const qty = Math.floor(Number(qtyEl.value));
 
-            if (!name) {
-                window.showMessage('請輸入品項', '請先填寫水果或商品名稱。', 'error');
-                nameEl.focus();
-                return;
-            }
+            const displayName = name || '未命名商品';
             if (priceEl.value === '' || !Number.isFinite(price) || price < 0) {
                 window.showMessage('單價有誤', '請輸入有效的單價（不可小於 0）。', 'error');
                 priceEl.focus();
@@ -805,9 +965,9 @@
             }
 
             // 相同名稱、相同單價視為同一品項，直接累加數量。
-            const existing = giftItems.find(item => item.name === name && item.price === price);
+            const existing = name ? giftItems.find(item => item.name === displayName && item.price === price) : null;
             if (existing) existing.qty += qty;
-            else giftItems.push({ id: nextGiftId++, name, price, qty });
+            else giftItems.push({ id: nextGiftId++, name: displayName, price, qty });
 
             nameEl.value = '';
             priceEl.value = '';
@@ -908,6 +1068,7 @@
         window.onload = function() {
             updateCalcDisplay();
             renderGiftItems();
+            renderNoteRecords();
         };
     </script>
 </body>
