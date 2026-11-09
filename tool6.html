@@ -16,6 +16,149 @@
             touch-action: manipulation;
         }
     </style>
+
+    <style>
+        :root {
+            --page: #f3f5f0;
+            --surface: #ffffff;
+            --surface-soft: #edf2eb;
+            --sage: #66816d;
+            --sage-dark: #496451;
+            --sage-pale: #e2ebe1;
+            --ink: #34443a;
+            --muted: #78867b;
+            --line: #dce5dc;
+        }
+        body {
+            background: var(--page) !important;
+            color: var(--ink) !important;
+        }
+        header {
+            background: rgba(248,250,246,.94) !important;
+            border-color: var(--line) !important;
+            box-shadow: 0 4px 18px rgba(55,75,59,.07) !important;
+        }
+        header span, header a { color: var(--sage-dark) !important; }
+        header a {
+            background: var(--sage-pale) !important;
+            border: 1px solid #d5e1d4 !important;
+        }
+        header a:hover { background: #d5e3d4 !important; }
+        section:not(.gift-calculator) {
+            background: var(--surface) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--line) !important;
+            box-shadow: 0 8px 24px rgba(55,75,59,.06) !important;
+        }
+        section:not(.gift-calculator) h2 { color: var(--sage-dark) !important; }
+        section:not(.gift-calculator) p { color: var(--muted) !important; }
+        section:not(.gift-calculator) input,
+        section:not(.gift-calculator) textarea {
+            background: #f7f9f6 !important;
+            color: var(--ink) !important;
+            border-color: #d8e2d8 !important;
+        }
+        section:not(.gift-calculator) input::placeholder,
+        section:not(.gift-calculator) textarea::placeholder { color: #9aa79b !important; }
+        section:not(.gift-calculator) button { box-shadow: none !important; }
+        section:not(.gift-calculator) button[class*="bg-gradient-to-r"] {
+            background: var(--sage) !important;
+            color: white !important;
+        }
+        section:not(.gift-calculator) button[class*="bg-emerald"],
+        section:not(.gift-calculator) button[class*="bg-amber-500/20"] {
+            background: var(--surface-soft) !important;
+            color: var(--sage-dark) !important;
+            border-color: var(--line) !important;
+        }
+        section:not(.gift-calculator) #calc-display,
+        section:not(.gift-calculator) #calc-history {
+            color: #f2f6ef !important;
+        }
+        section:not(.gift-calculator) .bg-emerald-950 {
+            background: #526b59 !important;
+            border-color: #526b59 !important;
+        }
+        section:not(.gift-calculator) #todo-list > div {
+            background: #f7f9f6 !important;
+            border-color: var(--line) !important;
+        }
+        footer {
+            background: #e9eee7 !important;
+            border-color: var(--line) !important;
+            color: #7b897d !important;
+        }
+        #custom-modal > div {
+            background: white !important;
+            color: var(--ink) !important;
+            border-color: var(--line) !important;
+        }
+        #modal-title { color: var(--sage-dark) !important; }
+        #modal-message { color: var(--ink) !important; }
+        .gift-calculator {
+            background: var(--surface) !important;
+            color: var(--ink);
+            border: 1px solid var(--line);
+            box-shadow: 0 8px 24px rgba(55,75,59,.06);
+        }
+        .gift-calculator h2, .gift-calculator h3 { color: var(--sage-dark); }
+        .gift-icon {
+            background: var(--sage-pale);
+            color: var(--sage-dark);
+        }
+        .gift-muted { color: var(--muted); }
+        .gift-entry { background: #f5f8f4; border: 1px solid var(--line); }
+        .gift-input {
+            background: white;
+            color: var(--ink);
+            border: 1px solid #d4dfd4;
+            outline: none;
+            min-height: 48px;
+        }
+        .gift-input:focus {
+            border-color: var(--sage);
+            box-shadow: 0 0 0 3px rgba(102,129,109,.14);
+        }
+        .gift-primary-btn { background: var(--sage); color: white; min-height: 48px; }
+        .gift-primary-btn:active, .gift-secondary-btn:active { transform: scale(.98); }
+        .gift-secondary-btn { background: var(--surface-soft); color: var(--sage-dark); border: 1px solid var(--line); }
+        .gift-count { background: var(--sage-pale); color: var(--sage-dark); }
+        .gift-empty { background: #f7f9f6; border: 1px dashed #cbd8cc; color: #879589; }
+        .gift-total-card { background: #edf3ec; border: 1px solid #dce7dc; }
+        .gift-total-card strong { color: var(--sage-dark); }
+        .gift-divider { border-color: #d8e3d8; }
+        .gift-tip { background: #f8f6ed; color: #7c795f; }
+        .gift-item {
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 13px 14px;
+        }
+        .gift-item-name { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+        .gift-item-meta { color: var(--muted); font-size: 13px; }
+        .gift-qty-btn {
+            width: 38px; height: 38px; border-radius: 11px;
+            background: var(--surface-soft); color: var(--sage-dark);
+            font-size: 20px; font-weight: 700;
+        }
+        .gift-qty-value {
+            width: 48px; text-align: center; font-weight: 700;
+            color: var(--ink); background: transparent; border: 0; outline: none;
+        }
+        .gift-delete {
+            width: 38px; height: 38px; border-radius: 11px;
+            color: #a36d68; background: #f8eeee;
+        }
+        @media (min-width: 768px) and (max-width: 1199px) {
+            main { padding-top: 22px !important; }
+            main > div { gap: 18px !important; }
+            section:not(.gift-calculator) { padding: 20px !important; }
+        }
+        @media (max-width: 767px) {
+            .gift-calculator { padding: 18px !important; }
+        }
+    </style>
+
     <script>
         tailwind.config = {
             theme: {
@@ -74,7 +217,7 @@
 
     <!-- 主要內容區 -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex-grow w-full">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
             
             <!-- 1. 待辦事項區塊 -->
             <section class="bg-emerald-900/60 backdrop-blur-md rounded-3xl p-5 sm:p-7 shadow-2xl shadow-emerald-950/60 border border-amber-500/20 flex flex-col justify-between transition-all hover:border-amber-500/40">
@@ -204,6 +347,86 @@
             </section>
 
         </div>
+
+        <!-- 4. 現組禮盒價格計算 -->
+        <section class="gift-calculator mt-6 sm:mt-8 rounded-3xl p-5 sm:p-7 xl:p-8 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="gift-icon w-12 h-12 rounded-2xl flex items-center justify-center">
+                        <i class="fa-solid fa-gift text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-lg sm:text-xl">禮盒價格計算</h2>
+                        <p class="text-sm gift-muted">現場組盒即時加減品項，金額自動更新</p>
+                    </div>
+                </div>
+                <button type="button" onclick="resetGiftItems()" class="gift-secondary-btn px-4 py-3 rounded-xl font-medium">
+                    <i class="fa-solid fa-rotate-left mr-2"></i>清空重算
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-5 gap-5">
+                <div class="xl:col-span-3">
+                    <div class="gift-entry rounded-2xl p-4 sm:p-5 mb-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                            <label class="sm:col-span-5 text-sm font-medium">
+                                品項名稱
+                                <input id="gift-name" type="text" maxlength="40" placeholder="例如：日本麝香葡萄"
+                                    class="gift-input mt-2 w-full rounded-xl px-4 py-3 text-base">
+                            </label>
+                            <label class="sm:col-span-3 text-sm font-medium">
+                                單價（元）
+                                <input id="gift-price" type="number" min="0" step="1" inputmode="decimal" placeholder="輸入單價"
+                                    class="gift-input mt-2 w-full rounded-xl px-4 py-3 text-base">
+                            </label>
+                            <label class="sm:col-span-2 text-sm font-medium">
+                                數量
+                                <input id="gift-qty" type="number" min="1" step="1" inputmode="numeric" value="1"
+                                    class="gift-input mt-2 w-full rounded-xl px-3 py-3 text-base text-center">
+                            </label>
+                            <div class="sm:col-span-2">
+                                <button type="button" onclick="addGiftItem()" class="gift-primary-btn w-full rounded-xl py-3 font-bold text-base">
+                                    <i class="fa-solid fa-plus mr-1"></i>加入
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold">已選品項</h3>
+                        <span id="gift-item-count" class="gift-count rounded-full px-3 py-1 text-sm">0 項</span>
+                    </div>
+                    <div id="gift-list" class="space-y-3">
+                        <div class="gift-empty rounded-2xl p-7 text-center">
+                            <i class="fa-solid fa-basket-shopping text-3xl mb-2"></i>
+                            <p>尚未加入品項，從上方輸入開始組盒</p>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="xl:col-span-2">
+                    <div class="gift-total-card rounded-2xl p-5 sm:p-6 xl:sticky xl:top-24">
+                        <p class="gift-muted text-sm font-medium">禮盒目前總金額</p>
+                        <div class="flex items-baseline gap-1 mt-2 mb-5">
+                            <span class="text-xl font-semibold">NT$</span>
+                            <strong id="gift-total" class="text-4xl sm:text-5xl font-bold tracking-tight">0</strong>
+                        </div>
+                        <div class="flex justify-between py-3 border-t gift-divider text-sm">
+                            <span class="gift-muted">品項種類</span>
+                            <strong id="gift-kind-total">0 種</strong>
+                        </div>
+                        <div class="flex justify-between py-3 border-t gift-divider text-sm">
+                            <span class="gift-muted">商品總數</span>
+                            <strong id="gift-qty-total">0 件</strong>
+                        </div>
+                        <p class="gift-tip mt-4 text-sm rounded-xl p-3">
+                            <i class="fa-regular fa-lightbulb mr-1"></i>
+                            可隨時調整數量或刪除單項，總金額會即時重新計算。
+                        </p>
+                    </div>
+                </aside>
+            </div>
+        </section>
     </main>
 
     <!-- 頁尾 -->
@@ -552,8 +775,139 @@
                       .replace(/'/g, "&#039;");
         }
 
+
+        // 現組禮盒計價：資料只保留在目前頁面，不影響既有雲端待辦與筆記同步。
+        let giftItems = [];
+        let nextGiftId = 1;
+
+        window.addGiftItem = function() {
+            const nameEl = document.getElementById('gift-name');
+            const priceEl = document.getElementById('gift-price');
+            const qtyEl = document.getElementById('gift-qty');
+            const name = nameEl.value.trim();
+            const price = Number(priceEl.value);
+            const qty = Math.floor(Number(qtyEl.value));
+
+            if (!name) {
+                window.showMessage('請輸入品項', '請先填寫水果或商品名稱。', 'error');
+                nameEl.focus();
+                return;
+            }
+            if (priceEl.value === '' || !Number.isFinite(price) || price < 0) {
+                window.showMessage('單價有誤', '請輸入有效的單價（不可小於 0）。', 'error');
+                priceEl.focus();
+                return;
+            }
+            if (!Number.isFinite(qty) || qty < 1) {
+                window.showMessage('數量有誤', '數量請輸入至少 1 件。', 'error');
+                qtyEl.focus();
+                return;
+            }
+
+            // 相同名稱、相同單價視為同一品項，直接累加數量。
+            const existing = giftItems.find(item => item.name === name && item.price === price);
+            if (existing) existing.qty += qty;
+            else giftItems.push({ id: nextGiftId++, name, price, qty });
+
+            nameEl.value = '';
+            priceEl.value = '';
+            qtyEl.value = '1';
+            nameEl.focus();
+            triggerVibration();
+            renderGiftItems();
+        };
+
+        window.changeGiftQty = function(id, delta) {
+            const item = giftItems.find(entry => entry.id === id);
+            if (!item) return;
+            item.qty = Math.max(1, item.qty + delta);
+            triggerVibration();
+            renderGiftItems();
+        };
+
+        window.setGiftQty = function(id, value) {
+            const item = giftItems.find(entry => entry.id === id);
+            if (!item) return;
+            const qty = Math.floor(Number(value));
+            if (!Number.isFinite(qty) || qty < 1) {
+                renderGiftItems();
+                return;
+            }
+            item.qty = qty;
+            renderGiftItems();
+        };
+
+        window.deleteGiftItem = function(id) {
+            giftItems = giftItems.filter(item => item.id !== id);
+            triggerVibration();
+            renderGiftItems();
+        };
+
+        window.resetGiftItems = function() {
+            if (giftItems.length && !confirm('確定清空目前禮盒的所有品項嗎？')) return;
+            giftItems = [];
+            renderGiftItems();
+        };
+
+        function renderGiftItems() {
+            const list = document.getElementById('gift-list');
+            const totalEl = document.getElementById('gift-total');
+            const countEl = document.getElementById('gift-item-count');
+            const kindEl = document.getElementById('gift-kind-total');
+            const qtyTotalEl = document.getElementById('gift-qty-total');
+            if (!list) return;
+
+            const total = giftItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+            const qtyTotal = giftItems.reduce((sum, item) => sum + item.qty, 0);
+            totalEl.textContent = total.toLocaleString('zh-TW');
+            countEl.textContent = `${giftItems.length} 項`;
+            kindEl.textContent = `${giftItems.length} 種`;
+            qtyTotalEl.textContent = `${qtyTotal} 件`;
+
+            if (!giftItems.length) {
+                list.innerHTML = `<div class="gift-empty rounded-2xl p-7 text-center">
+                    <i class="fa-solid fa-basket-shopping text-3xl mb-2"></i>
+                    <p>尚未加入品項，從上方輸入開始組盒</p>
+                </div>`;
+                return;
+            }
+
+            list.innerHTML = giftItems.map(item => `
+                <div class="gift-item">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="gift-item-name">${escapeHtml(item.name)}</div>
+                            <div class="gift-item-meta mt-1">$${item.price.toLocaleString('zh-TW')} × ${item.qty}　=　<strong class="text-base" style="color:#496451">$${(item.price * item.qty).toLocaleString('zh-TW')}</strong></div>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button type="button" class="gift-qty-btn" aria-label="減少數量" onclick="changeGiftQty(${item.id}, -1)">−</button>
+                            <input class="gift-qty-value" aria-label="品項數量" type="number" min="1" step="1" inputmode="numeric"
+                                value="${item.qty}" onchange="setGiftQty(${item.id}, this.value)">
+                            <button type="button" class="gift-qty-btn" aria-label="增加數量" onclick="changeGiftQty(${item.id}, 1)">+</button>
+                        </div>
+                        <button type="button" class="gift-delete shrink-0" aria-label="刪除品項" onclick="deleteGiftItem(${item.id})">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const priceInput = document.getElementById('gift-price');
+            const nameInput = document.getElementById('gift-name');
+            [nameInput, priceInput].forEach(input => input.addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    window.addGiftItem();
+                }
+            }));
+        });
+
+
         window.onload = function() {
             updateCalcDisplay();
+            renderGiftItems();
         };
     </script>
 </body>
