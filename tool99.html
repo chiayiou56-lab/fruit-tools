@@ -1424,6 +1424,7 @@
             document.getElementById('modalDP2Score').innerText = m.s2 || 0;
 
             activeFaults = { p1: 0, p2: 0 };
+            updateDModalFaultButtons();
             document.getElementById('dMatchModal').classList.remove('hidden');
         }
 
@@ -1465,6 +1466,14 @@
                     showToast('P2 累積 2 次失誤，P1 自動獲得 +1 分！');
                 }
             }
+            updateDModalFaultButtons();
+        }
+
+        function updateDModalFaultButtons() {
+            const btn1 = document.getElementById('modalDP1FaultBtn');
+            const btn2 = document.getElementById('modalDP2FaultBtn');
+            if (btn1) btn1.innerText = `失誤記次 (${activeFaults.p1}/2)`;
+            if (btn2) btn2.innerText = `失誤記次 (${activeFaults.p2}/2)`;
         }
 
         function confirmDModalWinner(playerNum) {
