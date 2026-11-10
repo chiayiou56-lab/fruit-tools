@@ -1019,12 +1019,12 @@
             const displayName = name || '未命名商品';
             if (priceEl.value === '' || !Number.isFinite(price) || price < 0) {
                 window.showMessage('單價有誤', '請輸入有效的單價（不可小於 0）。', 'error');
-                priceEl.focus();
+                // priceEl.focus(); // 已註解，避免手機自動彈出鍵盤
                 return;
             }
             if (!Number.isFinite(qty) || qty < 1) {
                 window.showMessage('數量有誤', '數量請輸入至少 1 件。', 'error');
-                qtyEl.focus();
+                // qtyEl.focus(); // 已註解，避免手機自動彈出鍵盤
                 return;
             }
 
@@ -1035,7 +1035,8 @@
             nameEl.value = '';
             priceEl.value = '';
             qtyEl.value = '1';
-            nameEl.focus();
+            // nameEl.focus(); // 已註解，避免手機自動彈出鍵盤
+            
             triggerVibration();
             renderGiftItems();
         };
