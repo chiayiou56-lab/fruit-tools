@@ -2,7 +2,7 @@
 *{box-sizing:border-box}body{margin:0;background:#f2f7f2;color:#19362b;font-family:system-ui,-apple-system,sans-serif}header{background:#087f5b;color:white;padding:20px}header>div,main{max-width:1100px;margin:auto}h1{margin:0;font-size:25px}header p{margin:5px 0 0;opacity:.9}main{padding:18px}.card{background:white;border:1px solid #dcebe0;border-radius:18px;padding:18px;margin-bottom:16px;box-shadow:0 3px 14px #1948320b}.top,.row,.actions,.stats{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.top{justify-content:space-between}.stats>div{flex:1;min-width:150px;background:#edf8f1;border-radius:14px;padding:14px}.stats strong{display:block;font-size:25px;margin-top:4px}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:12px 16px;background:#e7f2ea;color:#164831;font-weight:700;min-height:46px}button.primary{background:#087f5b;color:white}button.mic{font-size:21px;min-height:70px;padding:15px 28px}button.danger{background:#fff0ed;color:#a42a22}.hint{color:#637b6b;font-size:14px;line-height:1.6}input,select,textarea{border:1px solid #b9cec0;border-radius:10px;padding:11px;min-width:0;background:white}input[type=date]{min-height:46px}textarea{width:100%}.scroll{overflow:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{text-align:left;padding:12px 8px;border-bottom:1px solid #e7eee8}th{color:#60796b;font-size:14px}td button{white-space:nowrap;padding:8px 10px}.green{background:#dff4e8;color:#08623b}.red{background:#fff0eb;color:#a03724}.yellow{background:#fff3d7;color:#865600}.fields{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.fields label{display:grid;gap:5px;font-size:14px}.fields input,.fields select{width:100%}dialog{border:0;border-radius:18px;width:min(94vw,620px);padding:22px;box-shadow:0 10px 50px #0004}dialog::backdrop{background:#102a1aaa}#notice{padding:12px;background:#e9f7ee;border-radius:12px;margin-top:12px;display:none}.hideprint{display:block}#printReport{display:none}.listening{animation:pulse 1.1s infinite;background:#c62e44!important} @keyframes pulse{0%,100%{box-shadow:0 0 0 0 #e34d6655;transform:scale(1)}50%{box-shadow:0 0 0 13px #e34d6600;transform:scale(1.03)}} @media(max-width:650px){.fields{grid-template-columns:repeat(2,1fr)}main{padding:10px}.card{padding:14px}}@media print{header,main,dialog{display:none!important}#printReport{display:block;color:#000}table{min-width:0;font-size:11px}button{display:none}@page{size:A4 landscape;margin:10mm}}
 </style></head><body><header><div><a href="./index.html" style="display:inline-block;margin-bottom:12px;padding:10px 15px;border-radius:12px;background:#e7f2ea;color:#164831;font-weight:700;text-decoration:none">🏠 回首頁</a><h1>🍐 甜蜜果物・語音進貨</h1><p>快速記錄報價，掌握付款與上車狀態</p></div></header><main>
 <div class="card"><div class="top"><div><b>雲端同步</b> <span id="cloudStatus">本機模式</span><div class="hint">同一網站、同一組 Firebase 設定的裝置可同步。</div></div><div class="row"><button onclick="showMemory()">📝 名稱修正記憶</button><button onclick="cloudDialog.showModal()">⚙️ 雲端設定</button></div></div></div>
-<div class="card"><h2>🎙️ 說一筆進貨</h2><div class="row"><button class="primary mic" id="mic" onclick="startVoice()">🎙️ 點我說話</button><button onclick="openEdit()">＋ 手動新增</button></div><p class="hint">例如：香蕉550元三件（每件550元）；蘋果三件3000元（三件共3000元）；花生十斤700元（十斤共700元）。一次說一筆；件＝箱。<br>每筆辨識後都會先讓你檢查，確認後才新增。</p><div id="voiceText" aria-live="polite"></div><div class="row" style="margin-top:12px"><input id="dictation" style="flex:1;min-width:220px" placeholder="或點此用 iPad 鍵盤麥克風聽寫"><button onclick="addFromText()">辨識並確認</button></div><p class="hint">主畫面若無法使用上方麥克風，可點輸入框，再點 iPad 鍵盤上的麥克風聽寫，完成後按「辨識並確認」。</p><div id="notice"></div></div>
+<div class="card"><h2>🎙️ 說一筆進貨</h2><div class="row"><button class="primary mic" id="mic" onclick="startVoice()">🎙️ 點我說話</button><button type="button" id="voiceSubmit" hidden onclick="submitVoice()">說完送辨識</button><button type="button" onclick="focusDictation()">鍵盤聽寫</button><button onclick="openEdit()">＋ 手動新增</button></div><p class="hint">例如：香蕉550元三件（每件550元）；蘋果三件3000元（三件共3000元）；花生十斤700元（十斤共700元）。一次說一筆；件＝箱。<br>每筆辨識後都會先讓你檢查，確認後才新增。</p><div id="voiceText" aria-live="polite"></div><div class="row" style="margin-top:12px"><input id="dictation" style="flex:1;min-width:220px" placeholder="或點此用 手機或平板鍵盤麥克風聽寫"><button onclick="addFromText()">辨識並確認</button></div><p class="hint">主畫面若無法使用上方麥克風，可點輸入框，再點 手機或平板鍵盤上的麥克風聽寫，完成後按「辨識並確認」。</p><div id="notice"></div></div>
 <div class="card"><div class="top"><h2>📅 進貨紀錄</h2><div class="row"><input id="date" type="date" onchange="render()"><button onclick="todayView()">回到今天</button></div></div><div class="stats"><div>已付款金額<strong id="paid">$0</strong></div><div>未付款金額<strong id="unpaid">$0</strong></div><div>未上車數量<strong id="unloaded">0 件</strong></div></div><p class="hint">以下統計依選取日期計算。點擊狀態即可切換。</p><div class="scroll"><table><thead><tr><th>上車狀態</th><th>品名／進貨商</th><th>單價</th><th>數量</th><th>小計</th><th>付款狀態</th><th>操作</th></tr></thead><tbody id="rows"></tbody></table></div><div class="actions" style="margin-top:16px"><button onclick="printReport()">🖨️ 列印／儲存 PDF</button><button onclick="exportExcel()">📊 匯出 Excel</button><button onclick="openTextReport()">📋 複製文字報表</button><button class="danger" id="clearDateButton" onclick="clearSelectedDate()">🗑️ 清除所選日期紀錄</button></div></div></main>
 <dialog id="editDialog"><h2 id="editTitle">新增進貨</h2><div id="voiceReview" class="hint" style="display:none;overflow-wrap:anywhere"></div><form id="form"><input type="hidden" id="editId"><div class="fields"><label>品名<input id="name" list="fruitNames" required placeholder="例如 24蘋果"><datalist id="fruitNames"></datalist></label><label>進貨商（選填）<input id="supplier"></label><label>單價<input id="price" type="number" min="0" step="any" required></label><label>數量<input id="qty" type="number" min="0.01" step="any" required></label><label>單位<select id="unit"><option>件</option><option>斤</option><option>公斤</option><option>盒</option><option>個</option><option>包</option><option>罐</option><option>瓶</option></select></label><label>總價（可調整）<input id="total" type="number" min="0" step="any" required></label><label>付款狀態<select id="payment"><option value="paid">已付款</option><option value="unpaid">未付款</option></select></label><label>上車狀態<select id="status"><option value="unloaded">未上車</option><option value="loaded">已上車</option></select></label></div><p class="hint">件與箱為同一單位。</p><div class="actions"><button type="submit" class="primary" id="saveButton">確認新增</button><button type="button" onclick="editDialog.close()">取消</button></div></form></dialog>
 <dialog id="textReportDialog"><h2>📋 文字進貨報表</h2><p class="hint">確認內容後複製，再貼到 LINE。若無法自動複製，可長按文字框手動複製。</p><textarea id="textReportContent" rows="14" readonly style="line-height:1.6"></textarea><p id="copyStatus" class="hint" aria-live="polite"></p><div class="actions"><button class="primary" onclick="copyTextReport()">複製報表</button><button onclick="textReportDialog.close()">關閉</button></div></dialog><dialog id="memoryDialog"><h2>📝 名稱修正記憶</h2><p class="hint">語音聽到的品名與你確認的品名不同時，系統會記住整個品名，下次遇到相同文字時套用。可在這裡刪除錯誤記憶。</p><div id="memoryList" style="max-height:45vh;overflow:auto"></div><button type="button" onclick="memoryDialog.close()">關閉</button></dialog><dialog id="cloudDialog"><h2>雲端即時同步設定</h2><p class="hint">貼上原本使用的 Firebase 設定 JSON。第一版使用獨立的資料區，避免影響舊工具。</p><textarea id="config" rows="9" placeholder='{"apiKey":"...", "databaseURL":"...", "projectId":"..."}'></textarea><div class="actions"><button class="primary" onclick="saveConfig()">儲存並連線</button><button onclick="cloudDialog.close()">取消</button></div></dialog><div id="printReport"></div>
@@ -16,26 +16,55 @@ function todayView(){$('date').value=today();render()}function openEdit(id='',pr
 function ambiguousPriceAndQty(raw){let t=raw.trim().replace(/[＄$，,。\s]/g,'');let m=/^(.*?)(\d{3,})([1-9])(件|箱|公斤|斤|盒|個|包|罐|瓶)$/.exec(t);if(!m||!m[1]||!Number(m[2]))return null;let price=Number(m[2]),qty=Number(m[3]);return {name:m[1],price,qty,unit:m[4]==='箱'?'件':m[4],total:price*qty}}
 function addParsed(raw){$('voiceText').textContent='辨識到：'+raw;let p=parseVoice(raw),guess=false,partial=false;if(!p){p=ambiguousPriceAndQty(raw);guess=!!p}if(!p){p=parsePartial(raw);partial=true}let originalName=p.name||'';p.name=applyNameMemory(originalName);p.voiceDraft={raw,originalName,partial,guess};openEdit('',p)}function addFromText(){let v=$('dictation').value.trim();if(!v)return alert('請先輸入或使用鍵盤麥克風聽寫一筆進貨。');addParsed(v)}let activeVoice=null,voiceTimer=null;
 function finishVoice(session,message,abort){
- if(activeVoice!==session)return;
+ if(activeVoice!==session||session._cancelled)return;
  clearTimeout(voiceTimer);voiceTimer=null;
  if(abort){session._cancelled=true;try{session.abort()}catch(e){} }
  activeVoice=null;
  $('mic').classList.remove('listening');$('mic').textContent='🎙️ 點我說話';$('mic').setAttribute('aria-pressed','false');
+ $('voiceSubmit').hidden=true;
  if(message)$('voiceText').textContent=message;
 }
 function voiceTimeout(session,ms,message){clearTimeout(voiceTimer);voiceTimer=setTimeout(()=>finishVoice(session,message,true),ms)}
+function focusDictation(){
+ if(activeVoice)finishVoice(activeVoice,'已切換至鍵盤聽寫。',true);
+ $('dictation').focus();
+ $('voiceText').textContent='點鍵盤上的麥克風說一筆進貨，再按「辨識並確認」。';
+}
+function completeVoice(session,message){
+ if(activeVoice!==session||session._cancelled)return;
+ const raw=session._result;
+ finishVoice(session,message,!message||!!raw);
+ if(raw)addParsed(raw);
+}
+function submitVoice(){
+ const session=activeVoice;
+ if(!session||session._stopping)return;
+ session._stopping=true;
+ $('voiceSubmit').hidden=true;
+ $('voiceText').textContent='正在辨識語音…';
+ voiceTimeout(session,5000,'沒有收到辨識結果，請點「鍵盤聽寫」繼續。');
+ try{session.stop()}catch(e){finishVoice(session,'無法完成辨識，請點「鍵盤聽寫」繼續。',true)}
+}
 function startVoice(){
  if(activeVoice){finishVoice(activeVoice,'已取消本次語音，點麥克風可重新開始。',true);return}
  if($('date').value!==today()&&!confirm('目前選擇的不是今天，這筆將記在 '+$('date').value+'，確定繼續？'))return;
  let SR=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!SR){$('voiceText').textContent='此瀏覽器無法使用語音辨識，請使用下方輸入框的鍵盤麥克風聽寫。';return}
- let r=new SR();activeVoice=r;r.lang='zh-TW';r.continuous=false;r.interimResults=false;r.maxAlternatives=1;r._result='';r._cancelled=false;
+ let r=new SR();activeVoice=r;r.lang='zh-TW';r.continuous=false;r.interimResults=false;r.maxAlternatives=1;r._result='';r._cancelled=false;r._stopping=false;
  $('mic').classList.add('listening');$('mic').setAttribute('aria-pressed','true');$('mic').textContent='⏹ 點擊取消語音';$('voiceText').textContent='正在啟動麥克風…再次點擊可取消。';
  voiceTimeout(r,8000,'麥克風啟動逾時，請再試一次；如持續發生，可改用下方鍵盤麥克風。');
- r.onstart=()=>{if(activeVoice!==r)return;$('voiceText').textContent='🎙️ 正在聆聽，請說一筆進貨；再次點擊可取消。';voiceTimeout(r,25000,'語音辨識等待逾時，請重試或使用下方鍵盤麥克風。')};
- r.onspeechend=()=>{if(activeVoice!==r)return;$('voiceText').textContent='正在辨識語音…再次點擊可取消。';voiceTimeout(r,8000,'辨識等待逾時，請再試一次，或使用下方鍵盤麥克風。')};
- r.onresult=e=>{if(activeVoice!==r||r._cancelled)return;let raw=e.results?.[0]?.[0]?.transcript;if(!raw)return;r._result=raw;$('voiceText').textContent='辨識完成，正在結束麥克風…';try{r.stop()}catch(e){}voiceTimeout(r,8000,'麥克風結束逾時，請再試一次或使用下方鍵盤麥克風。')};
- r.onerror=e=>{if(activeVoice!==r)return;let msg=e.error==='aborted'?'語音辨識被中斷，請重試或使用下方鍵盤麥克風。':e.error==='not-allowed'?'麥克風權限未允許，請至 iPhone 的網站設定確認。':e.error==='no-speech'?'沒有聽到語音，請再試一次。':'語音辨識未完成（'+e.error+'），請重試或使用鍵盤麥克風。';r._error=msg;try{r.stop()}catch(e){}voiceTimeout(r,3000,msg)};
+ r.onstart=()=>{if(activeVoice!==r||r._stopping)return;$('voiceSubmit').hidden=false;$('voiceText').textContent='🎙️ 正在聆聽，請說一筆進貨；再次點擊可取消。';voiceTimeout(r,25000,'語音辨識等待逾時，請重試或使用下方鍵盤麥克風。')};
+ r.onspeechend=()=>{if(activeVoice===r)submitVoice()};
+ r.onresult=e=>{
+  if(activeVoice!==r||r._cancelled)return;
+  const raw=e.results?.[0]?.[0]?.transcript;
+  if(!raw)return;
+  r._result=raw;
+  $('voiceText').textContent='辨識完成，正在結束麥克風…';
+  clearTimeout(voiceTimer);
+  voiceTimer=setTimeout(()=>completeVoice(r,''),1500);
+ };
+ r.onerror=e=>{if(activeVoice!==r||r._result)return;let msg=e.error==='aborted'?'語音辨識被中斷，請重試或使用下方鍵盤麥克風。':e.error==='not-allowed'?'麥克風權限未允許，請至 iPhone 的網站設定確認。':e.error==='no-speech'?'沒有聽到語音，請再試一次。':'語音辨識未完成（'+e.error+'），請重試或使用鍵盤麥克風。';r._error=msg;voiceTimeout(r,3000,msg)};
  r.onend=()=>{if(activeVoice!==r)return;let raw=r._result, msg=r._error;finishVoice(r,msg||(!raw?'本次語音已結束，若沒有辨識結果請再試一次。':''),false);if(raw&&!r._cancelled)addParsed(raw)};
  try{r.start()}catch(e){finishVoice(r,'無法啟動麥克風：'+e.message,true)}
 }
